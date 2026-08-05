@@ -1,0 +1,19 @@
+# dependencies
+node_modules/
+
+# vector database / generated data
+chroma/
+backend/chunks/
+
+# zip dan file besar
+backend.zip
+
+# vscode
+.vscode/
+
+# macOS
+.DS_Store
+
+# environment
+.env
+backend/.env

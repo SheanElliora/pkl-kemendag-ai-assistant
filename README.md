@@ -40,7 +40,26 @@ docs/       → dokumentasi dan aset proyek
 
 ## Cara Menjalankan
 
-### Backend
+### 1. Jalankan ChromaDB
+
+Buka terminal pertama:
+
+```bash
+cd backend
+chroma run --path ./chroma
+```
+
+ChromaDB akan berjalan pada:
+
+```
+http://localhost:8000
+```
+
+---
+
+### 2. Jalankan Backend
+
+Buka terminal kedua:
 
 ```bash
 cd backend
@@ -48,7 +67,17 @@ npm install
 npm start
 ```
 
-### Frontend
+Backend berjalan pada:
+
+```
+http://localhost:3001
+```
+
+---
+
+### 3. Jalankan Frontend
+
+Buka terminal ketiga:
 
 ```bash
 cd frontend
@@ -56,9 +85,22 @@ npm install
 npm run dev
 ```
 
-Frontend akan berjalan di **http://localhost:5173**.
+Frontend berjalan pada:
+
+```
+http://localhost:5173
+```
 
 ---
+
+### Urutan Menjalankan Sistem
+
+1. **ChromaDB**
+2. **Backend**
+3. **Frontend**
+
+Ketiga proses tersebut harus berjalan secara bersamaan agar fitur **Retrieval-Augmented Generation (RAG)** dapat digunakan dengan normal.
+
 
 ## Alur Sistem
 

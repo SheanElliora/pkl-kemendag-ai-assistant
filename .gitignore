@@ -21,3 +21,4 @@ backend/chunks/
 # Backup
 *.zip
 structure.txt
+chroma/

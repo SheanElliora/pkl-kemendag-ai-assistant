@@ -9,6 +9,7 @@ backend/.env
 
 # Generated data
 backend/chroma/
+backend/chunks/
 
 # Editor
 .vscode/

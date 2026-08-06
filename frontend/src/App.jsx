@@ -264,143 +264,83 @@ overflow:"hidden"
 
 
 
-        {/* HEADER */}
-
-<div
-
-style={{
-
-background:
-"linear-gradient(135deg, #004a8f, #0072bc)",
-
-color:"white",
-
-padding:"18px",
-
-display:"flex",
-
-alignItems:"center",
-
-justifyContent:"space-between",
-
-gap:"20px"
-
-}}
-
->
-
-<div
-
-style={{
-
-display:"flex",
-
-alignItems:"center",
-
-gap:"20px",
-
-flex:1
-
-}}
-
-></div>
-
-<img
-
-src="/logo kemendag.png"
-
-alt="Logo Kemendag"
-
-style={{
-
-width:"70px",
-
-height:"70px",
-
-objectFit:"cover",
-
-background:"white",
-
-borderRadius:"10px",
-
-padding:"0"
-
-}}
-
-/>
-
-
-<div>
-
-
-<h2
-
-style={{
-
-margin:0,
-
-fontSize:"20px",
-
-fontWeight:"700"
-
-}}
-
->
-
-AI Document Intelligence
-
-</h2>
-
-
-<p
-
-style={{
-
-margin:"5px 0 0",
-
-fontSize:"14px",
-
-opacity:0.9
-
-}}
-
->
-
-Document Intelligence System - Kemendag
-
-</p>
-
-
-</div>
-
-      <button
-
-style={{
-
-background:"rgba(255,255,255,0.15)",
-
-color:"white",
-
-border:"1px solid rgba(255,255,255,0.5)",
-
-padding:"10px 16px",
-
-borderRadius:"10px",
-
-cursor:"pointer",
-
-fontWeight:"600",
-
-fontSize:"14px"
-
-}}
-
->
-
-🗑 Clear Chat
-
-</button>
-
+             {/* HEADER */}
+        <div
+          style={{
+            background:
+              "linear-gradient(135deg, #004a8f, #0072bc)",
+            color: "white",
+            padding: "18px 32px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "20px"
+          }}
+        >
+
+          {/* Logo + Text */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "16px"
+            }}
+          >
+
+            <img
+              src="/logo kemendag.png"
+              alt="Logo Kemendag"
+              style={{
+                width: "70px",
+                height: "70px",
+                objectFit: "cover",
+                background: "white",
+                borderRadius: "10px",
+                padding: "0",
+                flexShrink: 0
+              }}
+            />
+
+            <div style={{ textAlign: "left" }}>
+
+              <h2
+                style={{
+                  margin: 0,
+                  fontSize: "20px",
+                  fontWeight: "700"
+                }}
+              >
+                AI Document Intelligence
+              </h2>
+
+              <p
+                style={{
+                  margin: "5px 0 0",
+                  fontSize: "14px",
+                  opacity: 0.9
+                }}
+              >
+                Document Intelligence System - Kemendag
+              </p>
+
+            </div>
+          </div>
+
+          {/* Button */}
+          <button
+            style={{
+              background: "rgba(255,255,255,0.15)",
+              color: "white",
+              border: "1px solid rgba(255,255,255,0.5)",
+              padding: "10px 16px",
+              borderRadius: "10px",
+              cursor: "pointer",
+              fontWeight: "600",
+              fontSize: "14px"
+            }}
+          >
+            🗑 Clear Chat
+          </button>
 
         </div>
 

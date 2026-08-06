@@ -4,6 +4,17 @@ Sistem **Retrieval-Augmented Generation (RAG)** untuk membantu pencarian dan tan
 
 ---
 
+Fitur Utama
+Upload dan pengelolaan dokumen PDF regulasi perdagangan
+OCR dan ekstraksi teks dari dokumen PDF
+Chunking dokumen untuk proses retrieval
+Penyimpanan embedding pada ChromaDB
+Pencarian konteks dokumen menggunakan RAG
+Antarmuka chatbot berbasis React + Vite
+Backend API menggunakan Node.js + Express
+
+---
+
 ## Teknologi yang Digunakan
 
 ### Backend
@@ -11,6 +22,7 @@ Sistem **Retrieval-Augmented Generation (RAG)** untuk membantu pencarian dan tan
 * Node.js
 * Express.js
 * ChromaDB
+* OpenRouter API
 * OCR Text Processing
 * PDF Parsing
 
@@ -28,13 +40,36 @@ Sistem **Retrieval-Augmented Generation (RAG)** untuk membantu pencarian dan tan
 
 ---
 
-## Struktur Proyek
+Struktur Proyek
+pkl-kemendag-ai-assistant/
+├── backend/
+│   ├── docs/
+│   ├── chunks/
+│   ├── routes/
+│   ├── services/
+│   ├── scripts/
+│   ├── utils/
+│   ├── index.js
+│   ├── ingest.js
+│   └── package.json
+├── frontend/
+├── docs/
+├── .gitignore
+└── README.md
 
-```
-backend/    → API dan pipeline RAG
-frontend/   → antarmuka pengguna React
-docs/       → dokumentasi dan aset proyek
-```
+---
+
+Konfigurasi Environment
+
+Buat file .env di dalam folder backend/ berdasarkan .env.example.
+
+Contoh konfigurasi:
+
+OPENROUTER_API_KEY=YOUR_OPENROUTER_API_KEY
+OPENROUTER_MODEL=openai/gpt-4o-mini
+PORT=3001
+CHROMA_URL=http://localhost:8000
+DOCS_PATH=./docs
 
 ---
 

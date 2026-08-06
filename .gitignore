@@ -1,19 +1,23 @@
-# dependencies
+# Dependencies
 node_modules/
+backend/node_modules/
+frontend/node_modules/
 
-# vector database / generated data
-chroma/
-backend/chunks/
-
-# zip dan file besar
-backend.zip
-
-# vscode
-.vscode/
-
-# macOS
-.DS_Store
-
-# environment
+# Environment
 .env
 backend/.env
+
+# Generated data
+backend/chroma/
+backend/chunks/
+
+# Editor
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# Backup
+*.zip
+structure.txt

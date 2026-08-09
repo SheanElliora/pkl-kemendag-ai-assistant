@@ -6,10 +6,20 @@ frontend/node_modules/
 # Environment
 .env
 backend/.env
+frontend/.env
+frontend/.env.local
+
+# Build output (frontend)
+frontend/dist/
 
 # Generated data
 backend/chroma/
 backend/chunks/
+backend/data/
+backend/uploads/
+backend/temp/
+backend/temp_ocr/
+backend/ocr_text/
 
 # Editor
 .vscode/

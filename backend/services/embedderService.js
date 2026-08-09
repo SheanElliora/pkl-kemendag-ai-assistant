@@ -1,33 +1,4 @@
-import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { pipeline } from "@xenova/transformers";
-
-
-// ==============================
-// Membagi text menjadi chunk
-// ==============================
-
-export async function splitText(text) {
-
-    const splitter = new RecursiveCharacterTextSplitter({
-
-        chunkSize: 1000,
-        chunkOverlap: 200
-
-    });
-
-
-    const chunks = await splitter.splitText(text);
-
-
-    console.log(
-        "Jumlah chunk:",
-        chunks.length
-    );
-
-
-    return chunks;
-
-}
 
 
 
@@ -51,7 +22,7 @@ async function getEmbedder() {
 
         embedder = await pipeline(
             "feature-extraction",
-            "Xenova/all-MiniLM-L6-v2"
+            "Xenova/paraphrase-multilingual-MiniLM-L12-v2"
         );
 
 

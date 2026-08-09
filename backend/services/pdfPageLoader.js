@@ -1,9 +1,7 @@
 import fs from "fs";
 import path from "path";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
-
-
-const DOCS_FOLDER = "./docs";
+import { DOCS_FOLDER } from "../config.js";
 
 
 export async function loadPDFWithPages(filename){

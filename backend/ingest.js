@@ -121,6 +121,9 @@ async function processDocuments(documents){
                     filename:
                     doc.filename,
 
+                    title:
+                    doc.title,
+
                     page:
                     chunk.page,
 

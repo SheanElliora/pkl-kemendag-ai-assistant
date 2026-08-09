@@ -1,8 +1,7 @@
 import fs from "fs";
 import path from "path";
 
-
-const CHUNK_FOLDER = "./chunks";
+import { CHUNK_FOLDER } from "../config.js";
 
 
 

@@ -5,6 +5,25 @@ import { createEmbedding } from "./embedderService.js";
 const client = new ChromaClient();
 
 
+// ============================================
+// Parameter retrieval (bisa di-tune di sini)
+//
+// MAX_CANDIDATES  : jumlah chunk yang dipakai
+//                   sebagai context jawaban.
+//                   Kecil = sitasi lebih sedikit &
+//                   fokus; besar = jangkauan lebih
+//                   luas tapi ada risiko halaman
+//                   kurang relevan ikut tampil.
+// DISTANCE_RATIO  : batas jarak adaptif = terbaik
+//                   * ratio. Naikkan = lebih longgar.
+// DISTANCE_OFFSET : batas minimum mutlak tambahan.
+// ============================================
+
+const MAX_CANDIDATES = 3;
+const DISTANCE_RATIO = 2.2;
+const DISTANCE_OFFSET = 0.2;
+
+
 
 export async function searchDocuments(question){
 
@@ -27,26 +46,8 @@ export async function searchDocuments(question){
 
     let searchQuery = question;
 
-
     const lowerQuestion =
     question.toLowerCase();
-
-
-
-    // Tambahan keyword untuk membantu pencarian jurnal
-    if(
-    lowerQuestion.includes("algoritma") ||
-    lowerQuestion.includes("model") ||
-    lowerQuestion.includes("machine learning") ||
-    lowerQuestion.includes("terbaik")
-){
-
-    searchQuery +=
-    " ARIMA SVR Prophet XGBoost LSTM best model selected prediction engine mean square error";
-
-}
-
-
 
     const queryVector =
     await createEmbedding(searchQuery);
@@ -202,21 +203,16 @@ export async function searchDocuments(question){
 
 
             // ==================================
-            // Threshold relevansi
-            // ==================================
-
-            if(distance > 1.2){
-
-
-                console.log(
-                    "Distance terlalu jauh:",
-                    distance
-                );
-
-
-                return;
-
-            }
+// Pemotongan relevansi dilakukan
+    // SETELAH ranking (lihat "Pemotongan
+    // adaptif" di bawah), karena skala jarak
+    // L2 berbeda antarjenis dokumen.
+    //
+    // Jumlah akhir dibatasi MAX_CANDIDATES
+    // (3) agar sitasi lebih fokus. Untuk
+    // cakupan yang lebih luas, naikkan,
+    // misalnya ke 5.
+    // ==================================
 
 
 
@@ -337,10 +333,49 @@ export async function searchDocuments(question){
 
     // ==================================
     // Ambil context terbaik
+    //
+    // PEMOTONGAN ADAPTIF:
+    // Skala jarak L2 (embedding ternormalisasi) sangat
+    // berbeda antardokumen: laporan pasar ~0.3-0.6,
+    // sedangkan jurnal akademik ~0.9-1.2. Karena itu kita
+    // TIDAK memakai angka absolut, melainkan membandingkan
+    // tiap kandidat dengan jarak TERBAIK (paling relevan).
+    // Kandidat yang jaraknya melampaui batas relatif
+    // dianggap tidak relevan dan dibuang.
     // ==================================
 
+    const bestDistance =
+    candidates.length > 0
+        ? candidates[0].distance
+        : 0;
+
+    const maxAllowedDistance =
+    bestDistance * DISTANCE_RATIO + DISTANCE_OFFSET;
+
     const finalCandidates =
-    candidates.slice(0,5);
+    candidates
+    .filter(item=>{
+
+        if(
+            bestDistance > 0 &&
+            item.distance > maxAllowedDistance
+        ){
+
+            console.log(
+                "Dibuang (jarak jauh relatif):",
+                item.distance,
+                "> batas",
+                maxAllowedDistance
+            );
+
+            return false;
+
+        }
+
+        return true;
+
+    })
+    .slice(0, MAX_CANDIDATES);
 
 
 

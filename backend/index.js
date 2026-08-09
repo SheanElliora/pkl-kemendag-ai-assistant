@@ -1,81 +1,57 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
-
 import multer from "multer";
-import path from "path";
-import fs from "fs";
 
-import { ingestDocument } from "./ingest.js";
-import { askRAG } from "./services/ragService.js";
-import { ingestSinglePDF } from "./services/ingestService.js";
+import authRouter from "./routes/auth.js";
+import cmsRouter from "./routes/cms.js";
+import chatRouter from "./routes/chat.js";
+import { CORS_ORIGINS } from "./config.js";
+import { ensureDefaultAdmin } from "./services/userService.js";
+import { ensureFolders } from "./services/fileService.js";
+import { MODEL_CATALOG } from "./services/modelCatalog.js";
 
 
 const app = express();
 
-// ======================================
-// Folder Upload
-// ======================================
-
-const DOCS_FOLDER = "./docs";
-
-if (!fs.existsSync(DOCS_FOLDER)) {
-
-    fs.mkdirSync(DOCS_FOLDER);
-
-}
 
 // ======================================
-// Konfigurasi Upload PDF
+// Folder upload & dokumen dibuat otomatis
+// (lokasi diatur di config.js)
 // ======================================
 
-const storage = multer.diskStorage({
+ensureFolders();
 
-    destination: function(req, file, cb){
-
-        cb(null, DOCS_FOLDER);
-
-    },
-
-
-    filename: function(req, file, cb){
-
-        cb(null, file.originalname);
-
-    }
-
-});
-
-
-const upload = multer({
-
-    storage: storage,
-
-    fileFilter: function(req, file, cb){
-
-
-        if(file.mimetype === "application/pdf"){
-
-            cb(null, true);
-
-        }
-        else{
-
-            cb(
-                new Error("File harus PDF"),
-                false
-            );
-
-        }
-
-
-    }
-
-});
-
-app.use(cors());
+// CORS dibatasi ke origin yang didaftarkan
+// (daftar di .env: CORS_ORIGINS)
+app.use(cors({
+    origin: CORS_ORIGINS
+}));
 
 app.use(express.json());
+
+
+// ==============================
+// Autentikasi CMS (login / me)
+// ==============================
+
+app.use("/api/auth", authRouter);
+
+
+// ==============================
+// CMS (upload, daftar file,
+// approve/reject, user, log)
+// Semua endpoint wajib login.
+// ==============================
+
+app.use("/api/cms", cmsRouter);
+
+
+// ==============================
+// Chat RAG (publik)
+// ==============================
+
+app.use("/api/chat", chatRouter);
 
 
 // ==============================
@@ -88,174 +64,6 @@ console.log(
         ? "TERBACA"
         : "TIDAK TERBACA"
 );
-
-// ==============================
-// Endpoint Upload PDF
-// ==============================
-
-app.post(
-    "/api/upload",
-    upload.single("file"),
-    async (req, res) => {
-
-
-        try {
-
-
-            if(!req.file){
-
-                return res.status(400).json({
-
-                    error:
-                    "File PDF belum dikirim."
-
-                });
-
-            }
-
-
-            console.log(
-    "File diterima:",
-    req.file.filename
-);
-
-console.log(
-    "Lokasi file:",
-    req.file.path
-);
-
-
-            console.log(
-    "Mulai proses ingest..."
-);
-
-
-await ingestDocument(
-    req.file.filename
-);
-
-
-
-res.json({
-
-    message:
-    "Upload dan proses dokumen berhasil.",
-
-    filename:
-    req.file.filename
-
-});
-
-
-        }
-        catch(error){
-
-
-            console.error(error);
-
-
-            res.status(500).json({
-
-                error:
-                error.message
-
-            });
-
-
-        }
-
-
-    }
-);
-
-// ==============================
-// Endpoint Chat RAG
-// ==============================
-
-app.post("/api/chat", async (req, res) => {
-
-
-    console.log("\n==============================");
-    console.log("Request diterima");
-
-
-    const { message } = req.body;
-
-
-    if (!message) {
-
-        return res.status(400).json({
-
-            error:
-            "Message tidak boleh kosong."
-
-        });
-
-    }
-
-
-    console.log("Pertanyaan:");
-    console.log(message);
-
-
-
-    try {
-
-
-        console.log("Memanggil askRAG...");
-
-        const result = await askRAG(message);
-
-        console.log("askRAG selesai.");
-
-        console.log(result);
-        
-
-
-        console.log(
-            "Jawaban berhasil dibuat."
-        );
-
-
-
-        res.json({
-
-            reply:
-            result.answer,
-
-
-            sources:
-            result.sources
-
-        });
-
-
-
-    } catch (err) {
-
-
-        console.error("\n===== ERROR =====");
-
-        console.error(err);
-
-
-
-        res.status(500).json({
-
-            error:
-            "Gagal menjalankan RAG.",
-
-            detail:
-            err.message
-
-        });
-
-
-    }
-
-
-});
-
 
 
 // ==============================
@@ -276,6 +84,51 @@ app.get("/api/health", (req, res) => {
 });
 
 
+// ==============================
+// Daftar Model (untuk dropdown)
+// ==============================
+
+app.get("/api/models", (req, res) => {
+
+    res.json({
+
+        default: process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini",
+
+        models: MODEL_CATALOG
+
+    });
+
+});
+
+
+// ==============================
+// Error Handler (multer: batas ukuran dsb.)
+// ==============================
+
+app.use((err, req, res, next) => {
+
+    if (err instanceof multer.MulterError) {
+
+        if (err.code === "LIMIT_FILE_SIZE") {
+
+            return res.status(413).json({
+                error: "Ukuran file melebihi batas 20 MB"
+            });
+
+        }
+
+        return res.status(400).json({
+            error: err.message
+        });
+
+    }
+
+    res.status(err.status || 500).json({
+        error: err.message || "Terjadi kesalahan server"
+    });
+
+});
+
 
 // ==============================
 // Server
@@ -283,6 +136,11 @@ app.get("/api/health", (req, res) => {
 
 const PORT =
 process.env.PORT || 3001;
+
+
+// Pastikan user admin default tersedia
+// sebelum server menerima permintaan.
+ensureDefaultAdmin();
 
 
 

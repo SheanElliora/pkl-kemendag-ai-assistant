@@ -64,6 +64,8 @@ export async function saveVector(chunk, vector) {
 
                 filename: chunk.filename,
 
+                title: chunk.title ?? "",
+
                 page: chunk.page
 
             }

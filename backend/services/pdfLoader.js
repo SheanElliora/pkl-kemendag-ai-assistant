@@ -4,15 +4,27 @@ import path from "path";
 import { pdfToTextOCR } from "./ocrService.js";
 import { createChunks } from "./chunkService.js";
 import { cleanText } from "./textCleaner.js";
+import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
+import { loadPDFWithPages } from "./pdfPageLoader.js";
 
 import {
     saveChunks,
     loadChunks
 } from "./chunkStorageService.js";
+import {
+    DOCS_FOLDER,
+    OCR_FOLDER
+} from "../config.js";
 
+// =====================================
+// Ambang minimum karakter untuk dianggap
+// PDF berisi teks digital (selectable text).
+// Bila total teks yang diekstrak pdfjs
+// kurang dari ini, PDF dianggap hasil scan
+// dan diteruskan ke OCR.
+// =====================================
 
-const OCR_FOLDER = "./ocr_text";
-const DOCS_FOLDER = "./docs";
+const MIN_DIGITAL_CHARS = 500;
 
 
 
@@ -69,6 +81,55 @@ export async function loadSinglePDF(file){
 
 
 // =====================================
+// Ambil judul dokumen dari metadata PDF
+// =====================================
+
+async function getPdfTitle(pdfPath){
+
+    try {
+
+        const data =
+        new Uint8Array(
+            fs.readFileSync(pdfPath)
+        );
+
+        const pdf =
+        await pdfjsLib.getDocument({
+            data
+        }).promise;
+
+        const meta =
+        await pdf.getMetadata();
+
+        const title =
+        meta?.info?.Title;
+
+        if(
+            typeof title === "string" &&
+            title.trim()
+        ){
+
+            return title.trim();
+
+        }
+
+    }
+    catch(error){
+
+        console.log(
+            "Gagal membaca judul PDF:",
+            error.message
+        );
+
+    }
+
+    return null;
+
+}
+
+
+
+// =====================================
 // Fungsi utama proses PDF
 // dipakai oleh dua fungsi di atas
 // =====================================
@@ -99,6 +160,17 @@ async function processPDF(file){
     path.join(
         OCR_FOLDER,
         txtName
+    );
+
+    const pdfPath =
+    path.join(
+        DOCS_FOLDER,
+        file
+    );
+
+    const title =
+    await getPdfTitle(
+        pdfPath
     );
 
 
@@ -132,7 +204,7 @@ async function processPDF(file){
         pages =
         text
         .split(
-            /-- HALAMAN \d+ ---/
+            /--- HALAMAN \d+ ---/
         )
         .filter(
             page =>
@@ -158,43 +230,134 @@ async function processPDF(file){
 
 
         console.log(
-            "TXT belum ada, melakukan OCR..."
+            "TXT belum ada, mencoba ekstraksi teks digital..."
         );
 
 
+        // ======================================
+        // 1) Coba ekstraksi teks digital (pdfjs)
+        //    Lebih cepat & akurat untuk PDF yang
+        //    memang berisi teks (selectable text).
+        // ======================================
 
-        const pdfPath =
-        path.join(
-            DOCS_FOLDER,
-            file
+        let extractedPages = [];
+
+
+        try {
+
+            extractedPages =
+            await loadPDFWithPages(
+                file
+            );
+
+
+        }
+        catch(error){
+
+
+            console.log(
+                "Ekstraksi teks digital gagal:",
+                error.message
+            );
+
+
+            extractedPages = [];
+
+
+        }
+
+
+        const totalChars =
+        extractedPages.reduce(
+            (sum, page) =>
+            sum + page.text.length,
+            0
         );
 
 
-
-        const result =
-        await pdfToTextOCR(
-            pdfPath
-        );
+        if(totalChars >= MIN_DIGITAL_CHARS){
 
 
-
-        pages =
-        result.pages.map(
-            page=>({
-
-
-                page:
-                page.page,
+            console.log(
+                `Teks digital ditemukan (${totalChars} karakter), tanpa OCR`
+            );
 
 
-                text:
-                cleanText(
-                    page.text
-                )
+            pages =
+            extractedPages.map(
+                page=>({
+
+                    page:
+                    page.page,
+
+                    text:
+                    cleanText(
+                        page.text
+                    )
+
+                })
+            );
 
 
-            })
-        );
+            // Simpan cache TXT agar tidak perlu
+            // diekstrak ulang pada ingest berikutnya.
+            // Format sama dengan hasil OCR agar
+            // cabang "TXT ditemukan" bisa membacanya.
+            const txtContent =
+            extractedPages
+            .map(
+                page =>
+                `\n\n--- HALAMAN ${page.page} ---\n\n` +
+                page.text
+            )
+            .join("");
+
+
+            fs.writeFileSync(
+                txtPath,
+                txtContent,
+                "utf8"
+            );
+
+
+            console.log(
+                "TXT hasil ekstraksi tersimpan:",
+                txtName
+            );
+
+
+        }
+        else{
+
+
+            console.log(
+                "Teks digital kosong, beralih ke OCR (dokumen scan)..."
+            );
+
+
+            const result =
+            await pdfToTextOCR(
+                pdfPath
+            );
+
+
+            pages =
+            result.pages.map(
+                page=>({
+
+                    page:
+                    page.page,
+
+                    text:
+                    cleanText(
+                        page.text
+                    )
+
+                })
+            );
+
+
+        }
 
 
     }
@@ -261,6 +424,8 @@ async function processPDF(file){
     return {
 
         filename:file,
+
+        title:title,
 
         chunks:chunks
 

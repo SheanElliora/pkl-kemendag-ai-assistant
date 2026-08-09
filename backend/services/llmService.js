@@ -6,7 +6,9 @@ const client = new OpenAI({
     apiKey: process.env.OPENROUTER_API_KEY,
 
     baseURL:
-    "https://openrouter.ai/api/v1"
+    "https://openrouter.ai/api/v1",
+
+    timeout: 60000
 
 });
 
@@ -14,7 +16,8 @@ const client = new OpenAI({
 
 export async function generateAnswer(
     question,
-    context
+    context,
+    model
 ){
 
 
@@ -22,23 +25,21 @@ const prompt = `
 
 Anda adalah AI Assistant Sistem Informasi Perdagangan Kemendag.
 
-Tugas Anda adalah menjawab pertanyaan HANYA berdasarkan CONTEXT yang diberikan.
+Tugas Anda adalah menjawab pertanyaan berdasarkan CONTEXT yang diberikan.
 
 ATURAN WAJIB:
 
-1. Gunakan hanya informasi yang terdapat dalam CONTEXT.
+1. Jawab HANYA berdasarkan informasi dalam CONTEXT. Jangan menambah pengetahuan luar.
 
-2. Jangan menggunakan pengetahuan umum, pengalaman pribadi, atau informasi dari luar CONTEXT.
+2. Jika CONTEXT memuat informasi yang relevan (meskipun tersebar atau menggunakan istilah yang berbeda), gunakan dan rangkum dengan jelas.
 
-3. Jangan menebak atau mengisi informasi yang tidak tertulis dalam CONTEXT.
+3. Jika CONTEXT memuat topik yang berhubungan tapi tidak persis menjawab, tetap bantu dengan POIN-POIN yang tersedia lalu sebutkan keterbatasannya.
 
-4. Jika jawaban dapat disimpulkan secara wajar dari beberapa bagian CONTEXT, buatlah rangkuman yang jelas.
+4. Abaikan bagian yang hanya berisi daftar isi, daftar gambar, daftar tabel, nomor halaman, atau hasil OCR yang tidak bermakna.
 
-5. Abaikan bagian yang hanya berisi daftar isi, daftar gambar, daftar tabel, nomor halaman, atau hasil OCR yang tidak bermakna.
+5. Jangan terlalu cepat menyimpulkan bahwa informasi tidak ada. Periksa kata kunci yang serupa terlebih dahulu.
 
-6. Jika CONTEXT memuat jawaban, WAJIB jawab berdasarkan informasi tersebut.
-
-7. Jika CONTEXT tidak memuat informasi yang cukup untuk menjawab pertanyaan, jawab tepat dengan kalimat berikut:
+6. Jika benar-benar tidak ada satupun bagian CONTEXT yang berkaitan dengan pertanyaan, jawab tepat dengan kalimat:
 
 "Informasi tersebut tidak ditemukan dalam dokumen yang tersedia."
 
@@ -49,7 +50,6 @@ FORMAT JAWABAN:
 - Jangan menyebut kata "CONTEXT".
 - Jangan mengatakan "berdasarkan pengetahuan saya".
 - Jangan memberikan saran di luar isi dokumen.
-- Jangan menghubungi instansi atau memberikan rekomendasi yang tidak ada di dokumen.
 - Jika pertanyaan menanyakan "siapa", sebutkan nama pihaknya terlebih dahulu lalu jelaskan.
 - Jika pertanyaan menanyakan "apa", jelaskan poin-poin pentingnya.
 
@@ -71,10 +71,14 @@ const completion =
 await client.chat.completions.create({
 
     model:
-    "meta-llama/llama-3.1-8b-instruct",
+    model ||
+    process.env.OPENROUTER_MODEL ||
+    "openai/gpt-4o-mini",
 
 
     temperature:0.2,
+
+    max_tokens:1024,
 
 
     messages:[

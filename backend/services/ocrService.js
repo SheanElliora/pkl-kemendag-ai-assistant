@@ -2,6 +2,7 @@ import { exec } from "child_process";
 import fs from "fs";
 import path from "path";
 import { promisify } from "util";
+import { OCR_FOLDER } from "../config.js";
 
 const execAsync = promisify(exec);
 
@@ -133,7 +134,7 @@ export async function pdfToTextOCR(pdfPath) {
 
 
     const outputFolder =
-        "./ocr_text";
+        OCR_FOLDER;
 
 
     if(!fs.existsSync(outputFolder)){

@@ -2,7 +2,26 @@ import { searchDocuments } from "./retrieverService.js";
 import { generateAnswer } from "./llmService.js";
 
 
-export async function askRAG(question){
+function getDisplayName(meta){
+
+    if(
+        meta.title &&
+        meta.title.trim()
+    ){
+
+        return meta.title;
+
+    }
+
+    return meta.filename;
+
+}
+
+
+export async function askRAG(
+    question,
+    model
+){
 
 
     console.log("\n======================");
@@ -64,12 +83,15 @@ export async function askRAG(question){
             const meta =
             result.metadata[index];
 
+            const displayName =
+            getDisplayName(meta);
+
 
 
             context += `
 
 FILE:
-${meta.filename}
+${displayName}
 
 HALAMAN:
 ${meta.page}
@@ -90,6 +112,9 @@ ${doc}
 
     filename:
     meta.filename,
+
+    title:
+    meta.title ?? "",
 
     page:
     meta.page,
@@ -125,7 +150,9 @@ ${doc}
 
         question,
 
-        context
+        context,
+
+        model
 
     );
 
@@ -139,13 +166,42 @@ ${doc}
     let finalSources = sources;
 
 
-const noInformationFound =
-answer.toLowerCase().includes("tidak ditemukan") ||
-answer.toLowerCase().includes("tidak terdapat informasi") ||
-answer.toLowerCase().includes("tidak tersedia");
+// ==============================================
+// Deteksi jawaban "informasi tidak ditemukan"
+//
+// Sebelumnya: memakai substring (mis. cek "tidak
+// tersedia"), sehingga jawaban SAH yang kebetulan
+// memuat kata itu pun sitasinya ikut dihapus.
+//
+// Sekarang: dibandingkan dengan KALIMAT BAKU yang
+// didefinisikan di prompt LLM (llmService.js, aturan
+// 6). Hanya jika jawaban LLM persis kalimat itu,
+// sistem menganggap tidak ada informasi dan
+// mengosongkan sitasi. Selain itu, sitasi tetap
+// dipertahankan.
+// ==============================================
+
+const NOT_FOUND_SENTENCE =
+"Informasi tersebut tidak ditemukan dalam dokumen yang tersedia";
 
 
-if(noInformationFound){
+function isNotFoundAnswer(answer){
+
+
+    const normalized =
+    answer
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\.*$/, "");
+
+
+    return normalized === NOT_FOUND_SENTENCE;
+
+
+}
+
+
+if(isNotFoundAnswer(answer)){
 
     finalSources = [];
 

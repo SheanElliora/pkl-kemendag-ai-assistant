@@ -4,6 +4,45 @@ import { api, getUser, clearSession, fmtDate } from "../api.js";
 
 const MAX_SIZE = 20 * 1024 * 1024; // 20 MB, sama dengan backend
 
+// ---- Modal yang dipakai untuk alasan penolakan & konfirmasi hapus ----
+function Modal({ title, onClose, onConfirm, children, confirmLabel = "Simpan", confirmColor = "#16a75c" }) {
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(15,23,42,0.45)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 1000,
+        animation: "fadeIn 0.2s ease-out"
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="pop-in"
+        style={{
+          width: "92%",
+          maxWidth: 460,
+          background: "#fff",
+          borderRadius: 16,
+          boxShadow: "0 20px 50px rgba(0,0,0,0.25)",
+          padding: 24
+        }}
+      >
+        <h3 style={{ margin: "0 0 16px", fontSize: 17, color: "#1e293b" }}>{title}</h3>
+        {children}
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 20 }}>
+          <button onClick={onClose} style={smallBtn("#64748b")}>Batal</button>
+          <button onClick={onConfirm} style={smallBtn(confirmColor)}>{confirmLabel}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function CmsPage() {
 
   const navigate = useNavigate();
@@ -16,6 +55,7 @@ export default function CmsPage() {
 
   const [pending, setPending] = useState([]);
   const [history, setHistory] = useState([]);
+  const [historyFilter, setHistoryFilter] = useState("all");
 
   const [users, setUsers] = useState([]);
   const [newUser, setNewUser] = useState({ username: "", password: "", role: "maintainer" });
@@ -23,6 +63,10 @@ export default function CmsPage() {
 
   const [logs, setLogs] = useState([]);
   const [error, setError] = useState("");
+
+  const [rejectTarget, setRejectTarget] = useState(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const isAdmin = user?.role === "admin";
 
@@ -107,53 +151,42 @@ export default function CmsPage() {
 
   // ---- Persetujuan admin ----
 
-  async function decide(id, action) {
-    let reason;
-    if (action === "reject") {
-      reason = window.prompt("Alasan penolakan:", "");
-      if (reason == null) return; // dibatalkan
-    }
+  async function approve(id) {
     try {
-      await api(`/api/cms/files/${id}/${action}`, {
-        method: "POST",
-        body: action === "reject" ? { reason } : {}
-      });
+      await api(`/api/cms/files/${id}/approve`, { method: "POST", body: {} });
       refreshApproval();
     } catch (err) {
       setError(err.message);
+      refreshApproval();
     }
   }
 
-  // ---- Kelola user ----
+  // Buka modal penolakan (bukan window.prompt)
+  function openReject(file) {
+    setRejectTarget(file);
+    setRejectReason("");
+  }
 
-  async function createUser(e) {
-    e.preventDefault();
-    setUserMsg("");
-    setError("");
+  async function confirmReject() {
+    if (!rejectTarget) return;
+    const id = rejectTarget.id;
     try {
-      const data = await api("/api/cms/users", {
+      await api(`/api/cms/files/${id}/reject`, {
         method: "POST",
-        body: {
-          username: newUser.username.trim(),
-          password: newUser.password,
-          role: newUser.role
-        }
+        body: { reason: rejectReason }
       });
-      setUserMsg(data.message || "User dibuat.");
-      setNewUser({ username: "", password: "", role: "maintainer" });
-      refreshUsers();
+      setRejectTarget(null);
+      refreshApproval();
     } catch (err) {
       setError(err.message);
+      refreshApproval();
     }
   }
 
   async function changeRole(id, role) {
     setError("");
     try {
-      await api(`/api/cms/users/${id}`, {
-        method: "PUT",
-        body: { role }
-      });
+      await api(`/api/cms/users/${id}`, { method: "PUT", body: { role } });
       refreshUsers();
     } catch (err) {
       setError(err.message);
@@ -161,14 +194,17 @@ export default function CmsPage() {
     }
   }
 
-  async function removeUser(id, username) {
-    if (!window.confirm(`Hapus user "${username}"?`)) return;
+  async function confirmRemoveUser() {
+    const id = deleteTarget;
+    const username = users.find((u) => u.id === id)?.username || "";
+    setDeleteTarget(null);
     setError("");
     try {
       await api(`/api/cms/users/${id}`, { method: "DELETE" });
       refreshUsers();
     } catch (err) {
       setError(err.message);
+      refreshUsers();
     }
   }
 
@@ -177,20 +213,24 @@ export default function CmsPage() {
     navigate("/cms/login");
   }
 
-  // ==== Render ====
+  // ---- Render ----
+
+  const filteredHistory = historyFilter === "all"
+    ? history
+    : history.filter((f) => f.status === historyFilter);
 
   return (
     <div
       style={{
         minHeight: "100vh",
-        background: "linear-gradient(180deg,#eef5fb,#ffffff)",
+        background: "linear-gradient(180deg,#f6f7f9,#ffffff)",
         fontFamily: '"Inter", sans-serif'
       }}
     >
       {/* HEADER */}
       <div
         style={{
-          background: "linear-gradient(135deg, #004a8f, #0072bc)",
+          background: "linear-gradient(135deg, #001845, #00439c)",
           color: "white",
           padding: "16px 32px",
           display: "flex",
@@ -210,7 +250,7 @@ export default function CmsPage() {
         </div>
       </div>
 
-      <div style={{ maxWidth: 1000, margin: "auto", padding: "24px 20px" }}>
+      <div style={{ maxWidth: 1000, margin: "auto", padding: "24px 20px" }} className="fade-in">
         {/* TABS */}
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
           {!isAdmin && (
@@ -230,6 +270,12 @@ export default function CmsPage() {
 
         {error && (
           <div style={errorStyle}>{error}</div>
+        )}
+
+        {uploadMsg && tab === "upload" && (
+          <div style={{ ...okStyle, background: "#dcfce7", padding: "12px 16px", borderRadius: 10, marginBottom: 16 }}>
+            {uploadMsg}
+          </div>
         )}
 
         {/* ===== UPLOAD (maintainer) ===== */}
@@ -259,7 +305,6 @@ export default function CmsPage() {
                 📄 {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
               </p>
             )}
-            {uploadMsg && <p style={okStyle}>{uploadMsg}</p>}
           </div>
         )}
 
@@ -272,7 +317,7 @@ export default function CmsPage() {
             <div style={cardStyle}>
               <h3 style={h3Style}>Menunggu Persetujuan ({pending.length})</h3>
               {pending.length === 0 ? (
-                <p style={{ color: "#64748b", fontSize: 14 }}>Tidak ada dokumen menunggu.</p>
+                <EmptyState icon="📭" text="Tidak ada dokumen menunggu persetujuan." />
               ) : (
                 <table style={tableStyle}>
                   <thead>
@@ -287,8 +332,8 @@ export default function CmsPage() {
                         <Td>{f.uploadedBy}</Td>
                         <Td>{fmtDate(f.uploadedAt)}</Td>
                         <Td>
-                          <button onClick={() => decide(f.id, "approve")} style={smallBtn("#16a34a")}>✔ Terima</button>
-                          <button onClick={() => decide(f.id, "reject")} style={smallBtn("#dc2626")}>✖ Tolak</button>
+                          <button onClick={() => approve(f.id)} style={smallBtn("#16a75c")} title="Terima & proses dokumen">✔ Terima</button>
+                          <button onClick={() => openReject(f)} style={smallBtn("#ff1c3e")} title="Tolak dokumen">✖ Tolak</button>
                         </Td>
                       </tr>
                     ))}
@@ -297,11 +342,32 @@ export default function CmsPage() {
               )}
             </div>
 
-            <FileTable
-              rows={history}
-              empty="Belum ada dokumen diproses."
-              title="Riwayat Pemrosesan"
-            />
+            <div style={cardStyle}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 14 }}>
+                <h3 style={{ ...h3Style, margin: 0 }}>Riwayat Pemrosesan</h3>
+                <div style={{ display: "flex", gap: 6 }}>
+                  {[["all", "Semua"], ["approved", "Disetujui"], ["rejected", "Ditolak"], ["error", "Error"]].map(([val, label]) => (
+                    <button
+                      key={val}
+                      onClick={() => setHistoryFilter(val)}
+                      style={{
+                        padding: "7px 14px",
+                        borderRadius: 20,
+                        border: historyFilter === val ? "none" : "1px solid #cbd5e1",
+                        background: historyFilter === val ? "#00439c" : "#fff",
+                        color: historyFilter === val ? "#fff" : "#334155",
+                        cursor: "pointer",
+                        fontSize: 13,
+                        fontWeight: 600
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <FileTable rows={filteredHistory} empty="Tidak ada riwayat." />
+            </div>
           </>
         )}
 
@@ -310,7 +376,7 @@ export default function CmsPage() {
           <>
             <div style={cardStyle}>
               <h3 style={h3Style}>Tambah User</h3>
-              <form onSubmit={createUser} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <form onSubmit={(e) => { e.preventDefault(); createUser(); }} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                 <input
                   placeholder="Username"
                   value={newUser.username}
@@ -339,36 +405,46 @@ export default function CmsPage() {
 
             <div style={cardStyle}>
               <h3 style={h3Style}>Daftar User</h3>
-              <table style={tableStyle}>
-                <thead>
-                  <tr>
-                    <Th>Username</Th><Th>Role</Th><Th>Aksi</Th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map((u) => (
-                    <tr key={u.id}>
-                      <Td>{u.username}</Td>
-                      <Td>
-                        <select
-                          value={u.role}
-                          disabled={u.id === user.id}
-                          onChange={(e) => changeRole(u.id, e.target.value)}
-                          style={inputStyle}
-                        >
-                          <option value="maintainer">Maintainer</option>
-                          <option value="admin">Admin</option>
-                        </select>
-                      </Td>
-                      <Td>
-                        {u.id !== user.id && (
-                          <button onClick={() => removeUser(u.id, u.username)} style={smallBtn("#dc2626")}>Hapus</button>
-                        )}
-                      </Td>
+              {users.length === 0 ? (
+                <EmptyState icon="👥" text="Belum ada user." />
+              ) : (
+                <table style={tableStyle}>
+                  <thead>
+                    <tr>
+                      <Th>Username</Th><Th>Role</Th><Th>Aksi</Th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {users.map((u) => (
+                      <tr key={u.id}>
+                        <Td>{u.username}</Td>
+                        <Td>
+                          <select
+                            value={u.role}
+                            disabled={u.id === user.id}
+                            onChange={(e) => changeRole(u.id, e.target.value)}
+                            style={inputStyle}
+                          >
+                            <option value="maintainer">Maintainer</option>
+                            <option value="admin">Admin</option>
+                          </select>
+                        </Td>
+                        <Td>
+                          {u.id !== user.id && (
+                            <button
+                              onClick={() => setDeleteTarget(u.id)}
+                              style={smallBtn("#ff1c3e")}
+                              title={`Hapus user ${u.username}`}
+                            >
+                              Hapus
+                            </button>
+                          )}
+                        </Td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           </>
         )}
@@ -378,7 +454,7 @@ export default function CmsPage() {
           <div style={cardStyle}>
             <h3 style={h3Style}>Log Login</h3>
             {logs.length === 0 ? (
-              <p style={{ color: "#64748b", fontSize: 14 }}>Belum ada aktivitas login.</p>
+              <EmptyState icon="📜" text="Belum ada aktivitas login." />
             ) : (
               <table style={tableStyle}>
                 <thead>
@@ -401,8 +477,76 @@ export default function CmsPage() {
           </div>
         )}
       </div>
+
+      {/* ===== MODAL: Alasan Penolakan ===== */}
+      {rejectTarget && (
+        <Modal
+          title={`Tolak dokumen "${rejectTarget.originalName}"?`}
+          onClose={() => setRejectTarget(null)}
+          onConfirm={confirmReject}
+          confirmLabel="Tolak Dokumen"
+          confirmColor="#ff1c3e"
+        >
+          <p style={{ margin: "0 0 12px", fontSize: 14, color: "#475569" }}>
+            Alasan penolakan akan dicatat dan ditampilkan kepada pengunggah.
+          </p>
+          <textarea
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            placeholder="Tulis alasan penolakan (opsional)..."
+            rows={3}
+            style={{
+              width: "100%",
+              boxSizing: "border-box",
+              padding: "12px",
+              borderRadius: 10,
+              border: "1px solid #cbd5e1",
+              fontSize: 14,
+              resize: "vertical",
+              outline: "none",
+              fontFamily: 'inherit'
+            }}
+          />
+        </Modal>
+      )}
+
+      {/* ===== MODAL: Konfirmasi Hapus User ===== */}
+      {deleteTarget && (
+        <Modal
+          title={`Hapus user "${users.find((u) => u.id === deleteTarget)?.username || ""}"?`}
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={confirmRemoveUser}
+          confirmLabel="Ya, Hapus"
+          confirmColor="#ff1c3e"
+        >
+          <p style={{ margin: 0, fontSize: 14, color: "#475569" }}>
+            Tindakan ini tidak dapat dibatalkan. User tidak akan bisa login lagi.
+          </p>
+        </Modal>
+      )}
     </div>
   );
+
+  // ---- Fungsi tambah user (dibutuhkan submit handler) ----
+  async function createUser() {
+    setUserMsg("");
+    setError("");
+    try {
+      const data = await api("/api/cms/users", {
+        method: "POST",
+        body: {
+          username: newUser.username.trim(),
+          password: newUser.password,
+          role: newUser.role
+        }
+      });
+      setUserMsg(data.message || "User dibuat.");
+      setNewUser({ username: "", password: "", role: "maintainer" });
+      refreshUsers();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
 }
 
 // ---- Komponen kecil styling (agar JSX di atas ringkas) ----
@@ -415,7 +559,7 @@ function TabBtn({ active, onClick, children }) {
         padding: "10px 16px",
         borderRadius: 10,
         border: active ? "none" : "1px solid #cbd5e1",
-        background: active ? "#004a8f" : "#fff",
+        background: active ? "#00439c" : "#fff",
         color: active ? "#fff" : "#334155",
         fontWeight: 600,
         fontSize: 14,
@@ -427,12 +571,21 @@ function TabBtn({ active, onClick, children }) {
   );
 }
 
+function EmptyState({ icon, text }) {
+  return (
+    <div style={{ textAlign: "center", padding: "30px 10px", color: "#94a3b8" }} className="fade-in">
+      <div style={{ fontSize: 34, marginBottom: 8 }}>{icon}</div>
+      <div style={{ fontSize: 14 }}>{text}</div>
+    </div>
+  );
+}
+
 function FileTable({ rows, empty, title }) {
   return (
     <div style={cardStyle}>
       {title && <h3 style={h3Style}>{title}</h3>}
       {rows.length === 0 ? (
-        <p style={{ color: "#64748b", fontSize: 14 }}>{empty}</p>
+        <EmptyState icon="📄" text={empty} />
       ) : (
         <table style={tableStyle}>
           <thead>
@@ -446,11 +599,11 @@ function FileTable({ rows, empty, title }) {
                 <Td>📄 {f.originalName}</Td>
                 <Td>
                   <span style={statusBadge[f.status] || statusBadge.pending}>
-                    {f.status === "pending" ? "Menunggu" : f.status === "approved" ? "Disetujui" : "Ditolak"}
+                    {f.status === "pending" ? "Menunggu" : f.status === "approved" ? "Disetujui" : f.status === "error" ? "Gagal" : "Ditolak"}
                   </span>
                 </Td>
                 <Td>{fmtDate(f.uploadedAt)}</Td>
-                <Td>{f.rejectReason || "-"}</Td>
+                <Td>{f.rejectReason || (f.error ? f.error.slice(0, 60) + "…" : "-")}</Td>
               </tr>
             ))}
           </tbody>
@@ -474,16 +627,18 @@ const inputStyle = {
   border: "1px solid #cbd5e1",
   fontSize: 14,
   outline: "none",
-  boxSizing: "border-box"
+  boxSizing: "border-box",
+  fontFamily: 'inherit'
 };
 const primaryBtn = {
-  background: "#004a8f",
+  background: "#00439c",
   color: "#fff",
   border: "none",
   padding: "0 20px",
   borderRadius: 10,
   cursor: "pointer",
-  fontWeight: 600
+  fontWeight: 600,
+  fontFamily: 'inherit'
 };
 const headerBtn = {
   background: "rgba(255,255,255,0.15)",
@@ -493,7 +648,8 @@ const headerBtn = {
   borderRadius: 10,
   cursor: "pointer",
   fontWeight: 600,
-  fontSize: 13
+  fontSize: 13,
+  fontFamily: 'inherit'
 };
 const errorStyle = {
   background: "#fee2e2",
@@ -503,7 +659,7 @@ const errorStyle = {
   fontSize: 14,
   marginBottom: 16
 };
-const okStyle = { fontSize: 14, color: "#16a34a", fontWeight: 600, marginBottom: 0 };
+const okStyle = { fontSize: 14, color: "#16a75c", fontWeight: 600, marginBottom: 10 };
 const tableStyle = { width: "100%", borderCollapse: "collapse", fontSize: 14 };
 function Th({ children }) {
   return <th style={thStyle}>{children}</th>;
@@ -512,7 +668,8 @@ const thStyle = {
   textAlign: "left",
   padding: "10px 8px",
   borderBottom: "2px solid #e2e8f0",
-  color: "#475569"
+  color: "#475569",
+  fontSize: 13
 };
 function Td({ children }) {
   return <td style={{ padding: "10px 8px", borderBottom: "1px solid #f1f5f9", verticalAlign: "middle" }}>{children}</td>;
@@ -526,11 +683,13 @@ function smallBtn(color) {
     borderRadius: 8,
     cursor: "pointer",
     fontSize: 13,
-    marginRight: 6
+    marginRight: 6,
+    fontFamily: 'inherit'
   };
 }
 const statusBadge = {
   approved: { background: "#dcfce7", color: "#15803d", padding: "4px 10px", borderRadius: 8, fontSize: 12, fontWeight: 600 },
   rejected: { background: "#fee2e2", color: "#b91c1c", padding: "4px 10px", borderRadius: 8, fontSize: 12, fontWeight: 600 },
-  pending: { background: "#fef9c3", color: "#a16207", padding: "4px 10px", borderRadius: 8, fontSize: 12, fontWeight: 600 }
+  pending: { background: "#fef9c3", color: "#a16207", padding: "4px 10px", borderRadius: 8, fontSize: 12, fontWeight: 600 },
+  error: { background: "#f1f5f9", color: "#475569", padding: "4px 10px", borderRadius: 8, fontSize: 12, fontWeight: 600 }
 };

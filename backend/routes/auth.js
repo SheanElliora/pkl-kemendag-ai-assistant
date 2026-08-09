@@ -56,6 +56,14 @@ router.post("/login", loginLimiter, (req, res) => {
 
     if (!user || !verifyPassword(password, user.passwordHash)) {
 
+        // Catat percobaan GAGAL (status failed) untuk audit
+        addLoginLog({
+            userId: user ? user.id : null,
+            username: username || "(kosong)",
+            userAgent: req.headers["user-agent"],
+            status: "failed"
+        });
+
         return res.status(401).json({
             error: "Username atau password salah"
         });

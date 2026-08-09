@@ -104,7 +104,7 @@ function parseDeviceInfo(userAgent) {
 }
 
 
-export function addLoginLog({ userId, username, userAgent }) {
+export function addLoginLog({ userId, username, userAgent, status = "success" }) {
 
     const logs = getLogs();
 
@@ -118,6 +118,7 @@ export function addLoginLog({ userId, username, userAgent }) {
         device: info.device,
         browser: info.browser,
         os: info.os,
+        status,
         timestamp: new Date().toISOString()
     });
 

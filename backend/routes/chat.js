@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { askRAG } from "../services/ragService.js";
+import { askRAG, streamRAG } from "../services/ragService.js";
 
 
 const router = Router();
@@ -9,6 +9,9 @@ const router = Router();
 // POST /api/chat
 // Tanya jawab RAG. Publik (tidak
 // perlu login) sesuai desain demo.
+// - Body normal -> jawaban sekali kirim (JSON)
+// - Body { stream: true } -> Server-Sent Events
+//   (delta teks bertahap, lalu done + sources).
 // ==============================
 
 router.post("/", async (req, res) => {
@@ -18,7 +21,7 @@ router.post("/", async (req, res) => {
     console.log("Request diterima");
 
 
-    const { message, model } = req.body;
+    const { message, model, stream } = req.body;
 
 
     if (!message) {
@@ -38,6 +41,61 @@ router.post("/", async (req, res) => {
 
     console.log("Model:");
     console.log(model || "(default dari .env)");
+
+    console.log("Stream:", stream ? "ya" : "tidak");
+
+
+    // ------------- MODE STREAMING (SSE) -------------
+
+    if (stream) {
+
+        res.setHeader("Content-Type", "text/event-stream");
+        res.setHeader("Cache-Control", "no-cache");
+        res.setHeader("Connection", "keep-alive");
+        res.flushHeaders?.();
+
+        try {
+
+            for await (const evt of streamRAG(message, model)) {
+
+                if (evt.type === "delta") {
+
+                    res.write(`data: ${JSON.stringify({ type: "delta", text: evt.text })}\n\n`);
+
+                } else if (evt.type === "done") {
+
+                    res.write(`data: ${JSON.stringify({
+                        type: "done",
+                        answer: evt.answer,
+                        sources: evt.sources
+                    })}\n\n`);
+
+                }
+
+            }
+
+        } catch (err) {
+
+            console.error("\n===== ERROR (STREAM) =====");
+            console.error(err);
+
+            res.write(`data: ${JSON.stringify({
+                type: "error",
+                message: err.message || "Gagal menjawab."
+            })}\n\n`);
+
+        } finally {
+
+            res.end();
+
+        }
+
+        return;
+
+    }
+
+
+    // ------------- MODE BIASA (JSON) -------------
 
 
     try {

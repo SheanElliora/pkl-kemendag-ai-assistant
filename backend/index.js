@@ -2,11 +2,13 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import multer from "multer";
+import path from "path";
+import fs from "fs";
 
 import authRouter from "./routes/auth.js";
 import cmsRouter from "./routes/cms.js";
 import chatRouter from "./routes/chat.js";
-import { CORS_ORIGINS } from "./config.js";
+import { CORS_ORIGINS, DOCS_FOLDER } from "./config.js";
 import { ensureDefaultAdmin } from "./services/userService.js";
 import { ensureFolders } from "./services/fileService.js";
 import { MODEL_CATALOG } from "./services/modelCatalog.js";
@@ -97,6 +99,40 @@ app.get("/api/models", (req, res) => {
         models: MODEL_CATALOG
 
     });
+
+});
+
+
+// ==============================
+// Preview PDF dokumen (untuk menampilkan
+// sumber referensi di frontend chat)
+// Hanya file dari folder docs yang dilayani
+// (guard terhadap path traversal).
+// ==============================
+
+app.get("/api/documents/:filename", (req, res) => {
+
+    const safeName = path.basename(req.params.filename);
+
+    if (!safeName.toLowerCase().endsWith(".pdf")) {
+
+        return res.status(400).json({ error: "Hanya file PDF yang dilayani." });
+
+    }
+
+    const filePath = path.join(DOCS_FOLDER, safeName);
+
+    if (!fs.existsSync(filePath)) {
+
+        return res.status(404).json({ error: "Dokumen tidak ditemukan." });
+
+    }
+
+    res.setHeader("Content-Type", "application/pdf");
+
+    res.setHeader("Content-Disposition", `inline; filename="${encodeURIComponent(safeName)}"`);
+
+    fs.createReadStream(filePath).pipe(res);
 
 });
 

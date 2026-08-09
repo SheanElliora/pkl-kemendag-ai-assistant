@@ -27,6 +27,12 @@ export async function api(path, { method = "GET", headers = {}, body } = {}) {
   }
 
   if (!res.ok) {
+    // 401 = token tidak valid/sesi habis -> bersihkan sesi dan tandai
+    // agar halaman login bisa menampilkan pesan "sesi berakhir".
+    if (res.status === 401) {
+      clearSession();
+      localStorage.setItem("cms_session_expired", "1");
+    }
     const err = new Error(data.error || "Permintaan gagal");
     err.status = res.status;
     throw err;

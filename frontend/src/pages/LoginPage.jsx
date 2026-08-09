@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, saveSession } from "../api.js";
 
@@ -8,8 +8,18 @@ export default function LoginPage() {
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPass, setShowPass] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Flag diset oleh api.js saat API menolak token (401)
+    if (localStorage.getItem("cms_session_expired")) {
+      setSessionExpired(true);
+      localStorage.removeItem("cms_session_expired");
+    }
+  }, []);
 
   async function submit(e) {
 
@@ -50,7 +60,7 @@ export default function LoginPage() {
     <div
       style={{
         height: "100vh",
-        background: "linear-gradient(180deg,#eef5fb,#ffffff)",
+        background: "linear-gradient(180deg,#f6f7f9,#ffffff)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -58,6 +68,7 @@ export default function LoginPage() {
       }}
     >
       <div
+        className="pop-in"
         style={{
           width: 420,
           maxWidth: "92%",
@@ -79,12 +90,28 @@ export default function LoginPage() {
             background: "#fff"
           }}
         />
-        <h2 style={{ margin: "18px 0 4px", fontSize: 22, color: "#004a8f" }}>
+        <h2 style={{ margin: "18px 0 4px", fontSize: 22, color: "#00439c" }}>
           Masuk CMS
         </h2>
         <p style={{ margin: "0 0 24px", fontSize: 14, color: "#64748b" }}>
           Kelola dokumen & user sebagai admin atau maintainer.
         </p>
+
+        {sessionExpired && (
+          <div
+            style={{
+              background: "#fef9c3",
+              color: "#854d0e",
+              padding: "12px 14px",
+              borderRadius: 10,
+              fontSize: 14,
+              marginBottom: 16,
+              textAlign: "left"
+            }}
+          >
+            ⏰ Sesi Anda telah berakhir. Silakan login kembali untuk melanjutkan.
+          </div>
+        )}
 
         {error && (
           <div
@@ -110,15 +137,37 @@ export default function LoginPage() {
             required
             style={inputStyle}
           />
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
-            autoComplete="current-password"
-            required
-            style={inputStyle}
-          />
+
+          <div style={{ position: "relative" }}>
+            <input
+              type={showPass ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              autoComplete="current-password"
+              required
+              style={{ ...inputStyle, paddingRight: 48 }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPass((v) => !v)}
+              title={showPass ? "Sembunyikan password" : "Tampilkan password"}
+              style={{
+                position: "absolute",
+                right: 12,
+                top: 13,
+                background: "none",
+                border: "none",
+                fontSize: 18,
+                cursor: "pointer",
+                padding: 0,
+                lineHeight: 1
+              }}
+            >
+              {showPass ? "🙈" : "👁️"}
+            </button>
+          </div>
+
           <button
             type="submit"
             disabled={loading}
@@ -162,7 +211,7 @@ const inputStyle = {
 
 const buttonStyle = {
   width: "100%",
-  background: "#004a8f",
+  background: "#00439c",
   color: "#fff",
   border: "none",
   padding: "13px",

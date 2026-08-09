@@ -14,14 +14,9 @@ const client = new OpenAI({
 
 
 
-export async function generateAnswer(
-    question,
-    context,
-    model
-){
+function buildPrompt(question, context) {
 
-
-const prompt = `
+return `
 
 Anda adalah AI Assistant Sistem Informasi Perdagangan Kemendag.
 
@@ -52,6 +47,9 @@ FORMAT JAWABAN:
 - Jangan memberikan saran di luar isi dokumen.
 - Jika pertanyaan menanyakan "siapa", sebutkan nama pihaknya terlebih dahulu lalu jelaskan.
 - Jika pertanyaan menanyakan "apa", jelaskan poin-poin pentingnya.
+- Beri nomor kutipan untuk setiap fakta. Letakkan [n] tepat akhir kalimat atau klaim yang bersumber dari file tersebut, sesuai urutan "FILE:" pada CONTEXT (file pertama = [1], file kedua = [2], dst.). Contoh: "Produk tekstil Indonesia dikenal baik di Nigeria [1]."
+- Gunakan nomor kutipan HANYA untuk klaim yang benar-benar berasal dari file itu.
+- Jika jawaban berupa kalimat "Informasi tersebut tidak ditemukan dalam dokumen yang tersedia.", jangan menyertakan kutipan apa pun.
 
 CONTEXT:
 
@@ -64,6 +62,18 @@ ${question}
 Jawaban:
 
 `;
+
+}
+
+
+export async function generateAnswer(
+    question,
+    context,
+    model
+){
+
+
+const prompt = buildPrompt(question, context);
 
 
 
@@ -98,5 +108,48 @@ return completion
 .message
 .content;
 
+
+}
+
+
+// =====================================================
+// Streaming: hasil jawaban dikirim bertahap (SSE chunk)
+// Dipakai route /api/chat untuk efek "mengetik".
+// =====================================================
+
+export async function generateAnswerStream(
+    question,
+    context,
+    model
+){
+
+const prompt = buildPrompt(question, context);
+
+const stream =
+await client.chat.completions.create({
+
+    model:
+    model ||
+    process.env.OPENROUTER_MODEL ||
+    "openai/gpt-4o-mini",
+
+    temperature:0.2,
+
+    max_tokens:1024,
+
+    stream:true,
+
+    messages:[
+
+        {
+            role:"user",
+            content:prompt
+        }
+
+    ]
+
+});
+
+return stream;
 
 }

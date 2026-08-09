@@ -1,5 +1,5 @@
 import { searchDocuments } from "./retrieverService.js";
-import { generateAnswer } from "./llmService.js";
+import { generateAnswer, generateAnswerStream } from "./llmService.js";
 
 
 function getDisplayName(meta){
@@ -217,5 +217,122 @@ return {
 
 };
 
+
+}
+
+
+// =====================================================
+// Streaming jawaban untuk efek "mengetik".
+// Menghasilkan potongan teks (delta) satu per satu.
+// Pada akhirnya mengirim status done beserta sitasi.
+// =====================================================
+
+export async function* streamRAG(
+    question,
+    model
+){
+
+    const result =
+    await searchDocuments(question);
+
+    if(
+        !result.documents ||
+        result.documents.length === 0
+    ){
+
+        const fallback =
+        "Informasi tersebut tidak ditemukan dalam dokumen yang tersedia.";
+
+        yield {
+            type: "done",
+            answer: fallback,
+            sources: []
+        };
+
+        return;
+
+    }
+
+    let context = "";
+
+    let sources = [];
+
+    result.documents.forEach(
+        (doc,index)=>{
+
+            const meta =
+            result.metadata[index];
+
+            const displayName =
+            getDisplayName(meta);
+
+            context += `
+
+FILE:
+${displayName}
+
+HALAMAN:
+${meta.page}
+
+
+ISI DOKUMEN:
+${doc}
+
+
+========================
+
+
+`;
+
+            sources.push({
+                filename: meta.filename,
+                title: meta.title ?? "",
+                page: meta.page,
+                distance: result.distances[index]
+            });
+
+        }
+    );
+
+    const stream =
+    await generateAnswerStream(
+        question,
+        context,
+        model
+    );
+
+    let full = "";
+
+    for await (const part of stream) {
+
+        const delta =
+        part.choices?.[0]?.delta?.content;
+
+        if (!delta) continue;
+
+        full += delta;
+
+        yield {
+            type: "delta",
+            text: delta
+        };
+
+    }
+
+    const normalized =
+    full
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\.*$/, "");
+
+    const notFound =
+    normalized ===
+    "Informasi tersebut tidak ditemukan dalam dokumen yang tersedia";
+
+    yield {
+        type: "done",
+        answer: full.trim(),
+        sources: notFound ? [] : sources
+    };
 
 }

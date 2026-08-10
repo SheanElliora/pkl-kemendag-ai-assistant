@@ -60,27 +60,10 @@ export default function ChatPage() {
     "Bagaimana peluang ekspor alat kesehatan ke Jepang?"
   ];
 
-  const topics = [
-    { emoji: "🧵", label: "Tekstil Nigeria", match: ["nigeria", "tekstil", "ankara"] },
-    { emoji: "🎮", label: "Pasar Game Jepang", match: ["game"] },
-    { emoji: "🍜", label: "Restoran Jepang", match: ["restoran"] },
-    { emoji: "🏥", label: "Alat Medis Jepang", match: ["medis", "instrumen"] },
-    { emoji: "💡", label: "Regulasi Perdagangan", match: ["permendag"] },
-    { emoji: "💡", label: "Lampu Dekorasi", match: ["decoration", "lights", "lamp"] },
-    { emoji: "📄", label: "Dokumen Lainnya", match: [] }
+  // Frasa yang diketik di halaman awal (satu kalimat, satu efek ketik).
+  const typedPhrases = [
+    "Menjawab dari dokumen perdagangan resmi, disertai referensi sumber dokumen."
   ];
-
-  // Topik diturunkan dari dokumen yang tersedia, bukan hardcoded.
-  const docTopics = Object.entries(
-    availableDocs.reduce((acc, name) => {
-      const lower = name.toLowerCase();
-      const hit = topics.find((t) => t.match.some((kw) => lower.includes(kw)));
-      const label = hit?.label ?? "Dokumen Lainnya";
-      const emoji = hit?.emoji ?? "📄";
-      acc[label] = acc[label] || { emoji, label };
-      return acc;
-    }, {})
-  ).map(([, value]) => value);
 
   useEffect(() => {
     api("/api/documents")
@@ -643,62 +626,48 @@ export default function ChatPage() {
             className="chat-scroll"
             style={{
               flex: 1,
-              overflowY: "auto",
-              padding: isMobile ? "8px" : "12px",
+              overflowY: currentMessages.length === 0 && !loading ? "hidden" : "auto",
+              padding: isMobile ? "6px" : "10px",
               background: "#eef2f756",
-              position: "relative"
+              position: "relative",
+              display: currentMessages.length === 0 && !loading ? "flex" : "block",
+              alignItems: "center",
+              justifyContent: "center"
             }}
           >
             {currentMessages.length === 0 && !loading && (
-            <div className="fade-in" style={{ maxWidth: "720px", margin: "0 auto" }}>
-              <div style={{ textAlign: "center", marginBottom: "12px", paddingTop: "0" }}>
-                <div style={{ display: "flex", justifyContent: "center" }}>
-                  <HeroArt />
-                </div>
-                <h2 style={{ margin: "0", fontSize: isMobile ? "22px" : "26px", fontWeight: 700, color: "#00439c", fontFamily: '"Sora", sans-serif' }}>
-                  {greetingByHour()} 👋
-                </h2>
-                <p style={{ margin: "6px auto 0", fontSize: "15px", color: "#475569", lineHeight: "1.65", maxWidth: "540px" }}>
-                  Sistem menjawab pertanyaan Anda berdasarkan dokumen perdagangan resmi yang telah disetujui,
-                  lengkap dengan referensi sumber halaman.
-                </p>
-              </div>
-
-              <h4 style={{ margin: "0 0 10px", color: "#1e293b", fontWeight: 600, fontSize: "15px", fontFamily: '"Sora", sans-serif' }}>
-                Pilih Topik
-              </h4>
-
-              <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", justifyContent: "center", marginBottom: "14px" }}>
-                {(docTopics.length ? docTopics : topics.slice(0, 5)).map((t, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setInput(t.label + " — apakah ada informasi terkait?" )}
+            <div
+              className="fade-in"
+              style={{
+                width: "100%",
+                margin: "auto"
+              }}
+            >
+              <div style={{ textAlign: "center" }}>
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: "6px" }}>
+                  <img
+                    src="/logo kemendag.png"
+                    alt="Logo Kemendag"
                     style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      padding: "7px 14px",
-                      borderRadius: "20px",
-                      border: "1px solid #E8F2F8",
+                      width: isMobile ? "36px" : "40px",
+                      height: isMobile ? "36px" : "40px",
+                      objectFit: "cover",
                       background: "#ffffff",
-                      cursor: "pointer",
-                      fontSize: "13px",
-                      color: "#334155",
-                      fontWeight: 600,
-                      fontFamily: 'inherit',
-                      transition: "transform 0.15s ease, box-shadow 0.15s ease"
+                      borderRadius: "12px",
+                      boxShadow: "0 6px 16px rgba(0,67,156,0.12)"
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,114,188,0.18)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
-                  >
-                    <span>{t.emoji}</span>
-                    {t.label}
-                  </button>
-                ))}
+                  />
+                </div>
+                <h2 style={{ margin: "0", fontSize: isMobile ? "18px" : "20px", fontWeight: 600, color: "#00439c", fontFamily: '"Sora", sans-serif' }}>
+                  {greetingByHour()}
+                </h2>
+                <div style={{ margin: "6px auto 0", fontSize: "15px", color: "#475569", lineHeight: "1.5", width: "100%", minHeight: "20px" }}>
+                  <Typewriter phrases={typedPhrases} />
+                </div>
               </div>
 
               {suggestions.length > 0 && (
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", maxWidth: "560px", margin: "0 auto 10px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", maxWidth: "560px", margin: "8px auto 0" }}>
                   <span style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 600, flexShrink: 0 }}>Coba tanya:</span>
                   <button
                     onClick={() => sendMessage(suggestions[quickIdx])}
@@ -711,7 +680,7 @@ export default function ChatPage() {
                       border: "1px solid #E8F2F8",
                       color: "#334155",
                       borderRadius: "10px",
-                      padding: "8px 12px",
+                      padding: "6px 12px",
                       fontSize: "13px",
                       cursor: "pointer",
                       fontFamily: 'inherit',
@@ -734,8 +703,8 @@ export default function ChatPage() {
                   alignItems: "center",
                   justifyContent: "center",
                   gap: "10px",
-                  margin: "0 auto 18px",
-                  maxWidth: "780px"
+                  margin: "8px auto 0",
+                  width: "100%"
                 }}
               >
                 <ModelSelector models={models} model={model} onSelect={setModel} isMobile={isMobile} align="left" />
@@ -745,14 +714,14 @@ export default function ChatPage() {
                     alignItems: "center",
                     gap: "8px",
                     flex: 1,
-                    maxWidth: "560px",
                     minWidth: 0,
-                    height: "54px",
+                    maxWidth: "580px",
+                    height: "44px",
                     boxSizing: "border-box",
                     background: "#ffffff",
                     border: "2px solid #c7d2fe",
-                    borderRadius: "12px",
-                    padding: "0 8px 0 16px",
+                    borderRadius: "999px",
+                    padding: "0 6px 0 16px",
                     boxShadow: "0 8px 24px rgba(0,28,69,0.10)"
                   }}
                 >
@@ -780,12 +749,12 @@ export default function ChatPage() {
                       background: "#00439c",
                       color: "white",
                       border: "none",
-                      borderRadius: "12px",
-                      width: "44px",
-                      height: "44px",
+                      borderRadius: "999px",
+                      width: "32px",
+                      height: "32px",
                       flexShrink: 0,
                       cursor: "pointer",
-                      fontSize: "18px",
+                      fontSize: "16px",
                       fontFamily: 'inherit',
                       boxShadow: "0 4px 12px rgba(0,67,156,0.35)",
                       transition: "transform 0.15s ease"
@@ -1844,7 +1813,7 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left" }) {
           alignItems: "center",
           gap: "7px",
           padding: "6px 12px",
-          borderRadius: "12px",
+          borderRadius: "999px",
           border: open ? "2px solid #00439c" : "2px solid #c7d2fe",
           fontSize: "13px",
           background: open ? "#eef6fd" : "#fff",
@@ -1853,9 +1822,9 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left" }) {
           cursor: "pointer",
           fontFamily: 'inherit',
           boxShadow: open ? "0 4px 14px rgba(0,114,188,0.2)" : "0 8px 24px rgba(0,28,69,0.10)",
-          width: isMobile ? "150px" : "180px",
+          width: isMobile ? "150px" : "200px",
           minWidth: 0,
-          height: "54px",
+          height: "44px",
           boxSizing: "border-box",
           whiteSpace: "nowrap"
         }}
@@ -1992,6 +1961,38 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left" }) {
         </div>
       )}
     </div>
+  );
+}
+
+// Efek ketik-maju (typewriter) yang terus berulang:
+// ketik frasa -> jeda singkat -> hapus -> ketik lagi, tanpa henti.
+function Typewriter({ phrases, delay = 90, pause = 1600 }) {
+  const [index, setIndex] = useState(0);
+  const [text, setText] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    const current = phrases[index % phrases.length];
+    let timer;
+    if (!deleting && text === current) {
+      timer = setTimeout(() => setDeleting(true), pause);
+    } else if (deleting && text === "") {
+      setDeleting(false);
+      setIndex((i) => (i + 1) % phrases.length);
+    } else {
+      timer = setTimeout(
+        () => setText(current.slice(0, text.length + (deleting ? -1 : 1))),
+        deleting ? 40 : delay
+      );
+    }
+    return () => clearTimeout(timer);
+  }, [text, deleting, index, phrases, delay, pause]);
+
+  return (
+    <span style={{ display: "inline-flex", alignItems: "baseline" }}>
+      <span>{text}</span>
+      <span style={{ animation: "blinkCaret 1s step-end infinite", marginLeft: 2, color: "#00439c" }}>▍</span>
+    </span>
   );
 }
 
@@ -2160,9 +2161,9 @@ function SourceSkeleton() {
 }
 
 // Ilustrasi hero layar selamat datang
-function HeroArt() {
+function HeroArt({ size = 170 }) {
   return (
-    <svg width="170" height="118" viewBox="0 0 200 145" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginBottom: "2px", filter: "drop-shadow(0 10px 24px rgba(0,67,156,0.18))" }}>
+    <svg width={size} height={Math.round((size * 118) / 170)} viewBox="0 0 200 145" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginBottom: "2px", filter: "drop-shadow(0 10px 24px rgba(0,67,156,0.18))" }}>
       <defs>
         <linearGradient id="heroBg" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#E8F2F8" />

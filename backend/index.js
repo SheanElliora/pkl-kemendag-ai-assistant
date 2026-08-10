@@ -110,6 +110,39 @@ app.get("/api/models", (req, res) => {
 // (guard terhadap path traversal).
 // ==============================
 
+app.get("/api/documents", (req, res) => {
+
+    try {
+
+        const files =
+        fs.readdirSync(DOCS_FOLDER)
+        .filter(
+            file =>
+            file.toLowerCase().endsWith(".pdf")
+        )
+        .sort();
+
+        res.json({
+            files
+        });
+
+    }
+    catch(error){
+
+        console.log(
+            "Gagal membaca daftar dokumen:",
+            error.message
+        );
+
+        res.status(500).json({
+            error: "Gagal membaca daftar dokumen."
+        });
+
+    }
+
+});
+
+
 app.get("/api/documents/:filename", (req, res) => {
 
     const safeName = path.basename(req.params.filename);

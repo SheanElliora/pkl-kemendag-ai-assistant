@@ -32,3 +32,6 @@ backend/ocr_text/
 *.zip
 structure.txt
 chroma/
+
+# Logs
+*.log

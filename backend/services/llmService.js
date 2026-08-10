@@ -28,15 +28,17 @@ ATURAN WAJIB:
 
 2. Jika CONTEXT memuat informasi yang relevan (meskipun tersebar atau menggunakan istilah yang berbeda), gunakan dan rangkum dengan jelas.
 
-3. Jika CONTEXT memuat topik yang berhubungan tapi tidak persis menjawab, tetap bantu dengan POIN-POIN yang tersedia lalu sebutkan keterbatasannya.
+3. Jika CONTEXT memuat topik atau negara yang berhubungan tapi tidak persis menjawab, JANGAN langsung bilang tidak ada. Bantu dengan POIN-POIN yang tersedia (mis. jenis produk, sektor terkait), lalu jelaskan keterbatasannya secara singkat. Contoh: dokumen yang menyebut jenis alat medis di Jepang TETAP memuat jawaban untuk pertanyaan "alat medis apa saja yang diimpor Jepang", walaupun kata "impor" tidak tertulis eksplisit — rangkum jenis alat tersebut.
 
 4. Abaikan bagian yang hanya berisi daftar isi, daftar gambar, daftar tabel, nomor halaman, atau hasil OCR yang tidak bermakna.
 
-5. Jangan terlalu cepat menyimpulkan bahwa informasi tidak ada. Periksa kata kunci yang serupa terlebih dahulu.
+5. Jangan terlalu cepat menyimpulkan bahwa informasi tidak ada. Periksa kata kunci yang serupa terlebih dahulu, termasuk istilah umum atau sejenis (mis. "impor" ↔ "perdagangan luar negeri", "alat medis" ↔ "instrumen/peralatan kesehatan").
 
 6. Jika benar-benar tidak ada satupun bagian CONTEXT yang berkaitan dengan pertanyaan, jawab tepat dengan kalimat:
 
 "Informasi tersebut tidak ditemukan dalam dokumen yang tersedia."
+
+7. Kalimat "Informasi tersebut tidak ditemukan dalam dokumen yang tersedia." HANYA diizinkan jika keseluruhan CONTEXT sama sekali tidak membahas topik yang ditanyakan. Jika CONTEXT menyentuh topik/negara yang sama walau dengan istilah berbeda, wajib menjawab dengan fakta yang ada beserta kutipannya.
 
 FORMAT JAWABAN:
 

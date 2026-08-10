@@ -19,9 +19,9 @@ const client = new ChromaClient();
 // DISTANCE_OFFSET : batas minimum mutlak tambahan.
 // ============================================
 
-const MAX_CANDIDATES = 3;
-const DISTANCE_RATIO = 2.2;
-const DISTANCE_OFFSET = 0.2;
+const MAX_CANDIDATES = 5;
+const DISTANCE_RATIO = 3.0;
+const DISTANCE_OFFSET = 0.3;
 
 
 
@@ -208,10 +208,10 @@ export async function searchDocuments(question){
     // adaptif" di bawah), karena skala jarak
     // L2 berbeda antarjenis dokumen.
     //
-    // Jumlah akhir dibatasi MAX_CANDIDATES
-    // (3) agar sitasi lebih fokus. Untuk
-    // cakupan yang lebih luas, naikkan,
-    // misalnya ke 5.
+//     Jumlah akhir dibatasi MAX_CANDIDATES
+    //     (5) agar jangkauan konteks lebih luas dan
+    //     jawaban benar tidak terlewat. Untuk
+    //     konteks lebih fokus, turunkan kembali.
     // ==================================
 
 

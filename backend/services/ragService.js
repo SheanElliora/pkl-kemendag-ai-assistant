@@ -18,6 +18,61 @@ function getDisplayName(meta){
 }
 
 
+// ==== Deteksi jawaban "informasi tidak ditemukan" ====
+//
+// Fungsi & konstanta diletakkan di level modul agar bisa
+// dipakai oleh askRAG (non-stream) dan streamRAG (stream).
+//
+// Strategi:
+//   - Cocok persis dengan kalimat baku (kasus ideal).
+//   - ATAU mengandung frasa negatif yang jelas + TIDAK memuat
+//     kutipan [n]. Sesuai aturan prompt #52, jawaban "tidak
+//     ditemukan" memang tidak boleh disertai kutipan. Sebaliknya
+//     jawaban SAH yang memuat data dari dokumen pasti mengutip
+//     [n], sehingga tidak akan salah dianggap "tidak ditemukan".
+// =====================================================
+
+const NOT_FOUND_SENTENCE =
+"Informasi tersebut tidak ditemukan dalam dokumen yang tersedia";
+
+const NEGATIVE_PHRASES = [
+    "tidak ditemukan",
+    "tidak tersedia",
+    "tidak ada informasi",
+    "tidak terdapat",
+    "tidak disebutkan",
+    "tidak ada data"
+];
+
+const CITATION_PATTERN = /\[\s*\d+\s*\]/;
+
+function isNotFoundAnswer(answer) {
+
+    if (!answer || typeof answer !== "string") return false;
+
+    const normalized =
+    answer
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\.*$/, "");
+
+    if (normalized === NOT_FOUND_SENTENCE) return true;
+
+    const lower =
+    normalized
+    .toLowerCase();
+
+    const hasNegativePhrase =
+    NEGATIVE_PHRASES.some((p) => lower.includes(p));
+
+    const hasCitation =
+    CITATION_PATTERN.test(answer);
+
+    return hasNegativePhrase && !hasCitation;
+
+}
+
+
 export async function askRAG(
     question,
     model
@@ -169,37 +224,10 @@ ${doc}
 // ==============================================
 // Deteksi jawaban "informasi tidak ditemukan"
 //
-// Sebelumnya: memakai substring (mis. cek "tidak
-// tersedia"), sehingga jawaban SAH yang kebetulan
-// memuat kata itu pun sitasinya ikut dihapus.
-//
-// Sekarang: dibandingkan dengan KALIMAT BAKU yang
-// didefinisikan di prompt LLM (llmService.js, aturan
-// 6). Hanya jika jawaban LLM persis kalimat itu,
-// sistem menganggap tidak ada informasi dan
-// mengosongkan sitasi. Selain itu, sitasi tetap
-// dipertahankan.
+// (Definisi konstanta & fungsi dipindah ke level
+//  modul agar bisa dipakai jadi satu oleh
+//  askRAG dan streamRAG. Lihat bagian bawah file.)
 // ==============================================
-
-const NOT_FOUND_SENTENCE =
-"Informasi tersebut tidak ditemukan dalam dokumen yang tersedia";
-
-
-function isNotFoundAnswer(answer){
-
-
-    const normalized =
-    answer
-    .replace(/\s+/g, " ")
-    .trim()
-    .replace(/\.*$/, "");
-
-
-    return normalized === NOT_FOUND_SENTENCE;
-
-
-}
-
 
 if(isNotFoundAnswer(answer)){
 
@@ -319,15 +347,8 @@ ${doc}
 
     }
 
-    const normalized =
-    full
-    .replace(/\s+/g, " ")
-    .trim()
-    .replace(/\.*$/, "");
-
     const notFound =
-    normalized ===
-    "Informasi tersebut tidak ditemukan dalam dokumen yang tersedia";
+    isNotFoundAnswer(full);
 
     yield {
         type: "done",

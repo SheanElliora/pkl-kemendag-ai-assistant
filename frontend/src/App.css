@@ -99,6 +99,43 @@
   animation: fadeIn 0.3s ease-out both;
 }
 
+/* Muncul bertahap naik ke atas (hero landing) */
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rise {
+  animation: riseIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Logo hero: membesar halus saat hover */
+.logo-hover {
+  transition: transform 0.2s ease;
+}
+
+.logo-hover:hover {
+  transform: scale(1.08);
+}
+
+/* Kotak input pill: fokus diberi ring biru */
+.textbox-pill {
+  border: 2px solid #c7d2fe;
+  box-shadow: 0 8px 24px rgba(0, 28, 69, 0.10);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.textbox-pill:focus-within {
+  border-color: #00439c;
+  box-shadow: 0 0 0 4px rgba(0, 67, 156, 0.12), 0 8px 24px rgba(0, 28, 69, 0.10);
+}
+
 .pop-in {
   animation: popIn 0.2s ease-out both;
 }

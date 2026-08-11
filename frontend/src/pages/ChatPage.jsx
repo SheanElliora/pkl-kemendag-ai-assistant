@@ -628,7 +628,9 @@ export default function ChatPage() {
               flex: 1,
               overflowY: currentMessages.length === 0 && !loading ? "hidden" : "auto",
               padding: isMobile ? "6px" : "10px",
-              background: "#eef2f756",
+              background: currentMessages.length === 0 && !loading
+                ? "radial-gradient(640px 260px at 50% 74%, rgba(71,118,230,0.12), transparent 70%), radial-gradient(520px 240px at 50% 24%, rgba(56,189,248,0.09), transparent 70%), #eef2f756"
+                : "#eef2f756",
               position: "relative",
               display: currentMessages.length === 0 && !loading ? "flex" : "block",
               alignItems: "center",
@@ -644,10 +646,11 @@ export default function ChatPage() {
               }}
             >
               <div style={{ textAlign: "center" }}>
-                <div style={{ display: "flex", justifyContent: "center", marginBottom: "6px" }}>
+                <div className="rise" style={{ display: "flex", justifyContent: "center", marginBottom: "6px", animationDelay: "0s" }}>
                   <img
                     src="/logo kemendag.png"
                     alt="Logo Kemendag"
+                    className="logo-hover"
                     style={{
                       width: isMobile ? "36px" : "40px",
                       height: isMobile ? "36px" : "40px",
@@ -658,16 +661,19 @@ export default function ChatPage() {
                     }}
                   />
                 </div>
-                <h2 style={{ margin: "0", fontSize: isMobile ? "18px" : "20px", fontWeight: 600, color: "#00439c", fontFamily: '"Sora", sans-serif' }}>
+                <h2 className="rise" style={{ margin: "0", fontSize: isMobile ? "18px" : "20px", fontWeight: 600, color: "#00439c", fontFamily: '"Sora", sans-serif', animationDelay: "0.06s" }}>
                   {greetingByHour()}
                 </h2>
-                <div style={{ margin: "6px auto 0", fontSize: "15px", color: "#475569", lineHeight: "1.5", width: "100%", minHeight: "20px" }}>
+                <p className="rise" style={{ margin: "2px 0 0", fontSize: "12px", color: "#94a3b8", fontWeight: 500, animationDelay: "0.1s" }}>
+                  {todayLabel()}
+                </p>
+                <div className="rise" style={{ margin: "6px auto 0", fontSize: "15px", color: "#475569", lineHeight: "1.5", width: "100%", minHeight: "20px", animationDelay: "0.12s" }}>
                   <Typewriter phrases={typedPhrases} />
                 </div>
               </div>
 
               {suggestions.length > 0 && (
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", maxWidth: "560px", margin: "8px auto 0" }}>
+                <div className="rise" style={{ display: "flex", alignItems: "center", gap: "8px", maxWidth: "560px", margin: "8px auto 0", animationDelay: "0.18s" }}>
                   <span style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 600, flexShrink: 0 }}>Coba tanya:</span>
                   <button
                     onClick={() => sendMessage(suggestions[quickIdx])}
@@ -697,18 +703,23 @@ export default function ChatPage() {
                 </div>
               )}
 
+              <div className="rise" style={{ width: "170px", height: "1px", margin: "12px auto 0", background: "linear-gradient(90deg, transparent, #c7d2fe, transparent)", animationDelay: "0.24s" }} />
+
               <div
+                className="rise"
                 style={{
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   gap: "10px",
-                  margin: "8px auto 0",
-                  width: "100%"
+                  margin: "10px auto 0",
+                  width: "100%",
+                  animationDelay: "0.28s"
                 }}
               >
                 <ModelSelector models={models} model={model} onSelect={setModel} isMobile={isMobile} align="left" />
                 <div
+                  className="textbox-pill"
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -719,10 +730,8 @@ export default function ChatPage() {
                     height: "44px",
                     boxSizing: "border-box",
                     background: "#ffffff",
-                    border: "2px solid #c7d2fe",
                     borderRadius: "999px",
-                    padding: "0 6px 0 16px",
-                    boxShadow: "0 8px 24px rgba(0,28,69,0.10)"
+                    padding: "0 6px 0 16px"
                   }}
                 >
                   <input
@@ -744,7 +753,7 @@ export default function ChatPage() {
                   />
                   <button
                     onClick={() => sendMessage()}
-                    title="Kirim pertanyaan"
+                    title="Kirim pertanyaan (Enter)"
                     style={{
                       background: "#00439c",
                       color: "white",
@@ -1808,6 +1817,8 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left" }) {
         type="button"
         onClick={toggleOpen}
         title="Pilih model AI"
+        onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.03)"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
         style={{
           display: "flex",
           alignItems: "center",
@@ -1821,6 +1832,7 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left" }) {
           outline: "none",
           cursor: "pointer",
           fontFamily: 'inherit',
+          transition: "transform 0.15s ease, border-color 0.15s ease, background 0.15s ease",
           boxShadow: open ? "0 4px 14px rgba(0,114,188,0.2)" : "0 8px 24px rgba(0,28,69,0.10)",
           width: isMobile ? "150px" : "200px",
           minWidth: 0,
@@ -2061,6 +2073,16 @@ function greetingByHour() {
   if (h < 15) return "Selamat siang";
   if (h < 19) return "Selamat sore";
   return "Selamat malam";
+}
+
+// Label tanggal lengkap dalam bahasa Indonesia.
+function todayLabel() {
+  return new Date().toLocaleDateString("id-ID", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+  });
 }
 
 function dateLabel(ts) {

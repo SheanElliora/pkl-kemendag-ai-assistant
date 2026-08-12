@@ -36,7 +36,7 @@ for (const f of files) {
       ids: [id],
       embeddings: [vector],
       documents: [c.text],
-      metadatas: [{ filename, title: "", page: c.page }],
+      metadatas: [{ filename, title: "", page: c.page, printedPage: c.printedPage ?? c.page }],
     });
     total++;
     if (total % 100 === 0) console.log(`  ... ${total} chunk`);

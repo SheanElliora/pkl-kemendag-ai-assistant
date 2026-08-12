@@ -137,10 +137,17 @@ function containsPhrase(texts, phrase) {
 
 let docHit = 0, docTop5 = 0, pageHit = 0, pageHitTol = 0, phraseInTop7 = 0;
 
-for (const t of TESTS) {
+// Untuk debugging cepat: TESTS_LIMIT=N hanya menjalankan
+// N soal pertama (hemat waktu, tanpa mengedit daftar).
+const TEST_LIMIT =
+Number(process.env.TESTS_LIMIT) || TESTS.length;
+
+for (const t of TESTS.slice(0, TEST_LIMIT)) {
     const result = await searchDocuments(t.q);
     const files = result.metadata.map(m => m.filename);
-    const pages = result.metadata.map(m => m.page);
+    // Nomor halaman yang ditampilkan = printedPage
+    // (nomor tercetak) bila tersedia, kalau tidak indeks.
+    const pages = result.metadata.map(m => m.printedPage ?? m.page);
 
     const topIsCorrect = files[0]?.toLowerCase() === t.file.toLowerCase();
     const inTop5 = files.slice(0, 5).some(f => f.toLowerCase() === t.file.toLowerCase());
@@ -165,7 +172,7 @@ for (const t of TESTS) {
     }
 }
 
-const total = TESTS.length;
+const total = TESTS.slice(0, TEST_LIMIT).length;
 console.log("\n" + "=".repeat(60));
 console.log(`TOTAL SOAL             : ${total}`);
 console.log(`DOKUMEN TOP-1 benar    : ${docHit}/${total} (${(docHit/total*100).toFixed(1)}%)`);

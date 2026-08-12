@@ -7,7 +7,8 @@ import { createEmbedding } from "./services/embedderService.js";
 
 import {
     saveVector,
-    getExistingIds
+    getExistingIds,
+    deleteVectorsByFilename
 } from "./services/vectorStorage.js";
 
 
@@ -40,7 +41,7 @@ export async function ingestDocument(filename){
 async function processDocuments(documents){
 
 
-    const existingIds =
+    let existingIds =
     await getExistingIds();
 
 
@@ -57,6 +58,34 @@ async function processDocuments(documents){
 
 
     for(const doc of documents){
+
+
+        // Chunk di-build ulang => dokumen baru/berubah.
+        // Hapus vektor lama milik dokumen ini dari Chroma
+        // agar tidak ada sisa vektor usang (sumber berubah
+        // tapi vektor lama masih tertinggal).
+        if (doc.rebuilt) {
+
+            console.log(
+                "Dokumen berubah, menghapus vektor lama:",
+                doc.filename
+            );
+
+            await deleteVectorsByFilename(doc.filename);
+
+            // ID vektor dokumen ini sudah terhapus, jadi
+            // keluarkan dari snapshot existingIds agar
+            // chunk-nya di-embed & disimpan ulang (tidak
+            // di-skip karena id masih tercatat di snapshot
+            // lama).
+            const prefix = doc.filename + "_";
+
+            existingIds =
+            existingIds.filter(
+                id => !id.startsWith(prefix)
+            );
+
+        }
 
 
         console.log("\n==================================");
@@ -126,6 +155,9 @@ async function processDocuments(documents){
 
                     page:
                     chunk.page,
+
+                    printedPage:
+                    chunk.printedPage,
 
                     text:
                     chunk.text

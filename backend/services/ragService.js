@@ -149,7 +149,7 @@ FILE:
 ${displayName}
 
 HALAMAN:
-${meta.page}
+${meta.printedPage ?? meta.page}
 
 
 ISI DOKUMEN:
@@ -173,6 +173,9 @@ ${doc}
 
     page:
     meta.page,
+
+    printedPage:
+    meta.printedPage ?? meta.page,
 
     distance:
     result.distances[index]
@@ -300,7 +303,7 @@ FILE:
 ${displayName}
 
 HALAMAN:
-${meta.page}
+${meta.printedPage ?? meta.page}
 
 
 ISI DOKUMEN:
@@ -316,6 +319,7 @@ ${doc}
                 filename: meta.filename,
                 title: meta.title ?? "",
                 page: meta.page,
+                printedPage: meta.printedPage ?? meta.page,
                 distance: result.distances[index]
             });
 

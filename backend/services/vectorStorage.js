@@ -66,7 +66,10 @@ export async function saveVector(chunk, vector) {
 
                 title: chunk.title ?? "",
 
-                page: chunk.page
+                page: chunk.page,
+
+                printedPage:
+                    chunk.printedPage ?? chunk.page
 
             }
 

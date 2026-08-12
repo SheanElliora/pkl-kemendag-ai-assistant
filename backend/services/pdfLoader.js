@@ -9,7 +9,8 @@ import { loadPDFWithPages } from "./pdfPageLoader.js";
 
 import {
     saveChunks,
-    loadChunks
+    loadChunks,
+    getChunkPath
 } from "./chunkStorageService.js";
 import {
     DOCS_FOLDER,
@@ -25,6 +26,41 @@ import {
 // =====================================
 
 const MIN_DIGITAL_CHARS = 500;
+
+// =====================================
+// Deteksi perubahan sumber dokumen
+//
+// Cache (TXT hasil OCR/ekstraksi dan file
+// _chunks.json) hanya valid selama file PDF
+// sumber tidak berubah. Bila ada versi baru
+// di-upload (nama sama), mtime PDF lebih baru
+// dari cache sehingga cache dianggap usang
+// dan diproses ulang dari awal.
+// =====================================
+
+function isCacheStale(pdfPath, cachePath) {
+
+    try {
+
+        const pdfMtime =
+        fs.statSync(pdfPath).mtimeMs;
+
+        const cacheMtime =
+        fs.statSync(cachePath).mtimeMs;
+
+        // Cache lebih TUA dari PDF => PDF sudah
+        // diganti dengan versi baru => cache usang.
+        return cacheMtime < pdfMtime;
+
+    }
+    catch {
+
+        // Cache tidak ada => dianggap perlu dibuat.
+        return true;
+
+    }
+
+}
 
 
 
@@ -183,7 +219,13 @@ async function processPDF(file){
     // Ambil TXT hasil OCR
     // ==========================
 
-    if(fs.existsSync(txtPath)){
+    // Cache TXT dianggap usang bila PDF sumber
+    // sudah di-update (versi baru) — lihat helper
+    // isCacheStale di atas.
+    if(
+        fs.existsSync(txtPath) &&
+        !isCacheStale(pdfPath, txtPath)
+    ){
 
 
         console.log(
@@ -379,57 +421,47 @@ async function processPDF(file){
     let chunks =
     loadChunks(file);
 
+    // Flag: chunk di-build ulang? Dipakai ingest.js untuk
+    // menghapus vektor lama sebelum menyimpan yang baru.
+    let rebuilt = false;
 
+    const chunkPath = getChunkPath(file);
 
-    if(chunks){
-
-
+    if (
+        chunks &&
+        !isCacheStale(pdfPath, chunkPath)
+    ) {
         console.log(
             "Menggunakan chunk lama"
         );
-
-
     }
-    else{
-
-
+    else {
         console.log(
             "Membuat chunk baru"
         );
-
 
         chunks =
         createChunks(
             pages
         );
 
-
         saveChunks(
             file,
             chunks
         );
 
-
+        rebuilt = true;
     }
-
-
 
     console.log(
         "Jumlah chunk:",
         chunks.length
     );
 
-
-
     return {
-
-        filename:file,
-
-        title:title,
-
-        chunks:chunks
-
+        filename: file,
+        title: title,
+        chunks: chunks,
+        rebuilt
     };
-
-
 }

@@ -28,7 +28,7 @@ function ensureFolder(){
 
 
 // mendapatkan lokasi file chunk
-function getChunkPath(filename){
+export function getChunkPath(filename){
 
 
     const name =
@@ -147,6 +147,32 @@ export function loadChunks(filename){
 
 
         return null;
+
+
+    }
+
+
+}
+
+
+// menghapus file chunk milik satu dokumen
+export function deleteChunks(filename){
+
+
+    const filePath =
+    getChunkPath(filename);
+
+
+    if(fs.existsSync(filePath)){
+
+
+        fs.unlinkSync(filePath);
+
+
+        console.log(
+            "Chunk dihapus:",
+            filePath
+        );
 
 
     }

@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import { createEmbedding } from "./embedderService.js";
 import { rerankDocuments } from "./rerankerService.js";
+import { getQueryExpansion } from "./queryExpansionService.js";
 import { DOCS_FOLDER } from "../config.js";
 
 
@@ -186,7 +187,19 @@ const TERM_EN = [
     ["gdp", "gross domestic product gdp"]
 ];
 
-function expandQuestion(questionLower) {
+// ============================================
+// Perluasan query Indonesia -> Inggris
+//
+// Lapisan pertama: kamus manual TERM_EN di
+// bawah (cepat & gratis untuk istilah umum).
+// Lapisan kedua (queryExpansionService):
+// ekspansi otomatis via LLM untuk istilah di
+// luar kamus — agar dokumen baru bertopik
+// apa pun langsung terbantu tanpa perlu
+// menambah kamus manual.
+// ============================================
+
+function getLocalExpansion(questionLower) {
 
     const added = [];
 
@@ -259,10 +272,18 @@ export async function searchDocuments(question){
     const lowerQuestion =
     question.toLowerCase();
 
-    // Perluasan query: tambahkan istilah Inggris
-    // agar sinyal embedding ke dokumen Inggris kuat.
+    // Ekspansi berlapis:
+    // 1) kamus manual (instan, gratis),
+    // 2) LLM otomatis untuk istilah baru
+    //    (di-cache, jadi query berulang cepat).
+    const localExpansion =
+    getLocalExpansion(lowerQuestion);
+
     const expansion =
-    expandQuestion(lowerQuestion);
+    await getQueryExpansion(
+        question,
+        localExpansion
+    );
 
     const searchQuery =
     expansion

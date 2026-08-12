@@ -173,7 +173,35 @@ export async function approveFile(id, approvedBy) {
 
     if (fs.existsSync(destPath)) {
 
-        return { error: "Sudah ada file dengan nama sama di folder dokumen" };
+        // Dokumen dengan nama sama sudah ada di docs.
+        // Perlakukan sebagai PEMBARUAN (update): hapus
+        // versi lama (PDF + vektor + cache) lalu simpan
+        // versi baru. Jadi meng-upload ulang dokumen
+        // dengan nama yang sama otomatis menggantikan
+        // versi lama, tanpa perlu menghapus manual.
+        const oldRecord = getFiles().find(
+            f =>
+            f.filename === record.filename &&
+            ["approved", "error"].includes(f.status)
+        );
+
+        if (oldRecord) {
+
+            try {
+
+                await deleteFile(
+                    oldRecord.id,
+                    approvedBy
+                );
+
+            }
+            catch (updateError) {
+
+                return { error: "Gagal mengganti dokumen lama: " + updateError.message };
+
+            }
+
+        }
 
     }
 

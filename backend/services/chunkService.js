@@ -15,6 +15,89 @@
 // yang utuh dan retrieval lebih akurat.
 // =====================================
 
+// =====================================
+// Ekstraksi nomor halaman tercetak
+//
+// `page` di pipeline adalah INDEKS PDF (1..N),
+// tetapi dokumen cetak sering memberi nomor
+// halaman sendiri (offset akibat cover, kata
+// pengantar, halaman romawi, dst). Nomor
+// tercetak biasanya muncul di footer/header
+// halaman, sehingga kita coba deteksi dari
+// teks baris teratas / terbawah.
+//
+// Konservatif: hanya dipakai bila deteksi
+// yakin; bila ragu kembalikan null (maka
+// tampilan memakai indeks seperti biasa).
+// =====================================
+
+function looksLikeYear(n) {
+
+    return n >= 1900 && n <= 2099;
+
+}
+
+export function extractPrintedPage(text) {
+
+    if (!text) return null;
+
+    const lines =
+    text
+    .split("\n")
+    .map(l => l.trim())
+    .filter(Boolean);
+
+    if (lines.length === 0) return null;
+
+    // Lokasi favorit nomor halaman: baris paling
+    // atas (header) dan paling bawah (footer).
+    const heads = lines.slice(0, 1);
+    const tails = lines.slice(-2);
+    const pool = [...tails, ...heads];
+
+    const candidates = [];
+
+    for (const line of pool) {
+
+        // 1) Baris BERISI HANYA nomor, boleh dihias
+        //    tanda baca pemisah: "12", "- 12 -",
+        //    ". 7 .", "| 8 |", "23 ", "– 45 –".
+        let m =
+        line.match(
+            /^[\s.\-–—|:]*(\d{1,4})[\s.\-–—|:]*$/
+        );
+
+        if (m) candidates.push(Number(m[1]));
+
+        // 2) Eksplisit "Halaman/Page/hal./hlm. 12"
+        m =
+        line.match(
+            /(?:halaman|page|hal\.?|hlm\.?|p\.?)\s*[:.]?\s*(\d{1,4})/i
+        );
+
+        if (m) candidates.push(Number(m[1]));
+
+    }
+
+    // Pilih kandidat paling masuk akal: angka positif
+    // yang bukan tahun. Prefer angka relevan kecil.
+    for (const c of candidates) {
+
+        if (c >= 1 && c <= 9999 && !looksLikeYear(c)) {
+
+            return c;
+
+        }
+
+    }
+
+    // Cadangan: bila hanya berupa tahun pun (mis.
+    // dokumen yang mencetak tahun di footer), jangan
+    // mengganti — kembalikan null agar tidak salah.
+    return null;
+
+}
+
 // Pecah teks halaman menjadi daftar "segmen":
 // paragraf (baris kosong) dan kalimat.
 function splitIntoSentences(text) {
@@ -82,6 +165,12 @@ export function createChunks(
 
     for(const page of pages) {
 
+        // Nomor halaman tercetak (dari footer/header
+        // teks). null bila tidak terdeteksi -> tampilan
+        // memakai indeks page.
+        const printedPage =
+        extractPrintedPage(page.text);
+
         const sentences =
         splitIntoSentences(page.text);
 
@@ -101,6 +190,7 @@ export function createChunks(
 
                 chunks.push({
                     page: page.page,
+                    printedPage,
                     text
                 });
 
@@ -126,6 +216,7 @@ export function createChunks(
 
                     chunks.push({
                         page: page.page,
+                        printedPage,
                         text: piece
                     });
 

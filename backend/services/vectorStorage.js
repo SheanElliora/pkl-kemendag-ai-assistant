@@ -97,3 +97,20 @@ export async function getExistingIds() {
     }
 
 }
+
+// ======================================================
+// Menghapus SEMUA vector milik satu dokumen (per filename)
+// Dipakai saat dokumen dihapus dari sistem.
+// ======================================================
+
+export async function deleteVectorsByFilename(filename) {
+
+    const collection = await getCollection();
+
+    await collection.delete({
+
+        where: { filename }
+
+    });
+
+}

@@ -284,6 +284,41 @@ router.post(
 
 
 // ==============================
+// DELETE /api/cms/files/:id
+// Hanya admin. Menghapus dokumen
+// yang sudah disetujui/diproses:
+// file fisik + vector Chroma + record.
+// ==============================
+
+router.delete(
+    "/files/:id",
+    requireRole("admin"),
+    async (req, res) => {
+
+        const result =
+        await fileService.deleteFile(
+            req.params.id,
+            req.user.username
+        );
+
+        if (result.error) {
+
+            return res.status(400).json({
+                error: result.error
+            });
+
+        }
+
+        res.json({
+            message: "Dokumen dihapus.",
+            file: result.file
+        });
+
+    }
+);
+
+
+// ==============================
 // Manajemen user (khusus admin)
 // ==============================
 

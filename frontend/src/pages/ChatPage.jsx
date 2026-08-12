@@ -13,7 +13,8 @@ export default function ChatPage() {
   const [feedback, setFeedback] = useState({});
   const [previewDoc, setPreviewDoc] = useState(null);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
-  const [quickIdx, setQuickIdx] = useState(0);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [modelOpen, setModelOpen] = useState(false);
 
   const chatEndRef = useRef(null);
   const chatAreaRef = useRef(null);
@@ -53,16 +54,11 @@ export default function ChatPage() {
 
   const user = getUser();
 
-  const suggestions = [
-    "Bagaimana persepsi pasar Nigeria terhadap produk tekstil Indonesia?",
-    "Bagaimana pasar game yang ada di Jepang sekarang?",
-    "Bagaimana perkembangan industri restoran di Jepang?",
-    "Bagaimana peluang ekspor alat kesehatan ke Jepang?"
-  ];
-
-  // Frasa yang diketik di halaman awal (satu kalimat, satu efek ketik).
+  // Frasa yang diketik di halaman awal (berotasi, satu efek ketik).
   const typedPhrases = [
-    "Menjawab dari dokumen perdagangan resmi, disertai referensi sumber dokumen."
+    "Menjawab dari dokumen perdagangan resmi, disertai referensi sumber dokumen.",
+    "Mencari jawaban dari dokumen yang tersedia, lengkap dengan referensinya.",
+    "Pertanyaan terjawab dengan konteks dari dokumen resmi Kemendag."
   ];
 
   useEffect(() => {
@@ -122,15 +118,6 @@ export default function ChatPage() {
       chatEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [currentMessages, loading]);
-
-  // Rotasi saran cepat (hanya saat chat kosong)
-  useEffect(() => {
-    if (currentMessages.length > 0) return;
-    const id = setInterval(() => {
-      setQuickIdx((i) => (i + 1) % suggestions.length);
-    }, 4000);
-    return () => clearInterval(id);
-  }, [currentMessages.length, suggestions.length]);
 
   function sourceTitle(sources, filename) {
     return filename;
@@ -476,9 +463,10 @@ export default function ChatPage() {
         style={{
           maxWidth: "1100px",
           margin: "auto",
-          background: "#f1f5f9a5",
+          background: "#ffffff",
+          border: "1px solid #e6e9f0",
           borderRadius: isMobile ? "14px" : "20px",
-          boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+          boxShadow: "0 18px 50px rgba(15,40,80,0.14)",
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
@@ -490,6 +478,7 @@ export default function ChatPage() {
           style={{
             background: "linear-gradient(135deg, #001845, #00439c)",
             color: "white",
+            boxShadow: "inset 0 -3px 0 0 rgba(233,163,25,0.55)",
             padding: isMobile ? "12px 16px" : "18px 32px",
             display: "flex",
             alignItems: "center",
@@ -499,33 +488,23 @@ export default function ChatPage() {
             flexWrap: isMobile ? "wrap" : "nowrap"
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: isMobile ? "10px" : "16px", minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", minWidth: 0, background: "#ffffff", borderRadius: "12px", padding: isMobile ? "6px 10px" : "8px 14px", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
             <img
-              src="/logo kemendag.png"
-              alt="Logo Kemendag"
+              src="/logo kemendag lengkap.png"
+              alt="Logo Kementerian Perdagangan Republik Indonesia"
               style={{
-                width: isMobile ? "44px" : "70px",
-                height: isMobile ? "44px" : "70px",
-                objectFit: "cover",
-                background: "white",
-                borderRadius: "10px",
-                flexShrink: 0
+                height: isMobile ? "38px" : "46px",
+                width: "auto",
+                maxWidth: isMobile ? "170px" : "300px",
+                objectFit: "contain",
+                flexShrink: 0,
+                display: "block"
               }}
             />
-            <div style={{ textAlign: "left", minWidth: 0 }}>
-              <h2 style={{ margin: 0, fontSize: isMobile ? "16px" : "20px", fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontFamily: '"Sora", sans-serif' }}>
-                AI Document Intelligence
-              </h2>
-              {!isMobile && (
-                <p style={{ margin: "5px 0 0", fontSize: "14px", opacity: 0.9 }}>
-                  Document Intelligence System - Kemendag
-                </p>
-              )}
-            </div>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "8px", minWidth: 0 }}>
-            {!isMobile && (
+            {!isMobile && online !== true && (
               <span
                 title="Status koneksi ke backend"
                 style={{
@@ -533,22 +512,17 @@ export default function ChatPage() {
                   alignItems: "center",
                   gap: "6px",
                   fontSize: "12px",
-                  padding: "3px 10px",
+                  fontWeight: 600,
+                  padding: "4px 12px",
                   borderRadius: "20px",
-                  background: "rgba(255,255,255,0.15)",
-                  color: "#fff"
+                  border: "1px solid " + (online === null ? "#fde047" : "#fca5a5"),
+                  background: online === null ? "#fef9c3" : "#fee2e2",
+                  color: online === null ? "#854d0e" : "#991b1b",
+                  fontFamily: 'inherit'
                 }}
               >
-                <span
-                  style={{
-                    width: "8px",
-                    height: "8px",
-                    borderRadius: "50%",
-                    background: online === null ? "#facc15" : online ? "#16a75c" : "#ff1c3e",
-                    display: "inline-block"
-                  }}
-                />
-                {online === null ? "Menghubungi server…" : online ? "Terhubung" : "Server tidak merespons"}
+                <span style={{ fontSize: "12px", fontWeight: 700 }}>{online === null ? "…" : "✕"}</span>
+                {online === null ? "Menghubungi" : "Tidak merespons"}
               </span>
             )}
 
@@ -627,10 +601,11 @@ export default function ChatPage() {
             style={{
               flex: 1,
               overflowY: currentMessages.length === 0 && !loading ? "hidden" : "auto",
+              overflowX: currentMessages.length === 0 && !loading ? "hidden" : "auto",
               padding: isMobile ? "6px" : "10px",
               background: currentMessages.length === 0 && !loading
-                ? "radial-gradient(640px 260px at 50% 74%, rgba(71,118,230,0.12), transparent 70%), radial-gradient(520px 240px at 50% 24%, rgba(56,189,248,0.09), transparent 70%), #eef2f756"
-                : "#eef2f756",
+                ? "radial-gradient(rgba(0,67,156,0.06) 1px, transparent 1.4px) 0 0 / 22px 22px, #eef2f756"
+                : "radial-gradient(rgba(0,67,156,0.05) 1px, transparent 1.4px) 0 0 / 22px 22px, #eef2f756",
               position: "relative",
               display: currentMessages.length === 0 && !loading ? "flex" : "block",
               alignItems: "center",
@@ -638,72 +613,80 @@ export default function ChatPage() {
             }}
           >
             {currentMessages.length === 0 && !loading && (
+              <div className="aurora" aria-hidden="true">
+                <div
+                  className="aurora-blob"
+                  style={{
+                    width: 380,
+                    height: 380,
+                    top: -90,
+                    left: -100,
+                    background: "radial-gradient(circle, rgba(0,67,156,0.95), rgba(0,67,156,0) 68%)",
+                    opacity: 0.55,
+                    animation: "auroraDrift 16s ease-in-out infinite"
+                  }}
+                />
+                <div
+                  className="aurora-blob"
+                  style={{
+                    width: 340,
+                    height: 340,
+                    top: -50,
+                    right: -100,
+                    background: "radial-gradient(circle, rgba(56,189,248,0.95), rgba(56,189,248,0) 68%)",
+                    animation: "auroraDrift 20s ease-in-out -4s infinite"
+                  }}
+                />
+                <div
+                  className="aurora-blob"
+                  style={{
+                    width: 280,
+                    height: 280,
+                    bottom: -90,
+                    left: -40,
+                    background: "radial-gradient(circle, rgba(233,163,25,0.85), rgba(233,163,25,0) 70%)",
+                    opacity: 0.3,
+                    animation: "auroraDrift 24s ease-in-out -9s infinite"
+                  }}
+                />
+              </div>
+            )}
+
+            {currentMessages.length === 0 && !loading && (
             <div
-              className="fade-in"
+              className="fade-in hero-panel"
               style={{
                 width: "100%",
                 margin: "auto"
               }}
             >
               <div style={{ textAlign: "center" }}>
-                <div className="rise" style={{ display: "flex", justifyContent: "center", marginBottom: "6px", animationDelay: "0s" }}>
+                <div className="rise" style={{ display: "flex", justifyContent: "center", marginBottom: "14px", animationDelay: "0s" }}>
                   <img
                     src="/logo kemendag.png"
                     alt="Logo Kemendag"
                     className="logo-hover"
                     style={{
-                      width: isMobile ? "36px" : "40px",
-                      height: isMobile ? "36px" : "40px",
+                      width: isMobile ? "60px" : "84px",
+                      height: isMobile ? "60px" : "84px",
                       objectFit: "cover",
-                      background: "#ffffff",
-                      borderRadius: "12px",
-                      boxShadow: "0 6px 16px rgba(0,67,156,0.12)"
+                      mixBlendMode: "multiply"
                     }}
                   />
                 </div>
-                <h2 className="rise" style={{ margin: "0", fontSize: isMobile ? "18px" : "20px", fontWeight: 600, color: "#00439c", fontFamily: '"Sora", sans-serif', animationDelay: "0.06s" }}>
-                  {greetingByHour()}
+                <h2 className="rise" style={{ margin: "0", fontSize: isMobile ? "21px" : "24px", fontWeight: 700, letterSpacing: "-0.4px", color: "#00439c", fontFamily: '"Sora", sans-serif', animationDelay: "0.06s" }}>
+                  AI Document Intelligence – Kemendag
                 </h2>
-                <p className="rise" style={{ margin: "2px 0 0", fontSize: "12px", color: "#94a3b8", fontWeight: 500, animationDelay: "0.1s" }}>
+                <div className="rise" style={{ width: "56px", height: "3px", margin: "8px auto 0", borderRadius: "3px", background: "linear-gradient(90deg,#e9a319,#f6c453)", animationDelay: "0.08s" }} />
+                <p className="rise" style={{ margin: "6px 0 0", fontSize: "12px", color: "#64748b", fontWeight: 500, animationDelay: "0.1s" }}>
                   {todayLabel()}
                 </p>
-                <div className="rise" style={{ margin: "6px auto 0", fontSize: "15px", color: "#475569", lineHeight: "1.5", width: "100%", minHeight: "20px", animationDelay: "0.12s" }}>
-                  <Typewriter phrases={typedPhrases} />
+                <div className="rise" style={{ margin: "10px auto 0", fontSize: "15px", color: "#475569", lineHeight: "1.5", width: "100%", minHeight: "20px", animationDelay: "0.12s" }}>
+                  <Typewriter phrases={typedPhrases} delay={120} pause={2000} />
                 </div>
               </div>
 
-              {suggestions.length > 0 && (
-                <div className="rise" style={{ display: "flex", alignItems: "center", gap: "8px", maxWidth: "560px", margin: "8px auto 0", animationDelay: "0.18s" }}>
-                  <span style={{ fontSize: "12px", color: "#94a3b8", fontWeight: 600, flexShrink: 0 }}>Coba tanya:</span>
-                  <button
-                    onClick={() => sendMessage(suggestions[quickIdx])}
-                    title={suggestions[quickIdx]}
-                    style={{
-                      flex: 1,
-                      minWidth: 0,
-                      textAlign: "left",
-                      background: "#f8fafc",
-                      border: "1px solid #E8F2F8",
-                      color: "#334155",
-                      borderRadius: "10px",
-                      padding: "6px 12px",
-                      fontSize: "13px",
-                      cursor: "pointer",
-                      fontFamily: 'inherit',
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                      transition: "border-color 0.15s ease, background 0.15s ease"
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#c7d2fe"; e.currentTarget.style.background = "#eef6fd"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#E8F2F8"; e.currentTarget.style.background = "#f8fafc"; }}
-                  >
-                    💡 {suggestions[quickIdx]}
-                  </button>
-                </div>
-              )}
-
-              <div className="rise" style={{ width: "170px", height: "1px", margin: "12px auto 0", background: "linear-gradient(90deg, transparent, #c7d2fe, transparent)", animationDelay: "0.24s" }} />
+              <div className="rise" style={{ width: "190px", height: "1px", margin: "18px auto 0", background: "linear-gradient(90deg, transparent, #c7d2fe, transparent)", animationDelay: "0.24s" }} />
 
               <div
                 className="rise"
@@ -712,12 +695,12 @@ export default function ChatPage() {
                   alignItems: "center",
                   justifyContent: "center",
                   gap: "10px",
-                  margin: "10px auto 0",
+                  margin: "14px auto 0",
                   width: "100%",
                   animationDelay: "0.28s"
                 }}
               >
-                <ModelSelector models={models} model={model} onSelect={setModel} isMobile={isMobile} align="left" />
+                <ModelSelector models={models} model={model} onSelect={setModel} isMobile={isMobile} align="left" onOpenChange={setModelOpen} />
                 <div
                   className="textbox-pill"
                   style={{
@@ -735,6 +718,8 @@ export default function ChatPage() {
                   }}
                 >
                   <input
+                    autoFocus
+                    className="hero-input"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && sendMessage()}
@@ -753,28 +738,71 @@ export default function ChatPage() {
                   />
                   <button
                     onClick={() => sendMessage()}
+                    disabled={!input.trim() || loading}
                     title="Kirim pertanyaan (Enter)"
                     style={{
-                      background: "#00439c",
+                      background: !input.trim() || loading ? "#cbd5e1" : "linear-gradient(135deg, #001845, #00439c)",
                       color: "white",
                       border: "none",
                       borderRadius: "999px",
                       width: "32px",
                       height: "32px",
                       flexShrink: 0,
-                      cursor: "pointer",
+                      cursor: !input.trim() || loading ? "not-allowed" : "pointer",
                       fontSize: "16px",
                       fontFamily: 'inherit',
-                      boxShadow: "0 4px 12px rgba(0,67,156,0.35)",
-                      transition: "transform 0.15s ease"
+                      boxShadow: !input.trim() || loading ? "none" : "0 4px 12px rgba(0,67,156,0.35)",
+                      transition: "transform 0.15s ease, box-shadow 0.15s ease"
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.06)"; }}
+                    onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.transform = "scale(1.06)"; }}
                     onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
                   >
                     ➤
                   </button>
                 </div>
               </div>
+
+              {online === true && (
+                <div className="rise" style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "6px", marginTop: "16px", fontSize: "12px", color: "#64748b", animationDelay: "0.32s", visibility: modelOpen ? "hidden" : "visible" }}>
+                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#16a75c", display: "inline-block", animation: "pulseDot 1.5s infinite" }} />
+                  <span>Terhubung — siap menerima pertanyaan</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {currentMessages.length > 0 && !loading && (
+            <div style={{ display: "flex", justifyContent: "center", margin: "0 0 12px" }}>
+              {showResetConfirm ? (
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: "999px", padding: "6px 12px", boxShadow: "0 4px 12px rgba(0,0,0,0.06)" }}>
+                  <span style={{ fontSize: "13px", color: "#334155" }}>Mulai ulang percakapan?</span>
+                  <button onClick={() => { setShowResetConfirm(false); newConversation(); }} style={{ background: "#ef4444", color: "#fff", border: "none", borderRadius: "999px", padding: "5px 12px", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: 'inherit' }}>Ya</button>
+                  <button onClick={() => setShowResetConfirm(false)} style={{ background: "#f1f5f9", color: "#475569", border: "none", borderRadius: "999px", padding: "5px 12px", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: 'inherit' }}>Batal</button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowResetConfirm(true)}
+                  title="Kosongkan percakapan saat ini"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    background: "transparent",
+                    color: "#64748b",
+                    border: "1px dashed #cbd5e1",
+                    borderRadius: "999px",
+                    padding: "6px 14px",
+                    fontSize: "12.5px",
+                    fontFamily: 'inherit',
+                    cursor: "pointer",
+                    transition: "color 0.15s ease, border-color 0.15s ease"
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "#00439c"; e.currentTarget.style.borderColor = "#c7d2fe"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "#64748b"; e.currentTarget.style.borderColor = "#cbd5e1"; }}
+                >
+                  <span>↻</span> Mulai ulang percakapan
+                </button>
+              )}
             </div>
           )}
 
@@ -925,7 +953,7 @@ export default function ChatPage() {
                             </span>
                           )}
                           {m.time && (
-                            <span style={{ fontWeight: 400, fontSize: "11px", color: "#94a3b8", marginLeft: "8px" }}>
+                            <span style={{ fontWeight: 400, fontSize: "11px", color: "#64748b", marginLeft: "8px" }}>
                               {new Date(m.time).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
                             </span>
                           )}
@@ -958,7 +986,7 @@ export default function ChatPage() {
                           )}
                         </div>
                       </div>
-                      <div style={{ marginTop: "8px", lineHeight: "1.55", fontSize: "14px" }}>
+                      <div className="markdown-body" style={{ marginTop: "8px", lineHeight: "1.55", fontSize: "14px" }}>
                         {m.role === "user"
                           ? m.text
                           : (
@@ -970,6 +998,11 @@ export default function ChatPage() {
                                     sources={m.sources}
                                     onOpen={setPreviewDoc}
                                   />
+                                ),
+                                table: (props) => (
+                                  <div className="md-table-wrap">
+                                    <table {...props} />
+                                  </div>
                                 )
                               }}
                             >
@@ -1121,8 +1154,8 @@ export default function ChatPage() {
                             fontSize: "13px"
                           }}
                         >
-                          <b style={{ color: "#00439c", fontSize: "13px" }}>📚 Sumber Referensi</b>
-                          <div style={{ fontSize: "11px", color: "#94a3b8", marginTop: "4px" }}>
+                          <b style={{ color: "#c98500", fontSize: "13px", borderLeft: "3px solid #e9a319", paddingLeft: "8px" }}>📚 Sumber Referensi</b>
+                          <div style={{ fontSize: "11px", color: "#64748b", marginTop: "4px" }}>
                             Klik nomor halaman untuk membuka dokumen.
                           </div>
                           {(() => {
@@ -1443,7 +1476,7 @@ export default function ChatPage() {
                 outline: "none",
                 fontFamily: 'inherit',
                 background: loading ? "#f1f5f9" : "#fff",
-                color: loading ? "#94a3b8" : "#1e293b",
+                color: loading ? "#64748b" : "#1e293b",
                 resize: "none",
                 lineHeight: "1.45",
                 maxHeight: "140px",
@@ -1493,51 +1526,30 @@ export default function ChatPage() {
             style={{
               textAlign: "center",
               fontSize: "11px",
-              color: "#94a3b8",
+              color: "#64748b",
               background: "#ffffff",
               borderTop: "1px solid #eef2f7",
               padding: "8px 16px",
               flexShrink: 0
             }}
           >
-            Jawaban AI dapat mengandung ketidakakuratan. Verifikasi selalu dengan dokumen sumber.
+            Jawaban bersumber dari dokumen yang tersedia; silakan verifikasi dengan dokumen asli.
             <span style={{ margin: "0 8px", opacity: 0.6 }}>·</span>
-            Powered by <b style={{ fontWeight: 600, color: "#64748b" }}>ASK-Kemendag</b>
+            <b style={{ fontWeight: 600, color: "#64748b" }}>AI Document Intelligence – Kemendag</b>
           </div>
         )}
       </div>
 
-      {/* TOMBOL RIWAYAT MELAYANG DI KIRI ATAS */}
+      {/* TOMBOL RIWAYAT — PIL MELAYANG DI KIRI ATAS */}
       <button
         onClick={() => setSidebarOpen(true)}
         title="Buka riwayat percakapan"
-        className="fade-in"
-        style={{
-          position: "fixed",
-          left: 0,
-          top: isMobile ? "8px" : "18px",
-          zIndex: 30,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: "5px",
-          background: "linear-gradient(135deg,#001845,#00439c)",
-          color: "white",
-          border: "none",
-          borderRadius: "0 12px 12px 0",
-          padding: "10px 8px",
-          cursor: "pointer",
-          fontFamily: '"Inter", sans-serif',
-          fontSize: "11px",
-          fontWeight: 600,
-          boxShadow: "0 4px 14px rgba(0,28,69,0.35)",
-          transition: "box-shadow 0.15s ease"
-        }}
-        onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 6px 18px rgba(0,28,69,0.45)"; }}
-        onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 4px 14px rgba(0,28,69,0.35)"; }}
+        className="fade-in hist-pill"
+        style={{ position: "fixed", left: 30, top: 28 }}
       >
-        <span style={{ fontSize: "15px", lineHeight: 1 }}>☰</span>
-        {!isMobile && <span style={{ writingMode: "vertical-rl", textOrientation: "mixed", letterSpacing: "1px" }}>Riwayat</span>}
+        <span style={{ fontSize: "14px", lineHeight: 1 }}>☰</span>
+        <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#e9a319", flexShrink: 0 }} />
+        <span className="hist-pill-label">Riwayat</span>
       </button>
 
       {/* SIDEBAR RIWAYAT PERCAKAPAN */}
@@ -1643,7 +1655,7 @@ export default function ChatPage() {
                 const items = filteredHistory();
                 if (items.length === 0) {
                   return (
-                    <p style={{ fontSize: "13px", color: "#94a3b8", textAlign: "center", marginTop: "24px" }}>
+                    <p style={{ fontSize: "13px", color: "#64748b", textAlign: "center", marginTop: "24px" }}>
                       {historyQuery.trim()
                         ? "Tidak ada percakapan yang cocok."
                         : "Belum ada percakapan. Mulai tanya sesuatu! ✨"}
@@ -1666,7 +1678,7 @@ export default function ChatPage() {
                       style={{
                         fontSize: "11px",
                         fontWeight: 700,
-                        color: "#94a3b8",
+                        color: "#64748b",
                         textTransform: "uppercase",
                         letterSpacing: "0.5px",
                         padding: "14px 8px 4px"
@@ -1719,14 +1731,14 @@ export default function ChatPage() {
                           onClick={(e) => deleteConversation(c.id, e)}
                           style={{
                             flexShrink: 0,
-                            color: "#94a3b8",
+                            color: "#64748b",
                             fontSize: "14px",
                             padding: "2px 6px",
                             cursor: "pointer",
                             borderRadius: "6px"
                           }}
                           onMouseEnter={(e) => { e.currentTarget.style.color = "#ff1c3e"; e.currentTarget.style.background = "#fee2e2"; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.color = "#94a3b8"; e.currentTarget.style.background = "transparent"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.color = "#64748b"; e.currentTarget.style.background = "transparent"; }}
                         >
                           ✕
                         </span>
@@ -1774,7 +1786,7 @@ const miniActionStyle = {
 
 // Pemilih model AI; arah dropdown selalu ke bawah, tinggi dibatasi ruang yang tersedia
 // supaya halaman tidak ikut scroll. Daftar model selalu scroll di dalamnya.
-function ModelSelector({ models, model, onSelect, isMobile, align = "left" }) {
+function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOpenChange }) {
   const [open, setOpen] = useState(false);
   const [maxH, setMaxH] = useState(320);
   const ref = useRef(null);
@@ -1782,15 +1794,19 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left" }) {
 
   useEffect(() => {
     function onClickOutside(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target)) {
+        setOpen(false);
+        onOpenChange?.(false);
+      }
     }
     document.addEventListener("mousedown", onClickOutside);
     return () => document.removeEventListener("mousedown", onClickOutside);
-  }, []);
+  }, [onOpenChange]);
 
   function toggleOpen() {
     const next = !open;
     setOpen(next);
+    onOpenChange?.(next);
     if (!next) return;
     const btn = btnRef.current;
     const scrollEl = ref.current?.closest(".chat-scroll");
@@ -1834,7 +1850,7 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left" }) {
           fontFamily: 'inherit',
           transition: "transform 0.15s ease, border-color 0.15s ease, background 0.15s ease",
           boxShadow: open ? "0 4px 14px rgba(0,114,188,0.2)" : "0 8px 24px rgba(0,28,69,0.10)",
-          width: isMobile ? "150px" : "200px",
+          width: isMobile ? "135px" : "180px",
           minWidth: 0,
           height: "44px",
           boxSizing: "border-box",
@@ -1922,7 +1938,7 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left" }) {
               return (
                 <button
                   key={m.id}
-                  onClick={() => { onSelect(m.id); setOpen(false); }}
+                  onClick={() => { onSelect(m.id); setOpen(false); onOpenChange?.(false); }}
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -2066,15 +2082,6 @@ function historyGroupLabel(ts) {
   return d.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
 }
 
-// Sapaan mengikuti waktu lokal pengguna.
-function greetingByHour() {
-  const h = new Date().getHours();
-  if (h < 11) return "Selamat pagi";
-  if (h < 15) return "Selamat siang";
-  if (h < 19) return "Selamat sore";
-  return "Selamat malam";
-}
-
 // Label tanggal lengkap dalam bahasa Indonesia.
 function todayLabel() {
   return new Date().toLocaleDateString("id-ID", {
@@ -2154,7 +2161,7 @@ function ProcessingIndicator() {
 function SourceSkeleton() {
   return (
     <div className="fade-in" style={{ marginTop: "14px", paddingTop: "12px", borderTop: "1px solid #e2e8f0" }}>
-      <div style={{ fontSize: "13px", color: "#94a3b8", fontWeight: 600, marginBottom: "8px" }}>
+      <div style={{ fontSize: "13px", color: "#64748b", fontWeight: 600, marginBottom: "8px" }}>
         🔍 Memeriksa dokumen sumber…
       </div>
       {[0, 1].map((i) => (

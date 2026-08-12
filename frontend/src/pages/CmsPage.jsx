@@ -67,6 +67,7 @@ export default function CmsPage() {
   const [rejectTarget, setRejectTarget] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteDocTarget, setDeleteDocTarget] = useState(null);
 
   const isAdmin = user?.role === "admin";
 
@@ -208,6 +209,20 @@ export default function CmsPage() {
     }
   }
 
+  async function confirmDeleteDoc() {
+    if (!deleteDocTarget) return;
+    const id = deleteDocTarget.id;
+    setDeleteDocTarget(null);
+    setError("");
+    try {
+      await api(`/api/cms/files/${id}`, { method: "DELETE" });
+      refreshApproval();
+    } catch (err) {
+      setError(err.message);
+      refreshApproval();
+    }
+  }
+
   function logout() {
     clearSession();
     navigate("/cms/login");
@@ -346,7 +361,7 @@ export default function CmsPage() {
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, marginBottom: 14 }}>
                 <h3 style={{ ...h3Style, margin: 0 }}>Riwayat Pemrosesan</h3>
                 <div style={{ display: "flex", gap: 6 }}>
-                  {[["all", "Semua"], ["approved", "Disetujui"], ["rejected", "Ditolak"], ["error", "Error"]].map(([val, label]) => (
+                  {[["all", "Semua"], ["approved", "Disetujui"], ["rejected", "Ditolak"], ["error", "Error"], ["deleted", "Dihapus"]].map(([val, label]) => (
                     <button
                       key={val}
                       onClick={() => setHistoryFilter(val)}
@@ -366,7 +381,7 @@ export default function CmsPage() {
                   ))}
                 </div>
               </div>
-              <FileTable rows={filteredHistory} empty="Tidak ada riwayat." />
+              <FileTable rows={filteredHistory} empty="Tidak ada riwayat." onDelete={setDeleteDocTarget} />
             </div>
           </>
         )}
@@ -524,6 +539,22 @@ export default function CmsPage() {
           </p>
         </Modal>
       )}
+
+      {/* ===== MODAL: Konfirmasi Hapus Dokumen ===== */}
+      {deleteDocTarget && (
+        <Modal
+          title={`Hapus dokumen "${deleteDocTarget.originalName}"?`}
+          onClose={() => setDeleteDocTarget(null)}
+          onConfirm={confirmDeleteDoc}
+          confirmLabel="Ya, Hapus"
+          confirmColor="#ff1c3e"
+        >
+          <p style={{ margin: 0, fontSize: 14, color: "#475569" }}>
+            Dokumen akan dihapus dari sistem: file PDF, data vektor untuk pencarian AI, dan riwayat akses chatbot.
+            Tindakan ini tidak dapat dibatalkan.
+          </p>
+        </Modal>
+      )}
     </div>
   );
 
@@ -580,7 +611,14 @@ function EmptyState({ icon, text }) {
   );
 }
 
-function FileTable({ rows, empty, title }) {
+function FileTable({ rows, empty, title, onDelete }) {
+  const statusLabel = (status) =>
+    status === "pending" ? "Menunggu"
+    : status === "approved" ? "Disetujui"
+    : status === "error" ? "Gagal"
+    : status === "deleted" ? "Dihapus"
+    : "Ditolak";
+
   return (
     <div style={cardStyle}>
       {title && <h3 style={h3Style}>{title}</h3>}
@@ -591,6 +629,7 @@ function FileTable({ rows, empty, title }) {
           <thead>
             <tr>
               <Th>File</Th><Th>Status</Th><Th>Waktu</Th><Th>Catatan</Th>
+              {onDelete && <Th>Aksi</Th>}
             </tr>
           </thead>
           <tbody>
@@ -599,11 +638,25 @@ function FileTable({ rows, empty, title }) {
                 <Td>📄 {f.originalName}</Td>
                 <Td>
                   <span style={statusBadge[f.status] || statusBadge.pending}>
-                    {f.status === "pending" ? "Menunggu" : f.status === "approved" ? "Disetujui" : f.status === "error" ? "Gagal" : "Ditolak"}
+                    {statusLabel(f.status)}
+                    {f.status === "deleted" && f.deletedBy ? ` oleh ${f.deletedBy}` : ""}
                   </span>
                 </Td>
                 <Td>{fmtDate(f.uploadedAt)}</Td>
                 <Td>{f.rejectReason || (f.error ? f.error.slice(0, 60) + "…" : "-")}</Td>
+                {onDelete && (
+                  <Td>
+                    {["approved", "error"].includes(f.status) && (
+                      <button
+                        onClick={() => onDelete(f)}
+                        style={smallBtn("#ff1c3e")}
+                        title={`Hapus dokumen ${f.originalName}`}
+                      >
+                        Hapus
+                      </button>
+                    )}
+                  </Td>
+                )}
               </tr>
             ))}
           </tbody>
@@ -691,5 +744,6 @@ const statusBadge = {
   approved: { background: "#dcfce7", color: "#15803d", padding: "4px 10px", borderRadius: 8, fontSize: 12, fontWeight: 600 },
   rejected: { background: "#fee2e2", color: "#b91c1c", padding: "4px 10px", borderRadius: 8, fontSize: 12, fontWeight: 600 },
   pending: { background: "#fef9c3", color: "#a16207", padding: "4px 10px", borderRadius: 8, fontSize: 12, fontWeight: 600 },
-  error: { background: "#f1f5f9", color: "#475569", padding: "4px 10px", borderRadius: 8, fontSize: 12, fontWeight: 600 }
+  error: { background: "#f1f5f9", color: "#475569", padding: "4px 10px", borderRadius: 8, fontSize: 12, fontWeight: 600 },
+  deleted: { background: "#e2e8f0", color: "#475569", padding: "4px 10px", borderRadius: 8, fontSize: 12, fontWeight: 600 }
 };

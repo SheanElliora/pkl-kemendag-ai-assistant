@@ -136,6 +136,26 @@
   box-shadow: 0 0 0 4px rgba(0, 67, 156, 0.12), 0 8px 24px rgba(0, 28, 69, 0.10);
 }
 
+/* Placeholder input hero: lebih lembut */
+.hero-input::placeholder {
+  color: #9fafc2;
+  opacity: 1;
+}
+
+/* Halo ring di sekitar logo hero: mengembang sekali saat halaman dibuka */
+.logo-halo {
+  animation: logoGlow 1s ease-out 0.1s both;
+}
+
+@keyframes logoGlow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 67, 156, 0.4), 0 6px 16px rgba(0, 67, 156, 0.12);
+  }
+  100% {
+    box-shadow: 0 0 0 20px rgba(0, 67, 156, 0), 0 6px 16px rgba(0, 67, 156, 0.12);
+  }
+}
+
 .pop-in {
   animation: popIn 0.2s ease-out both;
 }
@@ -298,4 +318,226 @@ button:not(:disabled):active {
 button:disabled {
   cursor: not-allowed;
   opacity: 0.6;
+}
+
+
+/* =====================================
+   Styling markdown jawaban AI (tabel dll.)
+   ===================================== */
+
+/* Tabel lebar: bungkus scroll horizontal di layar kecil */
+.md-table-wrap {
+  overflow-x: auto;
+  margin: 12px 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.markdown-body table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 100%;
+  font-size: 13px;
+  background: #ffffff;
+}
+
+.markdown-body th {
+  background: linear-gradient(180deg, #f1f7fc, #e8f0fa);
+  color: #00439c;
+  font-weight: 700;
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 2px solid #d7e4f1;
+  white-space: nowrap;
+}
+
+.markdown-body td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #eef2f6;
+  vertical-align: top;
+}
+
+.markdown-body tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.markdown-body tbody tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+.markdown-body tbody tr:hover {
+  background: #eef6fd;
+}
+
+/* Elemen markdown lain, biar seragam */
+.markdown-body p:first-child {
+  margin-top: 0;
+}
+
+.markdown-body p:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-body pre {
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  overflow-x: auto;
+  font-size: 12.5px;
+  line-height: 1.5;
+  margin: 10px 0;
+}
+
+.markdown-body code {
+  background: #eef2f6;
+  color: #0f4a8a;
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-family: "JetBrains Mono", "Consolas", monospace;
+}
+
+.markdown-body pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  border-radius: 0;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  margin: 8px 0;
+  padding-left: 22px;
+}
+
+.markdown-body li {
+  margin: 3px 0;
+}
+
+.markdown-body hr {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 14px 0;
+}
+
+.markdown-body blockquote {
+  margin: 10px 0;
+  padding: 2px 12px;
+  border-left: 3px solid #c7d2fe;
+  color: #475569;
+  background: #f8fafc;
+  border-radius: 0 8px 8px 0;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4 {
+  color: #0f172a;
+  margin: 14px 0 6px;
+  line-height: 1.35;
+}
+
+.markdown-body h1 { font-size: 19px; }
+.markdown-body h2 { font-size: 17px; }
+.markdown-body h3 { font-size: 15.5px; }
+.markdown-body h4 { font-size: 14.5px; }
+
+.markdown-body strong {
+  color: #0f172a;
+}
+
+
+/* =====================================
+   Tombol riwayat — pil melayang kiri atas
+   ===================================== */
+
+/* Pil melayang penuh */
+.hist-pill {
+  position: fixed;
+  left: 14px;
+  top: 14px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #001845, #00439c);
+  color: white;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 28, 69, 0.35);
+  font-weight: 600;
+  font-family: "Inter", sans-serif;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.hist-pill:hover {
+  box-shadow: 0 6px 20px rgba(0, 28, 69, 0.45);
+  transform: translateY(-1px);
+}
+
+.hist-pill-label {
+  font-size: 13px;
+}
+
+
+/* =====================================
+   Latar aurora di halaman utama chat
+   Anchor ke AREA CHAT (bukan hero-panel
+   yang ter-centering), sehingga glow
+   berada di pojok atas area chat.
+   chat-scroll sudah overflow:hidden
+   saat halaman kosong jadi tidak scroll.
+   ===================================== */
+
+.hero-panel {
+  position: relative;
+}
+
+.aurora {
+  position: absolute;
+  inset: -50px -70px;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Konten chat selalu tampil di atas aurora */
+.chat-scroll > *:not(.aurora) {
+  position: relative;
+  z-index: 1;
+}
+
+/* Hormati preferensi pengguna yang mengurangi animasi */
+@media (prefers-reduced-motion: reduce) {
+  .aurora-blob {
+    animation: none !important;
+  }
+}
+
+@keyframes auroraDrift {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(28px, -24px) scale(1.12);
+  }
+  66% {
+    transform: translate(-22px, 18px) scale(0.92);
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+.aurora-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(64px);
+  opacity: 0.45;
+  will-change: transform;
 }

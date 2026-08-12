@@ -3,10 +3,13 @@ import path from "path";
 
 import {
     DOCS_FOLDER,
-    UPLOADS_FOLDER
+    UPLOADS_FOLDER,
+    OCR_FOLDER,
+    CHUNK_FOLDER
 } from "../config.js";
 import { readJson, writeJson } from "./storeService.js";
 import { ingestDocument } from "../ingest.js";
+import { deleteVectorsByFilename } from "./vectorStorage.js";
 
 
 // =====================================
@@ -243,6 +246,88 @@ export function rejectFile(id, rejectedBy, reason) {
     record.rejectedBy = rejectedBy;
     record.rejectedAt = new Date().toISOString();
     record.rejectReason = reason || "";
+
+    saveFiles(files);
+
+    return { file: record };
+
+}
+
+
+// =====================================
+// Delete: hapus dokumen yang sudah
+// disetujui/diproses.
+// Menghapus file fisik di docs +
+// vector-nya di Chroma, lalu menandai
+// record sebagai "deleted" (audit).
+// =====================================
+
+export async function deleteFile(id, deletedBy) {
+
+    const files = getFiles();
+
+    const record = files.find(
+        file => file.id === Number(id)
+    );
+
+    if (!record) {
+
+        return { error: "File tidak ditemukan" };
+
+    }
+
+    if (!["approved", "error"].includes(record.status)) {
+
+        return { error: "Hanya dokumen yang sudah disetujui yang dapat dihapus" };
+
+    }
+
+    // 1. Hapus file fisik dari folder docs
+    const destPath =
+    path.join(DOCS_FOLDER, record.filename);
+
+    if (fs.existsSync(destPath)) {
+
+        fs.unlinkSync(destPath);
+
+    }
+
+    // 1b. Hapus artifact hasil proses (teks OCR + chunk json)
+    const stem =
+    path.basename(record.filename, ".pdf");
+
+    const ocrPath =
+    path.join(OCR_FOLDER, stem + ".txt");
+
+    const chunkPath =
+    path.join(CHUNK_FOLDER, stem + "_chunks.json");
+
+    [ocrPath, chunkPath].forEach(p => {
+
+        if (fs.existsSync(p)) {
+
+            fs.unlinkSync(p);
+
+        }
+
+    });
+
+    // 2. Hapus vector/chunk-nya dari Chroma
+    try {
+
+        await deleteVectorsByFilename(record.filename);
+
+    }
+    catch (error) {
+
+        return { error: "Gagal menghapus data vektor: " + error.message };
+
+    }
+
+    // 3. Tandai record sebagai deleted (audit trail)
+    record.status = "deleted";
+    record.deletedBy = deletedBy;
+    record.deletedAt = new Date().toISOString();
 
     saveFiles(files);
 

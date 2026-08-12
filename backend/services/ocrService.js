@@ -36,7 +36,7 @@ export async function pdfToTextOCR(pdfPath) {
 
 
     await execAsync(
-        `pdftoppm -png "${pdfPath}" "${outputPrefix}"`
+        `pdftoppm -png -r 300 "${pdfPath}" "${outputPrefix}"`
     );
 
 

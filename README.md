@@ -24,7 +24,7 @@ Sistem **Retrieval-Augmented Generation (RAG)** untuk membantu pencarian dan tan
 * Node.js + Express.js
 * ChromaDB
 * OpenRouter API (multi-model)
-* OCR (Tesseract.js / PaddleOCR)
+* OCR (Tesseract CLI via `pdftoppm`)
 * PDF Parsing (pdf-parse, pdf-poppler)
 * Autentikasi JWT + bcrypt + rate-limit login (express-rate-limit)
 * Upload file (multer)
@@ -35,12 +35,18 @@ Sistem **Retrieval-Augmented Generation (RAG)** untuk membantu pencarian dan tan
 * React Router (HashRouter)
 * react-markdown
 
+### Model AI
+
+* **Chat (OpenRouter, multi-model)**: Gemini 2.5 Flash/Pro, GPT-4o/mini, Llama 3.1, Claude 3.5 Sonnet (satu API key).
+* **Embedding lokal** (`Xenova/multilingual-e5-small`): retrieval lintas bahasa (Indonesia ↔ Inggris) dengan prefix `query:`/`passage:`.
+* **Reranker lokal** (`Xenova/bge-reranker-base`): cross-encoder multibahasa yang menilai ulang kandidat (query, chunk) secara bersamaan setelah pencarian awal. (Percobaan awal memakai `ms-marco-MiniLM-L-6-v2`, tetapi memberi skor ~0 untuk query Indonesia sehingga tidak membedakan dokumen.)
+
 ### Pendekatan AI
 
 * Retrieval-Augmented Generation (RAG)
-* Text Chunking
+* Text Chunking berbasis kalimat (chunk selalu berawal/berakhir di batas kalimat)
 * Embedding Vector
-* Semantic Retrieval
+* Semantic Retrieval + Hybrid Ranking (embedding + kata kunci + rerank cross-encoder)
 
 ---
 
@@ -217,7 +223,10 @@ Ketiga proses harus berjalan bersamaan agar fitur RAG dapat digunakan.
 node scripts/resetChroma.js   # hapus isi database ChromaDB
 node scripts/checkChroma.js    # cek jumlah data di ChromaDB
 node scripts/listModels.js     # tampilkan daftar model OpenRouter
+node scripts/_reindex.mjs      # bangun ulang semua vektor dari chunks (setelah ganti embedding model)
 ```
+
+> **Penting**: bila model embedding diganti, jalankan `npm run ingest` (atau `node scripts/_reindex.mjs`) agar seluruh vektor di ChromaDB dihitung ulang dengan model baru. Vektor lama dari model lain tidak kompatibel.
 
 ---
 

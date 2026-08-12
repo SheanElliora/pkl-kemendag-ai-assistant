@@ -2,11 +2,16 @@ import { ChromaClient } from "chromadb";
 import fs from "fs";
 import path from "path";
 import { createEmbedding } from "./embedderService.js";
+import { rerankDocuments } from "./rerankerService.js";
 import { DOCS_FOLDER } from "../config.js";
 
 
 const client = new ChromaClient();
 
+// Log detail tiap langkah retrieval (kandidat, filter,
+// skor). Aktifkan hanya saat debugging; matikan saat
+// benchmark agar output ringkas & cepat.
+const DEBUG = process.env.RETRIEVER_DEBUG === "1";
 
 // ============================================
 // Parameter retrieval (bisa di-tune di sini)
@@ -32,6 +37,15 @@ const client = new ChromaClient();
 //                   cocok dengan kata pada pertanyaan.
 // MIN_CHUNK_LENGTH: chunk terlalu pendek (header,
 //                   cover, "-") dibuang.
+// RERANK_WIDTH    : berapa kandidat terbaik (berdasar
+//                   skor hybrid) yang dikirim ke model
+//                   cross-encoder untuk dinilai ulang
+//                   secara bersama (query+chunk).
+// RERANK_WEIGHT   : bobot skor relevansi cross-encoder
+//                   dalam skor akhir. Cross-encoder
+//                   lebih akurat dari embedding, jadi
+//                   bobot ini dominan menentukan
+//                   urutan akhir.
 // ============================================
 
 const MAX_CANDIDATES = 7;
@@ -41,6 +55,8 @@ const SEARCH_WIDTH = 60;
 const KEYWORD_BONUS = 0.05;
 const FILENAME_BONUS = 0.15;
 const MIN_CHUNK_LENGTH = 40;
+const RERANK_WIDTH = 16;
+const RERANK_WEIGHT = 0.5;
 
 // Kata umum yang bising untuk token 3 huruf.
 const STOP3 = new Set([
@@ -48,6 +64,36 @@ const STOP3 = new Set([
     "the","and","for","was","are","but","not","you",
     "all","can","had","her","his","its","our","out",
     "who","may","per","dna","nas","hns","xbe"
+]);
+
+// Kata umum (Indonesia/Inggris) yang TIDAK dihitung sebagai
+// kata kunci penting — meski panjang >= 4 huruf. Kata seperti
+// "untuk", "yang", "digunakan" hampir selalu muncul di SEMUA
+// dokumen, sehingga bila dihitung sebagai keyword, dokumen
+// yang sebenarnya tidak relevan ikut naik peringkat.
+const STOPWORD_ANY_LENGTH = new Set([
+    "yang","dengan","untuk","dari","dalam","pada","akan","tidak","juga",
+    "dapat","harus","serta","sudah","lebih","saat","agar","supaya",
+    "bagi","oleh","karena","sampai","antara","melalui","menjadi",
+    "adalah","sebagai","bahwa","atau","namun","tentang","mengenai",
+    "terkait","berdasarkan","membutuhkan","sistem","merupakan",
+    "berapa","bagaimana","apakah","mengapa","kapan","dimana","mana",
+    "tolong","bisa","untuk","sebutkan","jelaskan","apa","siapa",
+    "digunakan","membangun","melakukan","terdapat","tersebut",
+    "itu","ini","ada","dengan","sebuah","seluruh","semua","setiap",
+    "beberapa","banyak","utama","umum","besar","kecil","tinggi",
+    "rendah","baru","lama","sangat","kurang","cukup","hampir",
+    "maka","saya","kami","kita","mereka","anda","kalian",
+    "were","been","being","have","has","had","does","did","doing",
+    "would","could","should","shall","will","may","might","must",
+    "than","then","them","they","this","that","these","those",
+    "which","whose","where","when","while","there","here","about",
+    "into","over","under","again","further","once","only","other",
+    "some","such","same","own","each","both","few","more","most",
+    "because","through","during","before","after","above","below",
+    "use","using","used","using","make","made","making","get","got",
+    "take","took","know","known","see","saw","say","said","give",
+    "given","come","came","think","tell","show","find","found"
 ]);
 
 // ============================================
@@ -224,7 +270,10 @@ export async function searchDocuments(question){
         : question;
 
     const queryVector =
-    await createEmbedding(searchQuery);
+    await createEmbedding(
+        searchQuery,
+        "query"
+    );
 
 
 
@@ -251,19 +300,21 @@ export async function searchDocuments(question){
 
 
 
-    console.log("\n===== SEARCH RESULT =====");
+    if (DEBUG) {
+        console.log("\n===== SEARCH RESULT =====");
 
-    console.log(
-        "Question:",
-        question
-    );
-
-
-
-
+        console.log(
+            "Question:",
+            question
+        );
+    }
 
 
-    const candidates = [];
+
+
+
+
+    let candidates = [];
 
 
 
@@ -283,8 +334,10 @@ export async function searchDocuments(question){
     .filter(w=>{
         // angka 2+ digit, kata 4+ huruf, atau
         // kata 3 huruf yang bukan stopword
+        // (kata umum 4+ huruf juga dibuang: "untuk",
+        //  "digunakan", dll. hampir muncul di semua dokumen)
         return (w.length >= 2 && /^\d+$/.test(w))
-            || w.length >= 4
+            || (w.length >= 4 && !STOPWORD_ANY_LENGTH.has(w))
             || (w.length === 3 && !STOP3.has(w));
     });
 
@@ -305,21 +358,21 @@ result.documents[0].forEach(
 
 
 
-            console.log(
+            if (DEBUG) {
+                console.log(
+                    "Candidate:",
 
-                "Candidate:",
+                    meta.filename,
 
-                meta.filename,
+                    "| Page:",
 
-                "| Page:",
+                    meta.page,
 
-                meta.page,
+                    "| Distance:",
 
-                "| Distance:",
-
-                distance
-
-            );
+                    distance
+                );
+            }
 
 
 
@@ -331,11 +384,13 @@ result.documents[0].forEach(
 
             if (!activeFiles.has((meta.filename || "").toLowerCase())) {
 
-                console.log(
-                    "Dibuang dokumen tidak aktif:",
-                    meta.filename,
-                    meta.page
-                );
+                if (DEBUG) {
+                    console.log(
+                        "Dibuang dokumen tidak aktif:",
+                        meta.filename,
+                        meta.page
+                    );
+                }
 
                 return;
 
@@ -365,11 +420,13 @@ result.documents[0].forEach(
 
             ){
 
-                console.log(
-                    "Dibuang daftar isi:",
-                    meta.filename,
-                    meta.page
-                );
+                if (DEBUG) {
+                    console.log(
+                        "Dibuang daftar isi:",
+                        meta.filename,
+                        meta.page
+                    );
+                }
 
 
                 return;
@@ -393,10 +450,12 @@ result.documents[0].forEach(
 
             ){
 
-                console.log(
-                    "Dibuang cover:",
-                    meta.page
-                );
+                if (DEBUG) {
+                    console.log(
+                        "Dibuang cover:",
+                        meta.page
+                    );
+                }
 
 
                 return;
@@ -414,12 +473,14 @@ result.documents[0].forEach(
 
             if(doc.trim().length < MIN_CHUNK_LENGTH){
 
-                console.log(
-                    "Dibuang chunk pendek:",
-                    meta.filename,
-                    meta.page,
-                    `(${doc.trim().length} char)`
-                );
+                if (DEBUG) {
+                    console.log(
+                        "Dibuang chunk pendek:",
+                        meta.filename,
+                        meta.page,
+                        `(${doc.trim().length} char)`
+                    );
+                }
 
 
                 return;
@@ -557,6 +618,70 @@ result.documents[0].forEach(
 
 
 
+    // ==================================
+    // Rerank dengan cross-encoder
+    //
+    // Kandidat terbaik berdasarkan skor hybrid
+    // (embedding + kata kunci) dikirim ke model
+    // ms-marco-MiniLM-L-6-v2 yang menilai pasangan
+    // (query, chunk) secara BERSAMA. Cross-encoder
+    // jauh lebih tajam daripada embedding terpisah,
+    // sehingga urutan akhir mengikuti skor ini.
+    //
+    // Skor akhir menggabungkan skor hybrid (semakin
+    // kecil semakin baik) dengan skor cross-encoder
+    // (semakin besar semakin baik), sehingga:
+    //   item.rerankScore = item.score
+    //                     - RERANK_WEIGHT * rerank[i]
+    // ==================================
+
+    if (candidates.length > 0) {
+
+        const topForRerank =
+        candidates
+        .slice(0, RERANK_WIDTH);
+
+        if (DEBUG) {
+            console.log(
+                "Rerank",
+                topForRerank.length,
+                "kandidat dengan cross-encoder..."
+            );
+        }
+
+        const rerankScores =
+        await rerankDocuments(
+            question,
+            topForRerank.map(item=>item.doc)
+        );
+
+        topForRerank.forEach((item, i)=>{
+
+            item.rerankScore = rerankScores[i];
+
+        });
+
+        candidates =
+        candidates
+        .map(item=>{
+
+            if (item.rerankScore !== undefined) {
+
+                return {
+                    ...item,
+                    score: item.score - RERANK_WEIGHT * item.rerankScore
+                };
+
+            }
+
+            return item;
+
+        })
+        .sort((a,b)=>a.score - b.score);
+
+    }
+
+
 
 
 
@@ -591,12 +716,14 @@ result.documents[0].forEach(
             item.score > maxAllowedScore
         ){
 
+        if (DEBUG) {
             console.log(
                 "Dibuang (skor jauh relatif):",
                 item.score.toFixed(4),
                 "> batas",
                 maxAllowedScore.toFixed(4)
             );
+        }
 
             return false;
 
@@ -645,10 +772,12 @@ result.documents[0].forEach(
 
 
 
-    console.log(
-        "Dokumen lolos:",
-        documents.length
-    );
+    if (DEBUG) {
+        console.log(
+            "Dokumen lolos:",
+            documents.length
+        );
+    }
 
 
 

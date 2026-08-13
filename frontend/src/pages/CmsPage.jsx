@@ -68,6 +68,7 @@ export default function CmsPage() {
   const [rejectReason, setRejectReason] = useState("");
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteDocTarget, setDeleteDocTarget] = useState(null);
+  const [processingId, setProcessingId] = useState(null);
 
   const isAdmin = user?.role === "admin";
 
@@ -153,6 +154,7 @@ export default function CmsPage() {
   // ---- Persetujuan admin ----
 
   async function approve(id) {
+    setProcessingId(id);
     try {
       await api(`/api/cms/files/${id}/approve`, { method: "POST", body: {} });
       refreshApproval();
@@ -160,6 +162,7 @@ export default function CmsPage() {
       setError(err.message);
       refreshApproval();
     }
+    setProcessingId(null);
   }
 
   // Buka modal penolakan (bukan window.prompt)
@@ -171,6 +174,7 @@ export default function CmsPage() {
   async function confirmReject() {
     if (!rejectTarget) return;
     const id = rejectTarget.id;
+    setProcessingId(id);
     try {
       await api(`/api/cms/files/${id}/reject`, {
         method: "POST",
@@ -182,6 +186,7 @@ export default function CmsPage() {
       setError(err.message);
       refreshApproval();
     }
+    setProcessingId(null);
   }
 
   async function changeRole(id, role) {
@@ -347,8 +352,8 @@ export default function CmsPage() {
                         <Td>{f.uploadedBy}</Td>
                         <Td>{fmtDate(f.uploadedAt)}</Td>
                         <Td>
-                          <button onClick={() => approve(f.id)} style={smallBtn("#16a75c")} title="Terima & proses dokumen">✔ Terima</button>
-                          <button onClick={() => openReject(f)} style={smallBtn("#ff1c3e")} title="Tolak dokumen">✖ Tolak</button>
+                          <button onClick={() => approve(f.id)} style={{ ...smallBtn("#16a75c"), ...(processingId !== null ? { opacity: 0.6, cursor: "not-allowed" } : {}) }} title="Terima & proses dokumen" disabled={processingId !== null}>{processingId === f.id ? "Memproses…" : "✔ Terima"}</button>
+                          <button onClick={() => openReject(f)} style={{ ...smallBtn("#ff1c3e"), ...(processingId !== null ? { opacity: 0.6, cursor: "not-allowed" } : {}) }} title="Tolak dokumen" disabled={processingId !== null}>✖ Tolak</button>
                         </Td>
                       </tr>
                     ))}

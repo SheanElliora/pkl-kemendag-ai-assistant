@@ -29,7 +29,30 @@ const router = Router();
 // Konfigurasi Upload PDF
 // Batas ukuran: 20 MB (dari config.js)
 // Hanya menerima application/pdf
+// Nama file disanitasi: hanya mengambil
+// basename & menolak karakter berbahaya
+// (path traversal, karakter Windows
+// ilegal) agar tidak merusak folder.
 // ======================================
+
+function sanitizeFilename(name) {
+
+    // Buang semua bagian direktori/path
+    const base = String(name || "")
+        .replace(/^.*[\\/]/, "")
+        .trim();
+
+    // Karakter yang menyebabkan masalah di
+    // sistem file Windows/berbagi situasi
+    return base
+        .replace(/[<>:"/\\|?*\x00-\x1F]/g, "_")
+        // Buang spasi ganda & di ujung
+        .replace(/\s+/g, " ")
+        .trim()
+        // Nama kosong -> fallback acak
+        .slice(0, 180) || `dokumen_${Date.now()}`;
+
+}
 
 const storage = multer.diskStorage({
 
@@ -41,7 +64,7 @@ const storage = multer.diskStorage({
 
     filename: function(req, file, cb){
 
-        cb(null, file.originalname);
+        cb(null, sanitizeFilename(file.originalname));
 
     }
 

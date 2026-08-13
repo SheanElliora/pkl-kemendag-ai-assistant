@@ -12,6 +12,8 @@ import { CORS_ORIGINS, DOCS_FOLDER } from "./config.js";
 import { ensureDefaultAdmin } from "./services/userService.js";
 import { ensureFolders } from "./services/fileService.js";
 import { MODEL_CATALOG } from "./services/modelCatalog.js";
+import { createEmbedding } from "./services/embedderService.js";
+import { rerankDocuments } from "./services/rerankerService.js";
 
 
 const app = express();
@@ -207,6 +209,56 @@ const PORT =
 process.env.PORT || 3001;
 
 
+// ==============================
+// Warm-up model AI (embedding &
+// reranker) saat server start.
+//
+// Model dimuat lazy oleh layanan
+// masing-masing; tanpa warm-up,
+// pertanyaan PERTAMA setelah
+// start akan menunggu muat model
+// yang bisa memakan puluhan detik
+// (buruk untuk demo). Dipanggil
+// setelah listen supaya server
+// langsung merespons.
+// ==============================
+
+async function warmupModels() {
+
+    try {
+
+        console.log("\n===== WARMUP MODEL =====");
+
+        if (process.env.WARMUP_MODELS === "off") {
+
+            console.log("Warm-up dinonaktifkan (WARMUP_MODELS=off)");
+
+            return;
+
+        }
+
+        await createEmbedding("passage: warmup");
+
+        console.log("Embedding model: siap");
+
+        await rerankDocuments("warmup", ["warmup"]);
+
+        console.log("Reranker model: siap");
+
+        console.log("===== WARMUP SELESAI =====\n");
+
+    }
+    catch(error){
+
+        console.log(
+            "Warm-up model gagal (tidak fatal):",
+            error.message
+        );
+
+    }
+
+}
+
 // Pastikan user admin default tersedia
 // sebelum server menerima permintaan.
 ensureDefaultAdmin();
@@ -219,6 +271,11 @@ app.listen(PORT, () => {
     console.log(
         `Backend berjalan di http://localhost:${PORT}`
     );
+
+
+    // Muat model di latar belakang
+    // (tidak memblokir permintaan masuk)
+    warmupModels();
 
 
 });

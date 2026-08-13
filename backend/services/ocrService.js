@@ -1,13 +1,21 @@
 import { exec } from "child_process";
 import fs from "fs";
 import path from "path";
+import crypto from "crypto";
 import { promisify } from "util";
 import { OCR_FOLDER } from "../config.js";
 
 const execAsync = promisify(exec);
 
 
-const TEMP_FOLDER = "./temp_ocr";
+// Folder temp UNIK per proses OCR agar dua+ dokumen
+// yang diproses bersamaan tidak saling menimpa file
+// gambar (korupsi teks). Dibersihkan di akhir jalan.
+const TEMP_FOLDER =
+path.join(
+    "./temp_ocr",
+    crypto.randomBytes(4).toString("hex")
+);
 
 
 export async function pdfToTextOCR(pdfPath) {
@@ -17,7 +25,7 @@ export async function pdfToTextOCR(pdfPath) {
 
 
     if (!fs.existsSync(TEMP_FOLDER)) {
-        fs.mkdirSync(TEMP_FOLDER);
+        fs.mkdirSync(TEMP_FOLDER, { recursive: true });
     }
 
 

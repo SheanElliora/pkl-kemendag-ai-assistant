@@ -14,6 +14,7 @@ Sistem **Retrieval-Augmented Generation (RAG)** untuk membantu pencarian dan tan
 * Alur upload dokumen: **pending → approved/ditolak**. Dokumen baru baru diproses (OCR → chunking → embedding) setelah disetujui admin.
 * OCR, chunking, dan embedding otomatis saat dokumen disetujui.
 * Penyimpanan embedding pada ChromaDB.
+* **Sitasi nomor halaman tercetak**: jawaban disertai nomor halaman yang benar-benar tercetak pada dokumen (bukan nomor chunk retrieval). Bila tidak terdeteksi, memakai indeks PDF sebagai cadangan.
 
 ---
 
@@ -224,6 +225,8 @@ node scripts/resetChroma.js   # hapus isi database ChromaDB
 node scripts/checkChroma.js    # cek jumlah data di ChromaDB
 node scripts/listModels.js     # tampilkan daftar model OpenRouter
 node scripts/_reindex.mjs      # bangun ulang semua vektor dari chunks (setelah ganti embedding model)
+node scripts/_benchmark.mjs    # evaluasi retrieval terhadap 82 soal (dokumen/halaman/frasa)
+node scripts/_updatePrintedPages.mjs  # hitung ulang nomor halaman tercetak di chunks + metadata Chroma
 ```
 
 > **Penting**: bila model embedding diganti, jalankan `npm run ingest` (atau `node scripts/_reindex.mjs`) agar seluruh vektor di ChromaDB dihitung ulang dengan model baru. Vektor lama dari model lain tidak kompatibel.

@@ -1,4 +1,6 @@
 import { searchDocuments } from "../services/retrieverService.js";
+import { extractPrintedPage } from "../services/chunkService.js";
+import { cleanText } from "../services/textCleaner.js";
 import fs from "fs";
 import path from "path";
 
@@ -137,6 +139,27 @@ function containsPhrase(texts, phrase) {
 
 let docHit = 0, docTop5 = 0, pageHit = 0, pageHitTol = 0, phraseInTop7 = 0;
 
+// Konversi indeks PDF (t.page) -> nomor halaman TERCETAK
+// yang ditampilkan sistem (printedPage). Benchmark refs
+// ditulis memakai indeks PDF; sistem menampilkan nomor
+// tercetak, jadi ukur kecocokan pada nilai yang DITAMPILKAN.
+const printedCache = {};
+function printedOf(file, index) {
+    if (!printedCache[file]) {
+        printedCache[file] = {};
+        try {
+            const txt = file.replace(/\.pdf$/i, ".txt");
+            const text = fs.readFileSync(path.join(OCR_DIR, txt), "utf8");
+            const pages = text.split(/--- HALAMAN \d+ ---/).filter(p => p.trim()).map((p, i) => ({ page: i + 1, text: cleanText(p) }));
+            for (const pg of pages) {
+                printedCache[file][pg.page] = extractPrintedPage(pg.text, pg.page);
+            }
+        } catch { /* biarkan kosong */ }
+    }
+    const p = printedCache[file][index];
+    return p ?? index;
+}
+
 // Untuk debugging cepat: TESTS_LIMIT=N hanya menjalankan
 // N soal pertama (hemat waktu, tanpa mengedit daftar).
 const TEST_LIMIT =
@@ -151,8 +174,10 @@ for (const t of TESTS.slice(0, TEST_LIMIT)) {
 
     const topIsCorrect = files[0]?.toLowerCase() === t.file.toLowerCase();
     const inTop5 = files.slice(0, 5).some(f => f.toLowerCase() === t.file.toLowerCase());
-    const pageIsCorrect = files[0]?.toLowerCase() === t.file.toLowerCase() && pages[0] === t.page;
-    const pageIsCorrectTol = files[0]?.toLowerCase() === t.file.toLowerCase() && Math.abs(pages[0] - t.page) <= 1;
+    // Halaman sasaran = nomor tercetak pada indeks PDF t.page
+    const targetPrinted = printedOf(t.file, t.page);
+    const pageIsCorrect = files[0]?.toLowerCase() === t.file.toLowerCase() && pages[0] === targetPrinted;
+    const pageIsCorrectTol = files[0]?.toLowerCase() === t.file.toLowerCase() && Math.abs(pages[0] - targetPrinted) <= 1;
     const phraseFound = containsPhrase(result.documents, t.phrase);
 
     if (topIsCorrect) docHit++;
@@ -163,7 +188,7 @@ for (const t of TESTS.slice(0, TEST_LIMIT)) {
 
     if (!topIsCorrect || !pageIsCorrect || !phraseFound) {
         console.log(`\n[${topIsCorrect ? "OK" : "XX"}] ${t.q}`);
-        console.log(`   harus: ${t.file} (hal ${t.page}) | frasa: "${t.phrase}"`);
+        console.log(`   harus: ${t.file} (hal ${t.page} => tercetak ${targetPrinted}) | frasa: "${t.phrase}"`);
         console.log(`   top1 : ${files[0]} (hal ${pages[0]})`);
         console.log(`   top5: ${files.slice(0, 5).join(" | ")}`);
         if (!phraseFound) {

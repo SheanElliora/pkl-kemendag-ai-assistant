@@ -37,7 +37,28 @@ function looksLikeYear(n) {
 
 }
 
-export function extractPrintedPage(text) {
+// Angka romawi kecil lazim dipakai halaman pembuka
+// (i, ii, iii, ..., xx) dokumen resmi/laporan.
+const ROMAN_TO_INT = {
+
+    i: 1, ii: 2, iii: 3, iv: 4, v: 5, vi: 6, vii: 7, viii: 8,
+    ix: 9, x: 10, xi: 11, xii: 12, xiii: 13, xiv: 14, xv: 15,
+    xvi: 16, xvii: 17, xviii: 18, xix: 19, xx: 20
+
+};
+
+function isValidPageNumber(n) {
+
+    return (
+        Number.isInteger(n) &&
+        n >= 1 &&
+        n <= 9999 &&
+        !looksLikeYear(n)
+    );
+
+}
+
+export function extractPrintedPage(text, pageIndex) {
 
     if (!text) return null;
 
@@ -50,12 +71,11 @@ export function extractPrintedPage(text) {
     if (lines.length === 0) return null;
 
     // Lokasi favorit nomor halaman: baris paling
-    // atas (header) dan paling bawah (footer).
+    // bawah (footer) dan paling atas (header).
     const heads = lines.slice(0, 1);
     const tails = lines.slice(-2);
+    const lastLine = lines[lines.length - 1];
     const pool = [...tails, ...heads];
-
-    const candidates = [];
 
     for (const line of pool) {
 
@@ -67,33 +87,91 @@ export function extractPrintedPage(text) {
             /^[\s.\-–—|:]*(\d{1,4})[\s.\-–—|:]*$/
         );
 
-        if (m) candidates.push(Number(m[1]));
+        if (m) {
 
-        // 2) Eksplisit "Halaman/Page/hal./hlm. 12"
+            const n = Number(m[1]);
+
+            if (isValidPageNumber(n)) return n;
+
+        }
+
+        // 2) Angka romawi kecil saja pada satu baris
+        //    (halaman pembuka: "vi", "iii", dst.).
         m =
         line.match(
-            /(?:halaman|page|hal\.?|hlm\.?|p\.?)\s*[:.]?\s*(\d{1,4})/i
+            /^[\s.\-–—|:]*([ivxlcdm]{1,7})[\s.\-–—|:]*$/i
         );
 
-        if (m) candidates.push(Number(m[1]));
+        if (m) {
 
-    }
+            const rn = m[1].toLowerCase();
 
-    // Pilih kandidat paling masuk akal: angka positif
-    // yang bukan tahun. Prefer angka relevan kecil.
-    for (const c of candidates) {
+            if (ROMAN_TO_INT[rn]) return ROMAN_TO_INT[rn];
 
-        if (c >= 1 && c <= 9999 && !looksLikeYear(c)) {
+        }
 
-            return c;
+        // 3) Pola "- N -" di AWAL baris, umum pada
+        //    dokumen hukum/peraturan: "- 2 -  5. ...",
+        //    "- 10 - Pasal 21 ...".
+        m =
+        line.match(
+            /^[\s.\-–—|:]*[-–—]\s*(\d{1,4})\s*[-–—]/
+        );
+
+        if (m) {
+
+            const n = Number(m[1]);
+
+            if (isValidPageNumber(n)) return n;
+
+        }
+
+        // 4) Nomor di AKHIR baris TERAKHIR halaman
+        //    (footer), dipisah spasi/pipa/en-dash dari
+        //    teks isi:
+        //      "...VOL. 1/2020 | 4"
+        //      "...trainable 18"
+        //      "...JMPITA) 43"
+        //    Hanya baris terakhir yang diperiksa — baris
+        //    konten (tabel "Populasi 123", dst.) boleh
+        //    diakhiri angka tapi itu BUKAN nomor halaman.
+        //    Harus benar-benar token terakhir (bukan
+        //    desimal "3.5" atau ribuan "2,400").
+        //
+        // Kandidat ini adalah yang PALING TIDAK ANDAL,
+        // karena teks paparan juga bisa berakhir dengan
+        // angka ("...permainan tersebut. 33"). Bila indeks
+        // halaman diketahui, hanya terima bila nilainya
+        // dekat dengan indeks (offset halaman pembuka
+        // kecil): nomor halaman nyata hampir selalu
+        // berjarak 0-10 halaman dari indeks PDF.
+        if (line === lastLine) {
+
+            m =
+            line.match(
+                /(?:^|\s|\||-|–|—)\s*(\d{1,4})\s*$/
+            );
+
+            if (m) {
+
+                const n = Number(m[1]);
+
+                if (
+                    isValidPageNumber(n) &&
+                    (
+                        pageIndex == null ||
+                        Math.abs(n - pageIndex) <= 10
+                    )
+                ) return n;
+
+            }
 
         }
 
     }
 
-    // Cadangan: bila hanya berupa tahun pun (mis.
-    // dokumen yang mencetak tahun di footer), jangan
-    // mengganti — kembalikan null agar tidak salah.
+    // Tidak ada pola yang bisa diandalkan: kembalikan
+    // null agar tampilan memakai indeks PDF biasa.
     return null;
 
 }
@@ -169,7 +247,10 @@ export function createChunks(
         // teks). null bila tidak terdeteksi -> tampilan
         // memakai indeks page.
         const printedPage =
-        extractPrintedPage(page.text);
+        extractPrintedPage(
+            page.text,
+            page.page
+        );
 
         const sentences =
         splitIntoSentences(page.text);

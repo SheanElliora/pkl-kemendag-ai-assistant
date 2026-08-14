@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { askRAG, streamRAG } from "../services/ragService.js";
+import { translateLLMError } from "../services/llmService.js";
 
 
 const router = Router();
@@ -81,7 +82,7 @@ router.post("/", async (req, res) => {
 
             res.write(`data: ${JSON.stringify({
                 type: "error",
-                message: err.message || "Gagal menjawab."
+                message: translateLLMError(err) || "Gagal menjawab."
             })}\n\n`);
 
         } finally {
@@ -142,7 +143,7 @@ router.post("/", async (req, res) => {
         res.status(500).json({
 
             error:
-            "Gagal menjalankan RAG.",
+            translateLLMError(err),
 
             detail:
             err.message

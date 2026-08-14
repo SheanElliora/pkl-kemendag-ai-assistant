@@ -94,7 +94,7 @@ await client.chat.completions.create({
 
     temperature:0.2,
 
-    max_tokens:1024,
+    max_tokens:512,
 
 
     messages:[
@@ -141,7 +141,7 @@ await client.chat.completions.create({
 
     temperature:0.2,
 
-    max_tokens:1024,
+    max_tokens:512,
 
     stream:true,
 
@@ -157,5 +157,47 @@ await client.chat.completions.create({
 });
 
 return stream;
+
+}
+
+
+// =====================================================
+// Terjemahkan error API ke pesan yang ramah dipahami
+// pengguna akhir (ditampilkan langsung di chatbot).
+// =====================================================
+
+export function translateLLMError(error) {
+
+    const status =
+    error?.status;
+
+    const msg =
+    String(error?.message || error || "");
+
+    const isCredits =
+    status === 402 ||
+    /credits|billing|quota|payment|insufficient/i.test(msg);
+
+    const isRateLimit =
+    status === 429 ||
+    /rate limit|too many requests/i.test(msg);
+
+    if (isCredits) {
+
+        return "Saldo/kredit API (OpenRouter) hampir atau sudah habis. " +
+        "Tidak dapat memproses permintaan. Silakan isi ulang kredit di " +
+        "https://openrouter.ai/settings/credits lalu coba lagi.";
+
+    }
+
+    if (isRateLimit) {
+
+        return "Terlalu banyak permintaan dalam waktu singkat. " +
+        "Silakan tunggu beberapa saat lalu coba lagi.";
+
+    }
+
+    return "Terjadi kesalahan saat menghubungi model AI: " +
+    msg.slice(0, 300);
 
 }

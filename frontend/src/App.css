@@ -115,6 +115,101 @@
   animation: riseIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* Goyangan singkat saat login gagal */
+@keyframes shakeX {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(5px); }
+}
+
+.shake {
+  animation: shakeX 0.4s ease;
+}
+
+/* Baris tabel menyala tipis saat hover */
+tr.hover-row {
+  transition: background 0.15s ease;
+}
+
+tr.hover-row:hover td {
+  background: rgba(127, 177, 232, 0.12);
+}
+
+/* Zebra striping: latar baris genap */
+.zebra tbody tr:nth-child(even) {
+  background: rgba(127, 177, 232, 0.05);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Hover nav sidebar CMS */
+.side-nav-btn {
+  background: transparent;
+  transition: background 0.15s ease;
+}
+
+.side-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Tombol hapus gaya ghost: ikon abu memerah saat hover */
+.del-ghost {
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.del-ghost:hover {
+  color: #ef4444 !important;
+  background: rgba(220, 38, 38, 0.12);
+}
+
+/* Hover nav topbar mobile CMS */
+.top-nav-btn {
+  background: rgba(255, 255, 255, 0.14);
+  transition: background 0.15s ease;
+}
+
+.top-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.26);
+}
+
+/* Kartu statistik CMS */
+.stat-card {
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Tombol aksi utama CMS: default transparan redup, hover menyala */
+.add-user-btn {
+  background: linear-gradient(135deg, rgba(233, 163, 25, 0.5), rgba(201, 133, 0, 0.42));
+  color: #0b1e3a;
+  border: 1px solid rgba(233, 163, 25, 0.35);
+  box-shadow: 0 2px 8px rgba(201, 133, 0, 0.18);
+  backdrop-filter: blur(8px);
+  transition: background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, filter 0.2s ease;
+}
+
+.add-user-btn:not(:disabled):hover {
+  background: linear-gradient(135deg, #ffe08a, #f0b429);
+  border-color: rgba(255, 224, 138, 0.9);
+  box-shadow: 0 0 16px rgba(233, 163, 25, 0.55), 0 6px 20px rgba(233, 163, 25, 0.4);
+  filter: brightness(1.05);
+}
+
+.add-user-btn:not(:disabled):active {
+  filter: brightness(0.95);
+}
+
 /* Logo hero: membesar halus saat hover */
 .logo-hover {
   transition: transform 0.2s ease;
@@ -136,7 +231,14 @@
   box-shadow: 0 0 0 4px rgba(0, 67, 156, 0.12), 0 8px 24px rgba(0, 28, 69, 0.10);
 }
 
-/* Placeholder input hero: lebih lembut */
+body.theme-dark .textbox-pill {
+  border-color: #2b3a5c;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+body.theme-dark .hero-input::placeholder {
+  color: #5c6a82;
+}
 .hero-input::placeholder {
   color: #9fafc2;
   opacity: 1;
@@ -278,6 +380,10 @@
   border-radius: 8px;
 }
 
+body.theme-dark .skeleton {
+  background: #26324d;
+}
+
 .skeleton::after {
   content: "";
   position: absolute;
@@ -318,6 +424,14 @@ button:not(:disabled):active {
 button:disabled {
   cursor: not-allowed;
   opacity: 0.6;
+}
+
+/* Toggle tema: matikan efek terangkat/shrink bawaan semua tombol */
+.theme-toggle-btn:not(:disabled),
+.theme-toggle-btn:not(:disabled):hover,
+.theme-toggle-btn:not(:disabled):active {
+  transform: none;
+  box-shadow: none;
 }
 
 
@@ -540,4 +654,98 @@ button:disabled {
   filter: blur(64px);
   opacity: 0.45;
   will-change: transform;
+}
+
+
+/* =====================================
+   Dark mode (body.theme-dark) — override
+   elemen tampilan di halaman chat.
+   ===================================== */
+
+body.theme-dark .markdown-body {
+  color: #dbe4f0;
+}
+
+body.theme-dark .markdown-body h1,
+body.theme-dark .markdown-body h2,
+body.theme-dark .markdown-body h3,
+body.theme-dark .markdown-body h4,
+body.theme-dark .markdown-body strong {
+  color: #f1f5fb;
+}
+
+body.theme-dark .markdown-body pre {
+  background: #0b1220;
+  color: #dbe4f0;
+}
+
+body.theme-dark .markdown-body code {
+  background: #26324d;
+  color: #93c5fd;
+}
+
+body.theme-dark .markdown-body table {
+  background: #111a2e;
+}
+
+body.theme-dark .markdown-body .md-table-wrap {
+  border: 1px solid #26324d;
+}
+
+body.theme-dark .markdown-body th {
+  background: linear-gradient(180deg, #16233d, #142033);
+  color: #7fb1e8;
+  border-bottom: 2px solid #26324d;
+}
+
+body.theme-dark .markdown-body td {
+  border-bottom: 1px solid #1e2a45;
+}
+
+body.theme-dark .markdown-body tbody tr:nth-child(even) {
+  background: #141f36;
+}
+
+body.theme-dark .markdown-body tbody tr:hover {
+  background: #1b2740;
+}
+
+body.theme-dark .markdown-body hr {
+  border-top: 1px solid #26324d;
+}
+
+body.theme-dark .markdown-body blockquote {
+  border-left: 3px solid #2b3a5c;
+  color: #c3cede;
+  background: #111a2e;
+}
+
+body.theme-dark .markdown-body a {
+  color: #7fb1e8;
+}
+
+/* Scrollbar area chat */
+body.theme-dark .chat-scroll::-webkit-scrollbar-thumb {
+  background: #2b3a5c;
+}
+
+/* ===== Gaya scrollbar CMS (muncul saat hover) ===== */
+.scroll-hover *::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.scroll-hover *::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scroll-hover *::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 999px;
+  transition: background 0.2s ease;
+}
+.scroll-hover *:hover::-webkit-scrollbar-thumb {
+  background: rgba(233, 163, 25, 0.55);
+}
+.scroll-hover * {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
 }

@@ -13,23 +13,118 @@ export default function ChatPage() {
   const [feedback, setFeedback] = useState({});
   const [previewDoc, setPreviewDoc] = useState(null);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
+  const [newMsgIndex, setNewMsgIndex] = useState(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [modelOpen, setModelOpen] = useState(false);
+  const [cmsBtnVariant, setCmsBtnVariant] = useState(() => localStorage.getItem("cms_btn_variant_v2") || "chip");
+  const [cmsBtnLabel, setCmsBtnLabel] = useState(() => localStorage.getItem("cms_btn_label_v2") || "Panel Admin");
+
+  const [dark, setDark] = useState(() => {
+    const saved = localStorage.getItem("cms_theme");
+    if (saved === "dark" || saved === "light") return saved === "dark";
+    return typeof window !== "undefined" && window.matchMedia?.("(prefers-color-scheme: dark)").matches;
+  });
+
+  // Palet warna tema (light/dark) — satu sumber warna.
+  const t = {
+    pageBg: dark ? "#0b1120" : "linear-gradient(180deg,#f6f7f9,#ffffff)",
+    card: dark ? "#26385a" : "#ffffff",
+    cardSoft: dark ? "#304266" : "#f8fafc",
+    sidebar: dark ? "#0f182c" : "#f8fafc",
+    bgSoft: dark ? "#3a4b6b" : "#eef2f7",
+    bar: dark ? "#1b2944" : "#ffffff",
+    border: dark ? "#26324d" : "#e6e9f0",
+    borderSoft: dark ? "#2b3a58" : "#e2e8f0",
+    text: dark ? "#e5edf7" : "#1e293b",
+    textSoft: dark ? "#c3cede" : "#475569",
+    textMute: dark ? "#8b98ad" : "#64748b",
+    inputBg: dark ? "#0f1a2f" : "#fff",
+    bubbleBot: dark ? "#223254" : "#e2e7ee",
+    bubbleUser: dark ? "#0e5c9e" : "#9fc7ef",
+    accentText: dark ? "#7fb1e8" : "#00439c",
+    chatBg: dark
+      ? "radial-gradient(rgba(0,67,156,0.12) 1px, transparent 1.4px) 0 0 / 22px 22px, #0d1526"
+      : "radial-gradient(rgba(0,67,156,0.06) 1px, transparent 1.4px) 0 0 / 22px 22px, #eef2f756"
+  };
+
+  useEffect(() => {
+    localStorage.setItem("cms_theme", dark ? "dark" : "light");
+    document.body.classList.toggle("theme-dark", dark);
+  }, [dark]);
+
+  useEffect(() => { localStorage.setItem("cms_btn_variant_v2", cmsBtnVariant); }, [cmsBtnVariant]);
+  useEffect(() => { localStorage.setItem("cms_btn_label_v2", cmsBtnLabel); }, [cmsBtnLabel]);
+
+  const cmsGearIcon = (s) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  );
+  const cmsPersonIcon = (s) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
+    </svg>
+  );
+
+  const iconStroke = { fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
+  const IconFile = (s) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" {...iconStroke}>
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <polyline points="14 2 14 8 20 8" />
+    </svg>
+  );
+  const IconChat = (s) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" {...iconStroke}>
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+
+  function cmsEntryButton(dark, variant, label, onClick, title) {
+    const base = { cursor: "pointer", fontWeight: 600, fontSize: "14px", whiteSpace: "nowrap", fontFamily: "inherit", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "7px", flexShrink: 0 };
+    if (variant === "solid-gold") {
+      return (
+        <button onClick={onClick} title={title} style={{ ...base, background: "linear-gradient(135deg,#f6c453,#e9a319)", color: "#0b1e3a", border: "none", padding: "10px 16px", borderRadius: "10px", boxShadow: "0 4px 14px rgba(233,163,25,0.45)" }}>
+          {cmsGearIcon(15)}
+          {label}
+        </button>
+      );
+    }
+    if (variant === "icon-only") {
+      return (
+        <button onClick={onClick} title={title} aria-label={label} style={{ ...base, background: dark ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.12)", color: "white", border: "1px solid rgba(255,255,255,0.45)", width: "42px", height: "42px", padding: "0", borderRadius: "10px" }}>
+          {cmsGearIcon(18)}
+        </button>
+      );
+    }
+    if (variant === "chip") {
+      return (
+        <button onClick={onClick} title={title} style={{ ...base, background: dark ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.12)", color: "white", border: "1px solid rgba(255,255,255,0.45)", padding: "4px 10px 4px 6px", borderRadius: "16px", fontSize: "12px", gap: "6px" }}>
+          <span style={{ width: "20px", height: "20px", borderRadius: "50%", background: dark ? "linear-gradient(135deg,#14b8a6,#065f46)" : "linear-gradient(135deg,#f6c453,#e9a319)", color: dark ? "#ffffff" : "#0b1e3a", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{cmsPersonIcon(11)}</span>
+          {label}
+        </button>
+      );
+    }
+    return (
+      <button onClick={onClick} title={title} style={{ ...base, background: dark ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.12)", color: "white", border: "1px solid rgba(255,255,255,0.45)", padding: "10px 14px", borderRadius: "10px" }}>
+        {cmsGearIcon(15)}
+        {label}
+      </button>
+    );
+  }
 
   const chatEndRef = useRef(null);
   const chatAreaRef = useRef(null);
   const abortRef = useRef(null);
   const inputRef = useRef(null);
+  const heroInputRef = useRef(null);
 
   const [models, setModels] = useState([]);
   const [model, setModel] = useState(() =>
     localStorage.getItem("cms_model") || "google/gemini-2.5-flash"
   );
   const [online, setOnline] = useState(null);
-
-  const [availableDocs, setAvailableDocs] = useState([]);
-  const [docListOpen, setDocListOpen] = useState(false);
-  const docListEl = useRef(null);
 
   // ----- Riwayat percakapan (multi sesi, localStorage) -----
   const [conversations, setConversations] = useState(() => loadConversations());
@@ -62,16 +157,6 @@ export default function ChatPage() {
   ];
 
   useEffect(() => {
-    api("/api/documents")
-      .then((data) => {
-        if (Array.isArray(data.files) && data.files.length) {
-          setAvailableDocs(data.files);
-        }
-      })
-      .catch(() => setAvailableDocs([]));
-  }, []);
-
-  useEffect(() => {
     api("/api/models")
       .then((data) => {
         if (Array.isArray(data.models) && data.models.length) {
@@ -96,28 +181,41 @@ export default function ChatPage() {
     refreshHealth();
   }, []);
 
-  // Tutup dropdown dokumen saat klik di luar komponen
-  useEffect(() => {
-    function onClickOutside(e) {
-      if (docListEl.current && !docListEl.current.contains(e.target)) {
-        setDocListOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", onClickOutside);
-    return () => document.removeEventListener("mousedown", onClickOutside);
-  }, []);
-
   // Simpan pilihan model
   useEffect(() => {
     localStorage.setItem("cms_model", model);
   }, [model]);
 
-  // Auto-scroll ke pesan terbaru
+  // Auto-scroll halus ke pesan terbaru (hanya jika user berada di dekat bawah)
   useEffect(() => {
-    if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: "smooth" });
+    const el = chatAreaRef.current;
+    if (el) {
+      const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 160;
+      if (nearBottom && chatEndRef.current) {
+        chatEndRef.current.scrollIntoView({ behavior: "smooth" });
+      }
     }
   }, [currentMessages, loading]);
+
+  // Shortcut fokus input: Ctrl+K atau "/" (di luar kotak ketik)
+  useEffect(() => {
+    function onKeyDown(e) {
+      const target = e.target;
+      const typing = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA");
+      const targetInput = currentMessages.length > 0 || loading ? inputRef : heroInputRef;
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        targetInput.current?.focus();
+        return;
+      }
+      if (e.key === "/" && !typing) {
+        e.preventDefault();
+        targetInput.current?.focus();
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [currentMessages.length, loading]);
 
   function sourceTitle(sources, filename) {
     return filename;
@@ -197,6 +295,7 @@ export default function ChatPage() {
     activeIdRef.current = null;
     setSidebarOpen(false);
     setPreviewDoc(null);
+    setNewMsgIndex(null);
   }
 
   function deleteConversation(id, e) {
@@ -384,6 +483,10 @@ export default function ChatPage() {
       { role: "user", text, time: t }
     ]);
 
+    if (currentMessages.length > 0) {
+      setNewMsgIndex(currentMessages.length);
+    }
+
     await consumeStream(text, model, text);
   }
 
@@ -452,7 +555,7 @@ export default function ChatPage() {
     <div
       style={{
         height: "100vh",
-        background: "linear-gradient(180deg,#f6f7f9,#ffffff)",
+        background: t.pageBg,
         padding: isMobile ? "8px" : "18px",
         fontFamily: '"Inter", sans-serif',
         boxSizing: "border-box",
@@ -463,8 +566,8 @@ export default function ChatPage() {
         style={{
           maxWidth: "1100px",
           margin: "auto",
-          background: "#ffffff",
-          border: "1px solid #e6e9f0",
+          background: t.card,
+          border: "1px solid " + t.border,
           borderRadius: isMobile ? "14px" : "20px",
           boxShadow: "0 18px 50px rgba(15,40,80,0.14)",
           overflow: "hidden",
@@ -479,7 +582,7 @@ export default function ChatPage() {
             background: "linear-gradient(135deg, #001845, #00439c)",
             color: "white",
             boxShadow: "inset 0 -3px 0 0 rgba(233,163,25,0.55)",
-            padding: isMobile ? "12px 16px" : "18px 32px",
+            padding: isMobile ? "16px 16px" : "22px 32px",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -488,14 +591,14 @@ export default function ChatPage() {
             flexWrap: isMobile ? "wrap" : "nowrap"
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", minWidth: 0, background: "#ffffff", borderRadius: "12px", padding: isMobile ? "6px 10px" : "8px 14px", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
+          <div style={{ display: "flex", alignItems: "center", minWidth: 0 }}>
             <img
-              src="/logo kemendag lengkap.png"
+              src="/logo kemendag putih .png"
               alt="Logo Kementerian Perdagangan Republik Indonesia"
               style={{
-                height: isMobile ? "38px" : "46px",
+                height: isMobile ? "46px" : "56px",
                 width: "auto",
-                maxWidth: isMobile ? "170px" : "300px",
+                maxWidth: isMobile ? "170px" : "200px",
                 objectFit: "contain",
                 flexShrink: 0,
                 display: "block"
@@ -527,28 +630,88 @@ export default function ChatPage() {
             )}
 
             <div style={{ display: "flex", alignItems: "center", gap: isMobile ? "6px" : "10px", flexWrap: "wrap", justifyContent: "flex-end" }}>
+              <button
+                onClick={() => setDark((v) => !v)}
+                role="switch"
+                aria-checked={dark}
+                className="theme-toggle-btn"
+                title={dark ? "Beralih ke mode terang" : "Beralih ke mode gelap"}
+                aria-label={dark ? "Beralih ke mode terang" : "Beralih ke mode gelap"}
+                style={{
+                  position: "relative",
+                  width: "42px",
+                  height: "22px",
+                  borderRadius: "12px",
+                  border: "1px solid rgba(255,255,255,0.55)",
+                  background: dark ? "#0f766e" : "#e9a319",
+                  cursor: "pointer",
+                  flexShrink: 0,
+                  padding: "0",
+                  display: "block",
+                  overflow: "hidden"
+                }}
+              >
+                <span
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    borderRadius: "12px",
+                    background: "linear-gradient(135deg,#f6c453,#e9a319)",
+                    opacity: dark ? 0 : 1,
+                    transition: "opacity 0.4s ease"
+                  }}
+                />
+                <span
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    borderRadius: "12px",
+                    background: "linear-gradient(135deg,#14b8a6,#065f46)",
+                    opacity: dark ? 1 : 0,
+                    transition: "opacity 0.4s ease"
+                  }}
+                />
+                <span
+                  style={{
+                    position: "absolute",
+                    top: "3px",
+                    left: dark ? "24px" : "3px",
+                    width: "16px",
+                    height: "16px",
+                    borderRadius: "50%",
+                    background: "#ffffff",
+                    color: dark ? "#0f766e" : "#78350f",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.35)",
+                    transition: "left 0.25s ease, color 0.3s ease"
+                  }}
+                >
+                  {dark ? (
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                    </svg>
+                  ) : (
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="4" />
+                      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+                    </svg>
+                  )}
+                </span>
+              </button>
               {user ? (
                 <>
-                  <button
-                    onClick={() => navigate("/cms")}
-                    style={navButtonStyle}
-                  >
-                    ⚙ CMS ({user.username})
-                  </button>
+                  {cmsEntryButton(dark, cmsBtnVariant, "CMS (" + user.username + ")", () => window.open("/#/cms", "_blank"), "Buka panel CMS")}
                   <button
                     onClick={logout}
-                    style={navButtonStyle}
+                    style={navButtonStyle(dark)}
                   >
                     Keluar
                   </button>
                 </>
               ) : (
-                <button
-                  onClick={() => navigate("/cms/login")}
-                  style={navButtonStyle}
-                >
-                  ⚙ Masuk CMS
-                </button>
+                cmsEntryButton(dark, cmsBtnVariant, cmsBtnLabel, () => window.open("/#/cms/login", "_blank"), "Masuk ke panel administrasi CMS")
               )}
             </div>
           </div>
@@ -559,9 +722,9 @@ export default function ChatPage() {
           <div
             className="fade-in"
             style={{
-              background: "#fef3c7",
-              color: "#92400e",
-              borderBottom: "1px solid #fde68a",
+              background: dark ? "#3a2d12" : "#fef3c7",
+              color: dark ? "#fde68a" : "#92400e",
+              borderBottom: "1px solid " + (dark ? "#6b4f1a" : "#fde68a"),
               padding: isMobile ? "6px 12px" : "8px 16px",
               display: "flex",
               alignItems: "center",
@@ -577,9 +740,9 @@ export default function ChatPage() {
             <button
               onClick={refreshHealth}
               style={{
-                background: "#ffffff",
-                color: "#92400e",
-                border: "1px solid #fcd34d",
+                background: dark ? "#1b2944" : "#ffffff",
+                color: dark ? "#fde68a" : "#92400e",
+                border: "1px solid " + (dark ? "#4a3a16" : "#fcd34d"),
                 borderRadius: "8px",
                 padding: "5px 12px",
                 fontSize: "12px",
@@ -603,9 +766,7 @@ export default function ChatPage() {
               overflowY: currentMessages.length === 0 && !loading ? "hidden" : "auto",
               overflowX: currentMessages.length === 0 && !loading ? "hidden" : "auto",
               padding: isMobile ? "6px" : "10px",
-              background: currentMessages.length === 0 && !loading
-                ? "radial-gradient(rgba(0,67,156,0.06) 1px, transparent 1.4px) 0 0 / 22px 22px, #eef2f756"
-                : "radial-gradient(rgba(0,67,156,0.05) 1px, transparent 1.4px) 0 0 / 22px 22px, #eef2f756",
+              background: t.chatBg,
               position: "relative",
               display: currentMessages.length === 0 && !loading ? "flex" : "block",
               alignItems: "center",
@@ -674,14 +835,14 @@ export default function ChatPage() {
                     }}
                   />
                 </div>
-                <h2 className="rise" style={{ margin: "0", fontSize: isMobile ? "21px" : "24px", fontWeight: 700, letterSpacing: "-0.4px", color: "#00439c", fontFamily: '"Sora", sans-serif', animationDelay: "0.06s" }}>
+                <h2 className="rise" style={{ margin: "0", fontSize: isMobile ? "21px" : "24px", fontWeight: 700, letterSpacing: "-0.4px", color: t.accentText, fontFamily: '"Sora", sans-serif', animationDelay: "0.06s" }}>
                   AI Document Intelligence – Kemendag
                 </h2>
                 <div className="rise" style={{ width: "56px", height: "3px", margin: "8px auto 0", borderRadius: "3px", background: "linear-gradient(90deg,#e9a319,#f6c453)", animationDelay: "0.08s" }} />
-                <p className="rise" style={{ margin: "6px 0 0", fontSize: "12px", color: "#64748b", fontWeight: 500, animationDelay: "0.1s" }}>
+                <p className="rise" style={{ margin: "6px 0 0", fontSize: "12px", color: t.textMute, fontWeight: 500, animationDelay: "0.1s" }}>
                   {todayLabel()}
                 </p>
-                <div className="rise" style={{ margin: "10px auto 0", fontSize: "15px", color: "#475569", lineHeight: "1.5", width: "100%", minHeight: "20px", animationDelay: "0.12s" }}>
+                <div className="rise" style={{ margin: "10px auto 0", fontSize: "15px", color: t.textSoft, lineHeight: "1.5", width: "100%", minHeight: "20px", animationDelay: "0.12s" }}>
                   <Typewriter phrases={typedPhrases} delay={120} pause={2000} />
                 </div>
               </div>
@@ -700,7 +861,7 @@ export default function ChatPage() {
                   animationDelay: "0.28s"
                 }}
               >
-                <ModelSelector models={models} model={model} onSelect={setModel} isMobile={isMobile} align="left" onOpenChange={setModelOpen} />
+                <ModelSelector models={models} model={model} onSelect={setModel} isMobile={isMobile} align="left" onOpenChange={setModelOpen} dark={dark} />
                 <div
                   className="textbox-pill"
                   style={{
@@ -712,12 +873,13 @@ export default function ChatPage() {
                     maxWidth: "580px",
                     height: "44px",
                     boxSizing: "border-box",
-                    background: "#ffffff",
+                    background: t.card,
                     borderRadius: "999px",
                     padding: "0 6px 0 16px"
                   }}
                 >
                   <input
+                    ref={heroInputRef}
                     autoFocus
                     className="hero-input"
                     value={input}
@@ -731,17 +893,29 @@ export default function ChatPage() {
                       outline: "none",
                       fontSize: "15px",
                       fontFamily: 'inherit',
-                      color: "#1e293b",
+                      color: t.text,
                       background: "transparent",
                       padding: "0"
                     }}
                   />
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      color: t.textMute,
+                      whiteSpace: "nowrap",
+                      userSelect: "none",
+                      display: isMobile ? "none" : "inline",
+                      fontFamily: 'inherit'
+                    }}
+                  >
+                    Enter untuk kirim
+                  </span>
                   <button
                     onClick={() => sendMessage()}
                     disabled={!input.trim() || loading}
                     title="Kirim pertanyaan (Enter)"
                     style={{
-                      background: !input.trim() || loading ? "#cbd5e1" : "linear-gradient(135deg, #001845, #00439c)",
+                      background: !input.trim() || loading ? (dark ? "#26324d" : "#cbd5e1") : "linear-gradient(135deg, #001845, #00439c)",
                       color: "white",
                       border: "none",
                       borderRadius: "999px",
@@ -763,7 +937,7 @@ export default function ChatPage() {
               </div>
 
               {online === true && (
-                <div className="rise" style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "6px", marginTop: "16px", fontSize: "12px", color: "#64748b", animationDelay: "0.32s", visibility: modelOpen ? "hidden" : "visible" }}>
+                <div className="rise" style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "6px", marginTop: "16px", fontSize: "12px", color: t.textMute, animationDelay: "0.32s", visibility: modelOpen ? "hidden" : "visible" }}>
                   <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#16a75c", display: "inline-block", animation: "pulseDot 1.5s infinite" }} />
                   <span>Terhubung — siap menerima pertanyaan</span>
                 </div>
@@ -774,10 +948,10 @@ export default function ChatPage() {
           {currentMessages.length > 0 && !loading && (
             <div style={{ display: "flex", justifyContent: "center", margin: "0 0 12px" }}>
               {showResetConfirm ? (
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: "999px", padding: "6px 12px", boxShadow: "0 4px 12px rgba(0,0,0,0.06)" }}>
-                  <span style={{ fontSize: "13px", color: "#334155" }}>Mulai ulang percakapan?</span>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", background: t.card, border: "1px solid " + t.borderSoft, borderRadius: "999px", padding: "6px 12px", boxShadow: "0 4px 12px rgba(0,0,0,0.06)" }}>
+                  <span style={{ fontSize: "13px", color: t.textSoft }}>Mulai ulang percakapan?</span>
                   <button onClick={() => { setShowResetConfirm(false); newConversation(); }} style={{ background: "#ef4444", color: "#fff", border: "none", borderRadius: "999px", padding: "5px 12px", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: 'inherit' }}>Ya</button>
-                  <button onClick={() => setShowResetConfirm(false)} style={{ background: "#f1f5f9", color: "#475569", border: "none", borderRadius: "999px", padding: "5px 12px", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: 'inherit' }}>Batal</button>
+                  <button onClick={() => setShowResetConfirm(false)} style={{ background: t.bgSoft, color: t.textSoft, border: "none", borderRadius: "999px", padding: "5px 12px", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: 'inherit' }}>Batal</button>
                 </div>
               ) : (
                 <button
@@ -788,8 +962,8 @@ export default function ChatPage() {
                     alignItems: "center",
                     gap: "6px",
                     background: "transparent",
-                    color: "#64748b",
-                    border: "1px dashed #cbd5e1",
+                    color: t.textMute,
+                    border: "1px dashed " + t.border,
                     borderRadius: "999px",
                     padding: "6px 14px",
                     fontSize: "12.5px",
@@ -798,7 +972,7 @@ export default function ChatPage() {
                     transition: "color 0.15s ease, border-color 0.15s ease"
                   }}
                   onMouseEnter={(e) => { e.currentTarget.style.color = "#00439c"; e.currentTarget.style.borderColor = "#c7d2fe"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = "#64748b"; e.currentTarget.style.borderColor = "#cbd5e1"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = t.textMute; e.currentTarget.style.borderColor = t.border; }}
                 >
                   <span>↻</span> Mulai ulang percakapan
                 </button>
@@ -816,6 +990,15 @@ export default function ChatPage() {
 
             return (
               <div key={index}>
+                {index === newMsgIndex && (
+                  <div style={{ display: "flex", justifyContent: "center", margin: "14px 0 4px", padding: "0 18px" }}>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "10px", width: "100%", maxWidth: "280px", color: t.textMute, fontSize: "11px", fontWeight: 700, fontFamily: '"Inter", sans-serif' }}>
+                      <span style={{ flex: 1, height: "1px", background: t.border }} />
+                      Pesan baru
+                      <span style={{ flex: 1, height: "1px", background: t.border }} />
+                    </span>
+                  </div>
+                )}
                 {sep && (
                   <div
                     style={{
@@ -826,8 +1009,8 @@ export default function ChatPage() {
                   >
                     <span
                       style={{
-                        background: "#e2e8f0cc",
-                        color: "#64748b",
+                        background: t.borderSoft,
+                        color: t.textMute,
                         fontSize: "11px",
                         fontWeight: 600,
                         padding: "4px 12px",
@@ -871,29 +1054,30 @@ export default function ChatPage() {
                   {showTyping ? (
                     <div
                       style={{
-                        background: "#f8fafc",
+                        background: t.bubbleBot,
                         padding: "14px 18px",
                         borderRadius: "18px 18px 18px 4px",
                         boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
                         minWidth: "230px"
                       }}
                     >
-                      <ProcessingIndicator />
-                      <SourceSkeleton />
+                      <ProcessingIndicator dark={dark} />
+                      <SourceSkeleton dark={dark} />
                     </div>
                   ) : (
                     <div
                       style={{
                         maxWidth: isMobile ? "85%" : "76%",
-                        background: m.role === "user" ? "#E8F2F8" : "#f8fafc",
+                        background: m.role === "user" ? t.bubbleUser : t.bubbleBot,
                         padding: "11px 16px",
                         borderRadius: m.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
                         boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                        borderLeft: m.role === "bot" ? "4px solid #00439c" : "none"
+                        borderLeft: m.role === "bot" ? "4px solid #00439c" : "none",
+                        borderRight: m.role === "user" ? (dark ? "4px solid #059669" : "4px solid #e9a319") : "none"
                       }}
                     >
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px" }}>
-                        <b style={{ fontSize: "14px", color: m.role === "user" ? "#00439c" : "#111827" }}>
+                        <b style={{ fontSize: "14px", color: m.role === "user" ? (dark ? "#ffffff" : "#00439c") : t.text }}>
                           {m.role === "user" ? (
                             "Anda"
                           ) : (
@@ -934,8 +1118,8 @@ export default function ChatPage() {
                                 display: "inline-flex",
                                 alignItems: "center",
                                 gap: "4px",
-                                background: "#E8F2F8",
-                                color: "#00439c",
+                                background: t.bubbleUser,
+                                color: t.accentText,
                                 borderRadius: "20px",
                                 padding: "2px 9px",
                                 marginLeft: "8px",
@@ -944,16 +1128,16 @@ export default function ChatPage() {
                                 verticalAlign: "middle"
                               }}
                             >
-                              📄 {new Set(m.sources.map((s) => s.filename)).size} sumber
+                              {IconFile(11)} {new Set(m.sources.map((s) => s.filename)).size} sumber
                             </span>
                           )}
                           {m.streaming && (
-                            <span style={{ fontSize: "11px", color: "#00439c", marginLeft: "8px", fontWeight: 600 }} className="blink">
+                            <span style={{ fontSize: "11px", color: t.accentText, marginLeft: "8px", fontWeight: 600 }} className="blink">
                               ● mengetik
                             </span>
                           )}
                           {m.time && (
-                            <span style={{ fontWeight: 400, fontSize: "11px", color: "#64748b", marginLeft: "8px" }}>
+                            <span style={{ fontWeight: 400, fontSize: "11px", color: t.textMute, marginLeft: "8px" }}>
                               {new Date(m.time).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
                             </span>
                           )}
@@ -962,7 +1146,7 @@ export default function ChatPage() {
                           <button
                             onClick={() => deleteMessage(index)}
                             title="Hapus pesan"
-                            style={miniActionStyle}
+                            style={miniActionStyle(dark)}
                           >
                             ✕
                           </button>
@@ -971,14 +1155,14 @@ export default function ChatPage() {
                               <button
                                 onClick={() => copyText(m.text, index)}
                                 title={copied === index ? "Tersalin!" : "Salin jawaban"}
-                                style={miniActionStyle}
+                                style={miniActionStyle(dark)}
                               >
                                 {copied === index ? "✓" : "⧉"}
                               </button>
                               <button
                                 onClick={() => reask(index)}
                                 title="Ulangi pertanyaan (model berbeda)"
-                                style={miniActionStyle}
+                                style={miniActionStyle(dark)}
                               >
                                 ↻
                               </button>
@@ -1012,7 +1196,7 @@ export default function ChatPage() {
                       </div>
 
                       {m.role === "bot" && m.streaming && m.text && (
-                        <SourceSkeleton />
+                        <SourceSkeleton dark={dark} />
                       )}
 
                       {m.role === "bot" && !m.streaming && (
@@ -1021,10 +1205,10 @@ export default function ChatPage() {
                             onClick={() => setFeedback((prev) => ({ ...prev, [index]: prev[index] === "up" ? null : "up" }))}
                             title="Jawaban membantu"
                             style={{
-                              ...miniActionStyle,
+                              ...miniActionStyle(dark),
                               background: feedback[index] === "up" ? "#dcfce7" : "transparent",
-                              borderColor: feedback[index] === "up" ? "#16a75c" : "#e2e8f0",
-                              color: feedback[index] === "up" ? "#16a75c" : "#64748b"
+                              borderColor: feedback[index] === "up" ? "#16a75c" : t.borderSoft,
+                              color: feedback[index] === "up" ? "#16a75c" : t.textMute
                             }}
                           >
                             👍
@@ -1033,10 +1217,10 @@ export default function ChatPage() {
                             onClick={() => setFeedback((prev) => ({ ...prev, [index]: prev[index] === "down" ? null : "down" }))}
                             title="Jawaban kurang membantu"
                             style={{
-                              ...miniActionStyle,
+                              ...miniActionStyle(dark),
                               background: feedback[index] === "down" ? "#fee2e2" : "transparent",
-                              borderColor: feedback[index] === "down" ? "#ff1c3e" : "#e2e8f0",
-                              color: feedback[index] === "down" ? "#ff1c3e" : "#64748b"
+                              borderColor: feedback[index] === "down" ? "#ff1c3e" : t.borderSoft,
+                              color: feedback[index] === "down" ? "#ff1c3e" : t.textMute
                             }}
                           >
                             👎
@@ -1047,7 +1231,7 @@ export default function ChatPage() {
                       {m.role === "bot" && !m.streaming && (
                         <>
                           {m.sources && m.sources.length === 0 && (
-                            <div style={{ marginTop: "15px", paddingTop: "12px", borderTop: "1px solid #e2e8f0", fontSize: "13px" }}>
+                            <div style={{ marginTop: "15px", paddingTop: "12px", borderTop: "1px solid " + t.borderSoft, fontSize: "13px" }}>
                               <div
                                 style={{
                                   display: "flex",
@@ -1062,87 +1246,6 @@ export default function ChatPage() {
                                   Silakan coba pertanyaan lain atau gunakan kata kunci berbeda.
                                 </span>
                               </div>
-                              <div ref={docListEl} style={{ position: "relative", marginTop: "10px", display: "inline-block" }}>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setDocListOpen((v) => !v);
-                                  }}
-                                  style={{
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    gap: "6px",
-                                    padding: "7px 14px",
-                                    borderRadius: "10px",
-                                    border: "1px solid #cbd5e1",
-                                    background: "#ffffff",
-                                    cursor: "pointer",
-                                    fontSize: "12.5px",
-                                    color: "#00439c",
-                                    fontWeight: 600,
-                                    fontFamily: "inherit"
-                                  }}
-                                >
-                                  📚 Lihat dokumen tersedia <span style={{ fontSize: "10px" }}>▼</span>
-                                </button>
-                                {docListOpen && (
-                                  <div
-                                    style={{
-                                      position: "absolute",
-                                      top: "calc(100% + 6px)",
-                                      left: 0,
-                                      zIndex: 30,
-                                      minWidth: "260px",
-                                      maxHeight: "240px",
-                                      overflowY: "auto",
-                                      background: "#fff",
-                                      border: "1px solid #e2e8f0",
-                                      borderRadius: "12px",
-                                      boxShadow: "0 8px 24px rgba(15,23,42,0.14)",
-                                      padding: "6px"
-                                    }}
-                                  >
-                                    {availableDocs.length === 0 ? (
-                                      <div style={{ padding: "8px 10px", color: "#64748b", fontSize: "12.5px" }}>
-                                        Belum ada dokumen yang dimuat.
-                                      </div>
-                                    ) : (
-                                      availableDocs.map((doc) => (
-                                        <button
-                                          key={doc}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setDocListOpen(false);
-                                            setPreviewDoc({ filename: doc, pages: [1] });
-                                          }}
-                                          style={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            gap: "8px",
-                                            width: "100%",
-                                            textAlign: "left",
-                                            padding: "8px 10px",
-                                            border: "none",
-                                            background: "transparent",
-                                            cursor: "pointer",
-                                            borderRadius: "8px",
-                                            fontSize: "12.5px",
-                                            color: "#334155",
-                                            fontFamily: "inherit"
-                                          }}
-                                          onMouseEnter={(e) => { e.currentTarget.style.background = "#E8F2F8"; }}
-                                          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-                                        >
-                                          <span style={{ fontSize: "14px" }}>📄</span>
-                                          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                            {doc}
-                                          </span>
-                                        </button>
-                                      ))
-                                    )}
-                                  </div>
-                                )}
-                              </div>
                             </div>
                           )}
                           {m.sources && m.sources.length > 0 && (
@@ -1150,12 +1253,12 @@ export default function ChatPage() {
                           style={{
                             marginTop: "15px",
                             paddingTop: "12px",
-                            borderTop: "1px solid #e2e8f0",
+                            borderTop: "1px solid " + t.borderSoft,
                             fontSize: "13px"
                           }}
                         >
                           <b style={{ color: "#c98500", fontSize: "13px", borderLeft: "3px solid #e9a319", paddingLeft: "8px" }}>📚 Sumber Referensi</b>
-                          <div style={{ fontSize: "11px", color: "#64748b", marginTop: "4px" }}>
+                          <div style={{ fontSize: "11px", color: t.textMute, marginTop: "4px" }}>
                             Klik nomor halaman untuk membuka dokumen.
                           </div>
                           {(() => {
@@ -1213,30 +1316,30 @@ export default function ChatPage() {
                                   minWidth: 0,
                                   maxWidth: "100%",
                                   marginTop: "8px",
-                                  background: "#ffffff",
-                                  border: "1px solid #e2e8f0",
+                                  background: t.card,
+                                  border: "1px solid " + t.borderSoft,
                                   borderRadius: "10px",
                                   padding: "8px 12px",
                                   textAlign: "left",
                                   fontSize: "13px",
-                                  color: "#334155",
+                                  color: t.textSoft,
                                   fontFamily: 'inherit',
                                   overflow: "hidden"
                                 }}
                               >
-                                <span style={{ fontSize: "16px", flexShrink: 0 }}>📄</span>
+                                <span style={{ display: "inline-flex", flexShrink: 0, color: t.textMute }}>{IconFile(16)}</span>
                                 <div style={{ flex: 1, minWidth: 0 }}>
-                                  <div style={{ color: "#334155", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                  <div style={{ color: t.text, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                     {sourceTitle(m.sources, filename)}
                                   </div>
-                                  <div style={{ color: "#64748b", fontSize: "12px", marginTop: 2, display: "flex", flexWrap: "wrap", alignItems: "center", gap: "4px", minWidth: 0 }}>
+                                  <div style={{ color: t.textMute, fontSize: "12px", marginTop: 2, display: "flex", flexWrap: "wrap", alignItems: "center", gap: "4px", minWidth: 0 }}>
                                     <span style={{ flexShrink: 0 }}>Halaman:</span>
                                     {visiblePages.map(({ page }) => (
                                       <button
                                         key={page}
                                         onClick={(e) => { e.stopPropagation(); setPreviewDoc({ filename, pages: [page] }); }}
                                         title={`Buka halaman ${page}`}
-                                        style={pageChipStyle}
+                                        style={pageChipStyle(t)}
                                       >
                                         {page}
                                       </button>
@@ -1261,7 +1364,7 @@ export default function ChatPage() {
                         height: "38px",
                         borderRadius: "12px",
                         flexShrink: 0,
-                        background: "#e2e8f0",
+                        background: dark ? "linear-gradient(135deg,#6ee7b7,#059669)" : "linear-gradient(135deg,#f6c453,#e9a319)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -1300,14 +1403,14 @@ export default function ChatPage() {
               </div>
               <div
                 style={{
-                  background: "#f8fafc",
+                  background: t.bubbleBot,
                   padding: "14px 18px",
                   borderRadius: "18px 18px 18px 4px",
                   boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
                   minWidth: "230px"
                 }}
               >
-                <ProcessingIndicator />
+                <ProcessingIndicator dark={dark} />
               </div>
             </div>
           )}
@@ -1360,7 +1463,7 @@ export default function ChatPage() {
               onClick={(e) => e.stopPropagation()}
               className="pop-in"
               style={{
-                background: "#ffffff",
+                background: t.card,
                 borderRadius: "16px",
                 width: "100%",
                 maxWidth: "900px",
@@ -1383,11 +1486,14 @@ export default function ChatPage() {
                   flexShrink: 0
                 }}
               >
-                <div style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "14px", fontWeight: 600 }}>
-                  📄 {previewDoc.filename}
-                  {previewDoc.pages && previewDoc.pages.length > 0 && (
-                    <span style={{ fontSize: "12px", opacity: 0.85 }}> · hlm. {previewDoc.pages.join(", ")}</span>
-                  )}
+                <div style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "14px", fontWeight: 600, display: "flex", alignItems: "center", gap: "7px" }}>
+                  <span style={{ display: "inline-flex", flexShrink: 0 }}>{IconFile(14)}</span>
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {previewDoc.filename}
+                    {previewDoc.pages && previewDoc.pages.length > 0 && (
+                      <span style={{ fontSize: "12px", opacity: 0.85 }}> · hlm. {previewDoc.pages.join(", ")}</span>
+                    )}
+                  </span>
                 </div>
                 <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
                   <a
@@ -1441,14 +1547,27 @@ export default function ChatPage() {
               display: "flex",
               gap: "10px",
               padding: isMobile ? "10px" : "15px",
-              borderTop: "1px solid #ddd",
+              borderTop: "1px solid " + t.border,
               alignItems: isMobile ? "stretch" : "center",
               flexWrap: "wrap",
               flexShrink: 0,
-              background: "#ffffff"
+              background: t.bar
             }}
           >
-            <textarea
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                flex: 1,
+                background: t.card,
+                border: "1px solid " + t.border,
+                borderRadius: "999px",
+                padding: isMobile ? "4px 4px 4px 12px" : "6px 6px 6px 16px",
+                boxSizing: "border-box"
+              }}
+            >
+              <textarea
               ref={inputRef}
               value={input}
               onChange={(e) => {
@@ -1469,14 +1588,14 @@ export default function ChatPage() {
               style={{
                 flex: 1,
                 minWidth: "180px",
-                padding: "10px 16px",
-                borderRadius: "12px",
-                border: "1px solid #cbd5e1",
+                padding: "6px 0",
+                borderRadius: "0",
+                border: "none",
                 fontSize: "14px",
                 outline: "none",
                 fontFamily: 'inherit',
-                background: loading ? "#f1f5f9" : "#fff",
-                color: loading ? "#64748b" : "#1e293b",
+                background: "transparent",
+                color: loading ? t.textMute : t.text,
                 resize: "none",
                 lineHeight: "1.45",
                 maxHeight: "140px",
@@ -1491,32 +1610,26 @@ export default function ChatPage() {
               onClick={loading ? stopAnswer : () => sendMessage()}
               title={loading ? "Hentikan jawaban AI" : "Kirim pertanyaan"}
               style={{
-                background: loading ? "#ff1c3e" : "#00439c",
+                width: isMobile ? "32px" : "34px",
+                height: isMobile ? "32px" : "34px",
+                borderRadius: "50%",
+                flexShrink: 0,
+                background: loading ? "#dc2626" : "linear-gradient(135deg,#001845,#00439c)",
                 color: "white",
                 border: "none",
-                padding: "0 16px",
-                borderRadius: "10px",
                 cursor: "pointer",
-                fontWeight: 600,
-                height: "38px",
                 fontFamily: 'inherit',
-                fontSize: "13px",
-                display: "inline-flex",
+                fontSize: "16px",
+                lineHeight: 1,
+                display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: "6px",
-                minWidth: "108px"
+                boxShadow: loading ? "none" : "0 4px 12px rgba(0,67,156,0.35)"
               }}
             >
-              {loading ? (
-                <>
-                  <span style={{ fontSize: "14px", lineHeight: 1 }}>⏹</span>
-                  Hentikan
-                </>
-              ) : (
-                "Kirim"
-              )}
+              {loading ? "⏹" : "➤"}
             </button>
+            </div>
           </div>
         )}
 
@@ -1526,16 +1639,16 @@ export default function ChatPage() {
             style={{
               textAlign: "center",
               fontSize: "11px",
-              color: "#64748b",
-              background: "#ffffff",
-              borderTop: "1px solid #eef2f7",
+              color: t.textMute,
+              background: t.bar,
+              borderTop: "1px solid " + t.borderSoft,
               padding: "8px 16px",
               flexShrink: 0
             }}
           >
             Jawaban bersumber dari dokumen yang tersedia; silakan verifikasi dengan dokumen asli.
             <span style={{ margin: "0 8px", opacity: 0.6 }}>·</span>
-            <b style={{ fontWeight: 600, color: "#64748b" }}>AI Document Intelligence – Kemendag</b>
+            <b style={{ fontWeight: 600, color: t.textMute }}>AI Document Intelligence – Kemendag</b>
           </div>
         )}
       </div>
@@ -1573,9 +1686,11 @@ export default function ChatPage() {
               left: 0,
               bottom: 0,
               width: "min(320px, 88vw)",
-              background: "#f8fafc",
+              background: t.sidebar,
               zIndex: 41,
               boxShadow: "0 0 40px rgba(0,0,0,0.25)",
+              borderRadius: "0 18px 18px 0",
+              overflow: "hidden",
               display: "flex",
               flexDirection: "column"
             }}
@@ -1590,19 +1705,22 @@ export default function ChatPage() {
                 justifyContent: "space-between"
               }}
             >
-              <b style={{ fontSize: "15px", fontFamily: '"Sora", sans-serif' }}>💬 Riwayat Percakapan</b>
+              <b style={{ fontSize: "15px", fontFamily: '"Sora", sans-serif', display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ display: "inline-flex" }}>{IconChat(15)}</span>
+                Riwayat Percakapan
+              </b>
               <button
                 onClick={() => setSidebarOpen(false)}
                 style={{
-                  background: "rgba(255,255,255,0.2)",
+                  background: "transparent",
                   color: "white",
-                  border: "1px solid rgba(255,255,255,0.5)",
+                  border: "none",
                   borderRadius: "8px",
                   padding: "6px 10px",
-                  fontSize: "12px",
+                  fontSize: "14px",
                   cursor: "pointer",
                   fontFamily: 'inherit',
-                  fontWeight: 600
+                  fontWeight: 700
                 }}
               >
                 ✕
@@ -1614,10 +1732,10 @@ export default function ChatPage() {
                 onClick={newConversation}
                 style={{
                   width: "100%",
-                  background: "#ffffff",
-                  border: "1px solid #E8F2F8",
-                  color: "#00439c",
-                  borderRadius: "12px",
+                  background: t.card,
+                  border: "1px solid " + t.borderSoft,
+                  color: dark ? "white" : "#00439c",
+                  borderRadius: "999px",
                   padding: "12px",
                   fontSize: "14px",
                   fontWeight: 700,
@@ -1638,14 +1756,14 @@ export default function ChatPage() {
                 style={{
                   width: "100%",
                   boxSizing: "border-box",
-                  background: "#ffffff",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "10px",
-                  padding: "9px 12px",
+                  background: t.card,
+                  border: "1px solid " + t.borderSoft,
+                  borderRadius: "999px",
+                  padding: "9px 14px",
                   fontSize: "13px",
                   outline: "none",
                   fontFamily: 'inherit',
-                  color: "#1e293b"
+                  color: t.text
                 }}
               />
             </div>
@@ -1655,10 +1773,10 @@ export default function ChatPage() {
                 const items = filteredHistory();
                 if (items.length === 0) {
                   return (
-                    <p style={{ fontSize: "13px", color: "#64748b", textAlign: "center", marginTop: "24px" }}>
+                    <p style={{ fontSize: "13px", color: t.textMute, textAlign: "center", marginTop: "24px" }}>
                       {historyQuery.trim()
                         ? "Tidak ada percakapan yang cocok."
-                        : "Belum ada percakapan. Mulai tanya sesuatu! ✨"}
+                        : "Belum ada percakapan. Mulai tanya sesuatu!"}
                     </p>
                   );
                 }
@@ -1678,7 +1796,7 @@ export default function ChatPage() {
                       style={{
                         fontSize: "11px",
                         fontWeight: 700,
-                        color: "#64748b",
+                        color: t.textMute,
                         textTransform: "uppercase",
                         letterSpacing: "0.5px",
                         padding: "14px 8px 4px"
@@ -1699,15 +1817,15 @@ export default function ChatPage() {
                           padding: "10px 12px",
                           marginTop: "6px",
                           borderRadius: "10px",
-                          border: activeConvId === c.id ? "1px solid #00439c" : "1px solid transparent",
-                          background: activeConvId === c.id ? "#eef6fd" : "#ffffff",
+                          border: activeConvId === c.id ? (dark ? "1px solid #3f6db8" : "1px solid #00439c") : "1px solid transparent",
+                          background: activeConvId === c.id ? (dark ? "#1c3a63" : "#eef6fd") : t.card,
                           cursor: "pointer",
                           fontFamily: 'inherit',
-                          color: "#1e293b",
+                          color: t.text,
                           boxShadow: "0 1px 3px rgba(0,0,0,0.06)"
                         }}
                       >
-                        <span style={{ fontSize: "16px", flexShrink: 0 }}>💬</span>
+                        <span style={{ display: "inline-flex", flexShrink: 0, color: t.textMute }}>{IconChat(16)}</span>
                         <span style={{ flex: 1, minWidth: 0 }}>
                           <span
                             style={{
@@ -1721,7 +1839,7 @@ export default function ChatPage() {
                           >
                             {c.title || "Percakapan baru"}
                           </span>
-                          <span style={{ display: "block", fontSize: "11px", color: "#64748b", marginTop: 2 }}>
+                          <span style={{ display: "block", fontSize: "11px", color: t.textMute, marginTop: 2 }}>
                             {c.messages.length} pesan · {new Date(c.updatedAt || c.createdAt).toLocaleDateString("id-ID")}
                           </span>
                         </span>
@@ -1731,14 +1849,14 @@ export default function ChatPage() {
                           onClick={(e) => deleteConversation(c.id, e)}
                           style={{
                             flexShrink: 0,
-                            color: "#64748b",
+                            color: t.textMute,
                             fontSize: "14px",
                             padding: "2px 6px",
                             cursor: "pointer",
                             borderRadius: "6px"
                           }}
-                          onMouseEnter={(e) => { e.currentTarget.style.color = "#ff1c3e"; e.currentTarget.style.background = "#fee2e2"; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.color = "#64748b"; e.currentTarget.style.background = "transparent"; }}
+                          onMouseEnter={(e) => { e.currentTarget.style.color = "#ff1c3e"; e.currentTarget.style.background = dark ? "#3a1220" : "#fee2e2"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.color = t.textMute; e.currentTarget.style.background = "transparent"; }}
                         >
                           ✕
                         </span>
@@ -1755,10 +1873,10 @@ export default function ChatPage() {
   );
 }
 
-const navButtonStyle = {
-  background: "rgba(255,255,255,0.15)",
+const navButtonStyle = (dark) => ({
+  background: dark ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.12)",
   color: "white",
-  border: "1px solid rgba(255,255,255,0.5)",
+  border: "1px solid " + (dark ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.45)"),
   padding: "10px 14px",
   borderRadius: "10px",
   cursor: "pointer",
@@ -1766,27 +1884,28 @@ const navButtonStyle = {
   fontSize: "14px",
   whiteSpace: "nowrap",
   fontFamily: 'inherit'
-};
+});
 
-const miniActionStyle = {
+const miniActionStyle = (dark) => ({
   background: "transparent",
-  border: "1px solid #e2e8f0",
-  color: "#64748b",
+  border: "none",
+  color: dark ? "#8b98ad" : "#64748b",
   borderRadius: "8px",
   width: "28px",
   height: "28px",
   cursor: "pointer",
   fontSize: "14px",
+  fontWeight: 700,
   lineHeight: "1",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   fontFamily: 'inherit'
-};
+});
 
 // Pemilih model AI; arah dropdown selalu ke bawah, tinggi dibatasi ruang yang tersedia
 // supaya halaman tidak ikut scroll. Daftar model selalu scroll di dalamnya.
-function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOpenChange }) {
+function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOpenChange, dark }) {
   const [open, setOpen] = useState(false);
   const [maxH, setMaxH] = useState(320);
   const ref = useRef(null);
@@ -1825,6 +1944,16 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
 
   const badge = providerBadge(model);
   const short = model.split("/").pop();
+  const mt = {
+    card: dark ? "#151f36" : "#ffffff",
+    border: dark ? "#2a3752" : "#e2e8f0",
+    borderSoft: dark ? "#1f2a44" : "#eef2f7",
+    text: dark ? "#e5edf7" : "#1e293b",
+    textMute: dark ? "#8b98ad" : "#64748b",
+    textSoft: dark ? "#c3cede" : "#334155",
+    itemBg: dark ? "#1b2740" : "#eef6fd",
+    softBg: dark ? "#1e2a45" : "#eef2f7"
+  };
 
   return (
     <div ref={ref} style={{ position: "relative" }}>
@@ -1841,10 +1970,10 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
           gap: "7px",
           padding: "6px 12px",
           borderRadius: "999px",
-          border: open ? "2px solid #00439c" : "2px solid #c7d2fe",
+          border: open ? "2px solid #00439c" : "2px solid " + (dark ? "#2b3a5c" : "#c7d2fe"),
           fontSize: "13px",
-          background: open ? "#eef6fd" : "#fff",
-          color: "#1e293b",
+          background: open ? mt.itemBg : mt.card,
+          color: mt.text,
           outline: "none",
           cursor: "pointer",
           fontFamily: 'inherit',
@@ -1886,7 +2015,7 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
         <span
           style={{
             fontSize: "10px",
-            color: "#64748b",
+            color: mt.textMute,
             transform: open ? "rotate(180deg)" : "none",
             transition: "transform 0.2s ease"
           }}
@@ -1905,10 +2034,10 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
             right: align === "right" ? 0 : "auto",
             minWidth: "280px",
             maxWidth: "min(320px, calc(100vw - 40px))",
-            background: "#ffffff",
+            background: mt.card,
             borderRadius: "14px",
             boxShadow: "0 12px 32px rgba(0,0,0,0.18)",
-            border: "1px solid #e2e8f0",
+            border: "1px solid " + mt.border,
             zIndex: 20,
             display: "flex",
             flexDirection: "column",
@@ -1923,11 +2052,11 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
               padding: "10px 12px",
               fontSize: "12px",
               fontWeight: 700,
-              color: "#64748b",
+              color: mt.textMute,
               textTransform: "uppercase",
               letterSpacing: "0.5px",
-              borderBottom: "1px solid #eef2f7",
-              background: "#ffffff"
+              borderBottom: "1px solid " + mt.borderSoft,
+              background: mt.card
             }}
           >
             Pilih Model AI
@@ -1948,10 +2077,10 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
                     padding: "10px 10px",
                     borderRadius: "10px",
                     border: "none",
-                    background: m.id === model ? "#eef6fd" : "transparent",
+                    background: m.id === model ? mt.itemBg : "transparent",
                     cursor: "pointer",
                     fontFamily: 'inherit',
-                    color: "#1e293b"
+                    color: mt.text
                   }}
                 >
                   <span
@@ -1975,12 +2104,14 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
                     <div style={{ fontSize: "13px", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {m.id.split("/").pop()}
                     </div>
-                    <div style={{ fontSize: "11px", color: "#64748b", marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <div style={{ fontSize: "11px", color: mt.textMute, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {m.label}
                     </div>
                   </div>
                   {m.id === model && (
-                    <span style={{ color: "#00439c", fontSize: "14px", flexShrink: 0 }}>✓</span>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", color: "#00439c", fontSize: "12px", fontWeight: 700, flexShrink: 0 }}>
+                      ✓ Aktif
+                    </span>
                   )}
                 </button>
               );
@@ -2141,11 +2272,11 @@ const PROCESS_STEPS = [
   "Menyusun jawaban…"
 ];
 
-function ProcessingIndicator() {
+function ProcessingIndicator({ dark }) {
   const step = useCycle(PROCESS_STEPS, 1500);
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-      <div style={{ fontSize: "14px", color: "#334155", whiteSpace: "nowrap", fontWeight: 600 }}>
+      <div style={{ fontSize: "14px", color: dark ? "#c3cede" : "#334155", whiteSpace: "nowrap", fontWeight: 600 }}>
         {step}
       </div>
       <div className="typing-dots" style={{ marginTop: 0 }}>
@@ -2158,10 +2289,10 @@ function ProcessingIndicator() {
 }
 
 // Kartu sumber "samar" (skeleton berkilau) saat AI mengetik
-function SourceSkeleton() {
+function SourceSkeleton({ dark }) {
   return (
-    <div className="fade-in" style={{ marginTop: "14px", paddingTop: "12px", borderTop: "1px solid #e2e8f0" }}>
-      <div style={{ fontSize: "13px", color: "#64748b", fontWeight: 600, marginBottom: "8px" }}>
+    <div className="fade-in" style={{ marginTop: "14px", paddingTop: "12px", borderTop: "1px solid " + (dark ? "#1e2a45" : "#e2e8f0") }}>
+      <div style={{ fontSize: "13px", color: dark ? "#8b98ad" : "#64748b", fontWeight: 600, marginBottom: "8px" }}>
         🔍 Memeriksa dokumen sumber…
       </div>
       {[0, 1].map((i) => (
@@ -2172,8 +2303,8 @@ function SourceSkeleton() {
             alignItems: "center",
             gap: "10px",
             marginBottom: "8px",
-            background: "#ffffff",
-            border: "1px solid #eef2f7",
+            background: dark ? "#1c2a47" : "#ffffff",
+            border: "1px solid " + (dark ? "#2a3a58" : "#eef2f7"),
             borderRadius: "10px",
             padding: "8px 12px"
           }}
@@ -2269,10 +2400,10 @@ const citeStyle = {
   fontFamily: 'inherit'
 };
 
-const pageChipStyle = {
-  background: "#eef2f7",
-  color: "#334155",
-  border: "1px solid #d3dce6",
+const pageChipStyle = (t) => ({
+  background: t.borderSoft,
+  color: t.textSoft,
+  border: "1px solid " + t.border,
   borderRadius: "6px",
   padding: "0 7px",
   fontSize: "11px",
@@ -2280,7 +2411,7 @@ const pageChipStyle = {
   lineHeight: "18px",
   cursor: "pointer",
   fontFamily: 'inherit'
-};
+});
 
 // Komponen tautan milik ReactMarkdown:
 // - /cite/<idx> => tombol buka dokumen sumber

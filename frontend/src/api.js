@@ -61,6 +61,33 @@ export function clearSession() {
   localStorage.removeItem("cms_user");
 }
 
+// ---- Buka PDF (dengan token) di tab baru ----
+
+export async function openPdf(path) {
+  const token = localStorage.getItem("cms_token");
+  const res = await fetch(path, {
+    headers: token ? { Authorization: "Bearer " + token } : {}
+  });
+  if (!res.ok) {
+    if (res.status === 401) {
+      clearSession();
+      localStorage.setItem("cms_session_expired", "1");
+    }
+    let msg = "Gagal memuat dokumen";
+    try {
+      const data = await res.json();
+      msg = data.error || msg;
+    } catch {
+      // abaikan
+    }
+    throw new Error(msg);
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  window.open(url, "_blank");
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+}
+
 // ---- Format tanggal agar mudah dibaca ----
 
 export function fmtDate(value) {

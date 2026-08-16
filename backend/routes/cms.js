@@ -1,9 +1,11 @@
 import { Router } from "express";
 import multer from "multer";
 import fs from "fs";
+import path from "path";
 
 import {
     UPLOADS_FOLDER,
+    DOCS_FOLDER,
     MAX_FILE_SIZE
 } from "../config.js";
 import {
@@ -237,6 +239,45 @@ router.get("/files", (req, res) => {
     });
 
 });
+
+
+// ==============================
+// GET /api/cms/files/:id/download
+// Unduh/pratinjau PDF.
+// Admin: semua file; maintainer: file miliknya.
+// ==============================
+
+router.get(
+    "/files/:id/download",
+    (req, res) => {
+
+        const file = fileService.getFileById(req.params.id);
+
+        if (!file) {
+            return res.status(404).json({ error: "File tidak ditemukan" });
+        }
+
+        const isAdmin = req.user.role === "admin";
+        const isOwner = file.uploadedBy === req.user.username;
+
+        if (!isAdmin && !isOwner) {
+            return res.status(403).json({ error: "Tidak berhak mengakses file ini" });
+        }
+
+        let filePath = path.join(UPLOADS_FOLDER, file.filename);
+
+        if (!fs.existsSync(filePath)) {
+            filePath = path.join(DOCS_FOLDER, file.filename);
+        }
+
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({ error: "File fisik tidak ditemukan" });
+        }
+
+        res.download(filePath, file.originalName);
+
+    }
+);
 
 
 // ==============================

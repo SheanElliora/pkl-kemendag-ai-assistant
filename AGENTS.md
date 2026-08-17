@@ -6,13 +6,13 @@ Ringkasan ini dimuat otomatis oleh opencode setiap sesi baru. Baca sebelum menge
 
 - Proyek di C:\dev\pkl-kemendag-ai-assistant (SUDAH dipindah keluar OneDrive - jangan pindahkan lagi).
 - Sistem 100% sehat: ChromaDB :8000, Backend :3001, Frontend :5173. Login CMS: admin / AdminKemendag2026! (password lain ada di backend/.env - jangan commit .env).
-- Git: branch main, semua commit ter-push. Commit terakhir = 2273363 (AGENTS.md).
+- Git: branch main, semua commit ter-push. Commit terakhir = 5454666 (E2E Playwright + backup otomatis + runbook).
 - npm audit backend = 0 vuln (overrides protobufjs 7.6.5, js-yaml 4.3.1, sharp@0.32.6->0.35.3). npm install backend WAJIB --legacy-peer-deps.
 - Tes CMS E2E: 27 PASS / 0 FAIL (node scripts/testCmsFullLifecycle.mjs).
 - Tes UI browser (Playwright, frontend/): npx playwright test = 3 PASS (chat streaming + siklus CMS upload->approve->delete via UI, self-cleaning). Instal browser: npx playwright install chromium.
 - Cek kesehatan cepat: node scripts/healthCheck.mjs (5 PASS: backend, frontend, Chroma v2, 631 vektor, chat RAG end-to-end; flag --no-chat untuk skip LLM).
 - Runbook ultra-ringkas: RUNBOOK.md (start, cek, tes, backup, kredensial, jebakan).
-- Backup Chroma terverifikasi bisa di-restore (631 vektor, ID collection sama).
+- Backup Chroma terverifikasi bisa di-restore (631 vektor, ID collection sama). files.json sempat terhapus insiden BOM PowerShell (18-08-2026) dan BERHASIL di-restore dari backup/2026-08-17_20-58-28/files.json.
 - Backup otomatis: `npm run backup` (scripts/backupChroma.mjs) -> backup/<waktu>/ di akar repo (git-ignored), berisi chroma/ + files.json + users.json + manifest; stop-hidupkan Chroma, verifikasi vektor, simpan 5 terbaru. Jalankan tiap kali dokumen baru di-approve (atau via Task Scheduler).
 - Rate-limit: login 10x/15mnt/IP, chat 20/mnt/IP -> 429.
 

@@ -226,6 +226,8 @@ Ketiga proses harus berjalan bersamaan agar fitur RAG dapat digunakan.
 node scripts/resetChroma.js   # hapus isi database ChromaDB
 node scripts/checkChroma.js    # cek jumlah data di ChromaDB
 node scripts/listModels.js     # tampilkan daftar model OpenRouter
+node scripts/healthCheck.mjs   # cek kesehatan: backend, frontend, ChromaDB, vektor, chat RAG (--no-chat untuk skip LLM)
+node scripts/testCmsFullLifecycle.mjs  # tes E2E CMS: login, CRUD dokumen, log, dll. (27 tes, self-cleaning)
 node scripts/_reindex.mjs      # bangun ulang semua vektor dari chunks (setelah ganti embedding model)
 node scripts/_benchmark.mjs    # evaluasi retrieval terhadap 82 soal (dokumen/halaman/frasa)
 node scripts/_updatePrintedPages.mjs  # hitung ulang nomor halaman tercetak di chunks + metadata Chroma

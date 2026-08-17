@@ -6,9 +6,11 @@ Ringkasan ini dimuat otomatis oleh opencode setiap sesi baru. Baca sebelum menge
 
 - Proyek di C:\dev\pkl-kemendag-ai-assistant (SUDAH dipindah keluar OneDrive - jangan pindahkan lagi).
 - Sistem 100% sehat: ChromaDB :8000, Backend :3001, Frontend :5173. Login CMS: admin / AdminKemendag2026! (password lain ada di backend/.env - jangan commit .env).
-- Git: branch main, semua commit ter-push. Commit terakhir = 0bc295f.
+- Git: branch main, semua commit ter-push. Commit terakhir = 2273363 (AGENTS.md).
 - npm audit backend = 0 vuln (overrides protobufjs 7.6.5, js-yaml 4.3.1, sharp@0.32.6->0.35.3). npm install backend WAJIB --legacy-peer-deps.
 - Tes CMS E2E: 27 PASS / 0 FAIL (node scripts/testCmsFullLifecycle.mjs).
+- Cek kesehatan cepat: node scripts/healthCheck.mjs (5 PASS: backend, frontend, Chroma v2, 631 vektor, chat RAG end-to-end; flag --no-chat untuk skip LLM).
+- Backup Chroma terverifikasi bisa di-restore (631 vektor, ID collection sama).
 - Rate-limit: login 10x/15mnt/IP, chat 20/mnt/IP -> 429.
 
 ## Cara menjalankan (3 terminal)
@@ -27,5 +29,5 @@ Detail lengkap di DEMO.md dan README.md (seksi Cadangan & Pemulihan).
 - Backup tersimpan di C:\Users\shean\AppData\Local\Temp\opencode\: KONTEKS_PEMULIHAN.md (lengkap + kredensial), backup_chroma_chunks, users_backup.json.
 - Installer .exe/.msi di Downloads JANGAN dihapus (kebutuhan UAS kampus).
 - Pelajaran: jangan kirim JSON inline di PowerShell+curl (pakai --data "@file"); jangan flood /api/chat (backend macet); hapus folder OneDrive besar = hentikan OneDrive dulu.
-- Folder kosong sisa di OneDrive: ...PKL-Kemendag\Machine Learning - Copy (0 MB) - hapus manual/restart PC.
+- Folder sisa OneDrive ...PKL-Kemendag\Machine Learning - Copy (0 MB) SUDAH dihapus (18-08-2026, hentikan OneDrive dulu).
 - OneDrive hanya berisi dokumentasi PKL (01-Regulasi s/d 09-Backend) - BUKAN proyek.

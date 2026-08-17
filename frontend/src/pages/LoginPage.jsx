@@ -159,7 +159,7 @@ export default function LoginPage() {
       >
         <img
           className="rise"
-          src="/logo kemendag.png"
+          src="/logo-kemendag.png"
           alt="Logo Kemendag"
           style={{
             width: 88,

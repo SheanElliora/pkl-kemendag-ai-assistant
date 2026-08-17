@@ -541,7 +541,7 @@ export default function CmsPage() {
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <img src="/logo kemendag putih .png" alt="Kemendag" style={{ height: 28, borderRadius: 5 }} />
+            <img src="/logo-kemendag-putih.png" alt="Kemendag" style={{ height: 28, borderRadius: 5 }} />
             <div style={{ flex: 1 }} />
             <button onClick={() => setDark((v) => !v)} title={dark ? "Mode terang" : "Mode gelap"} style={topIconBtn}>
               <SIcon name={dark ? "sun" : "moon"} size={16} />
@@ -623,7 +623,7 @@ export default function CmsPage() {
             }}
           >
             <img
-              src={isOpen ? "/logo kemendag putih .png" : "/logo kemendag.png"}
+              src={isOpen ? "/logo-kemendag-putih.png" : "/logo-kemendag.png"}
               alt="Kemendag"
               style={{ height: isOpen ? 40 : 58, borderRadius: isOpen ? 6 : 14, flexShrink: 0 }}
             />

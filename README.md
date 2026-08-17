@@ -149,9 +149,11 @@ Buka terminal kedua:
 
 ```bash
 cd backend
-npm install
+npm install --legacy-peer-deps
 npm start
 ```
+
+> **Catatan:** flag `--legacy-peer-deps` wajib — ada konflik peer antara `@langchain/community` → `stagehand` (pustaka browser otomasi yang tidak terpakai) dengan `dotenv@^17`. Tanpa flag, instalasi gagal.
 
 Backend berjalan pada `http://localhost:3001`.
 
@@ -233,6 +235,47 @@ node scripts/_updatePrintedPages.mjs  # hitung ulang nomor halaman tercetak di c
 
 ---
 
+
+---
+
+## Cadangan & Pemulihan (Backup & Restore)
+
+### Yang wajib dicadangkan
+
+| Item | Lokasi | Keterangan |
+| ---- | ------ | ---------- |
+| Data ChromaDB | `backend/chroma/` | Seluruh vektor retrieval (ratusan chunk) |
+| Hasil chunking | `backend/chunks/` | Teks chunk + metadata — sumber untuk re-index |
+| Akun & riwayat | `backend/data/` (`users.json`, `files.json`) | User CMS + status dokumen |
+| Dokumen disetujui | `backend/docs/` | Dokumen sumber yang sudah diproses |
+| File pending | `backend/uploads/` | Dokumen yang belum disetujui |
+| Konfigurasi rahasia | `backend/.env` | API key, JWT secret — **jangan pernah di-commit** |
+| Cache model lokal | `backend/node_modules/@xenova/transformers/.cache` | ±434 MB; **ikut terhapus bila `node_modules` dihapus** → unduh ulang |
+
+### Prosedur backup (manual)
+
+1. Pastikan backend tidak sedang memproses dokumen (atau hentikan dulu).
+2. Salin folder di tabel ke lokasi aman **di luar folder proyek** (mis. `C:\Users\<user>\Documents\backup\...`).
+3. Simpan salinan `.env` secara terpisah dan rahasia.
+
+### Prosedur pemulihan dari nol
+
+1. `git clone` repo, lalu `npm install --legacy-peer-deps` di `backend/` dan `frontend/`.
+2. Kembalikan folder `chroma`, `chunks`, `data`, `docs`, `uploads` dari backup ke posisinya.
+3. Salin `.env` (nilai `JWT_SECRET` dan `DEFAULT_ADMIN_PASSWORD` **harus sama** dengan sebelumnya, dan `users.json` lama ikut dikembalikan — jika tidak, token lama hangus dan password admin kembali ke default).
+4. Jalankan berurutan: ChromaDB → Backend → Frontend.
+
+### Catatan pemeliharaan npm
+
+* `npm audit` backend dipertahankan **0 kerentanan** lewat `overrides` di `package.json`: `protobufjs` 7.6.5, `js-yaml` 4.3.1, dan `sharp@0.32.6 → 0.35.3`.
+* Bila suatu saat override tidak diterapkan (versi lama masih terpasang di `package-lock.json`), **hapus `package-lock.json` + `node_modules`** lalu install ulang dengan `--legacy-peer-deps` — `npm install`/`--force` biasa tidak menengahi.
+* `sharp` di bawah `@xenova/transformers` tidak pernah di-import oleh kode (kerentanan inert), tetapi tetap di-override agar audit bersih.
+
+### Pelajaran dari insiden
+
+* Sinkronisasi OneDrive pernah menghasilkan file duplikat `*-DESKTOP-*` yang merusak repo; solusi: restore dari git + pola `*-DESKTOP-*` di `.gitignore`. **Disarankan menjalankan proyek di luar folder OneDrive.**
+
+---
 
 ## Status Proyek
 

@@ -593,7 +593,7 @@ export default function ChatPage() {
         >
           <div style={{ display: "flex", alignItems: "center", minWidth: 0 }}>
             <img
-              src="/logo kemendag putih .png"
+              src="/logo-kemendag-putih.png"
               alt="Logo Kementerian Perdagangan Republik Indonesia"
               style={{
                 height: isMobile ? "46px" : "56px",
@@ -824,7 +824,7 @@ export default function ChatPage() {
               <div style={{ textAlign: "center" }}>
                 <div className="rise" style={{ display: "flex", justifyContent: "center", marginBottom: "14px", animationDelay: "0s" }}>
                   <img
-                    src="/logo kemendag.png"
+                    src="/logo-kemendag.png"
                     alt="Logo Kemendag"
                     className="logo-hover"
                     style={{

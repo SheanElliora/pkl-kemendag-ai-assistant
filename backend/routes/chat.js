@@ -1,9 +1,32 @@
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import { askRAG, streamRAG } from "../services/ragService.js";
 import { translateLLMError } from "../services/llmService.js";
 
 
 const router = Router();
+
+
+// ==============================
+// Rate limit chat: 20 pertanyaan
+// per menit per IP. Melindungi
+// kredit API OpenRouter dari
+// pemakaian berlebihan, karena
+// endpoint ini publik (tanpa
+// login) sesuai desain demo.
+// ==============================
+
+const chatLimiter = rateLimit({
+
+    windowMs: 60 * 1000,
+    max: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        error: "Terlalu banyak pertanyaan dalam satu menit. Coba lagi sebentar lagi."
+    }
+
+});
 
 
 // ==============================
@@ -15,7 +38,7 @@ const router = Router();
 //   (delta teks bertahap, lalu done + sources).
 // ==============================
 
-router.post("/", async (req, res) => {
+router.post("/", chatLimiter, async (req, res) => {
 
 
     console.log("\n==============================");

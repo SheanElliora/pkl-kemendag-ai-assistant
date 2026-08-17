@@ -35,3 +35,6 @@ chroma/
 
 # Logs
 *.log
+
+# OneDrive conflict copies
+*-DESKTOP-*

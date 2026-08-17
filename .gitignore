@@ -32,9 +32,15 @@ backend/ocr_text/
 *.zip
 structure.txt
 chroma/
+backup/
 
 # Logs
 *.log
+
+# Test artifacts (Playwright)
+frontend/test-results/
+frontend/playwright-report/
+frontend/e2e/.tmp/
 
 # OneDrive conflict copies
 *-DESKTOP-*

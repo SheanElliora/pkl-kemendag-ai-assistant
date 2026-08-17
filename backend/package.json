@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "node --watch --env-file=.env index.js",
     "start": "node --env-file=.env index.js",
-    "ingest": "node --max-old-space-size=4096 --env-file=.env ingest.js"
+    "ingest": "node --max-old-space-size=4096 --env-file=.env ingest.js",
+    "backup": "node scripts/backupChroma.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

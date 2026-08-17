@@ -143,4 +143,4 @@ if (doChat) {
 console.log("\n=====================================");
 console.log(`HASIL: ${pass} PASS, ${fail} FAIL${skipped ? `, ${skipped} SKIP` : ""}`);
 console.log("=====================================");
-process.exit(fail > 0 ? 1 : 0);
+process.exitCode = fail > 0 ? 1 : 0;

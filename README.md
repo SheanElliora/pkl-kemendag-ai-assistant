@@ -228,10 +228,22 @@ node scripts/checkChroma.js    # cek jumlah data di ChromaDB
 node scripts/listModels.js     # tampilkan daftar model OpenRouter
 node scripts/healthCheck.mjs   # cek kesehatan: backend, frontend, ChromaDB, vektor, chat RAG (--no-chat untuk skip LLM)
 node scripts/testCmsFullLifecycle.mjs  # tes E2E CMS: login, CRUD dokumen, log, dll. (27 tes, self-cleaning)
+npm run backup               # backup Chroma + data ke backup/ (5 terbaru disimpan)
 node scripts/_reindex.mjs      # bangun ulang semua vektor dari chunks (setelah ganti embedding model)
 node scripts/_benchmark.mjs    # evaluasi retrieval terhadap 82 soal (dokumen/halaman/frasa)
 node scripts/_updatePrintedPages.mjs  # hitung ulang nomor halaman tercetak di chunks + metadata Chroma
 ```
+
+### Tes UI browser (Playwright, dari folder `frontend/`)
+
+```
+npx playwright test          # 3 tes: chat (2) + siklus hidup CMS via UI (1)
+npx playwright test --headed # lihat browser berjalan
+```
+
+Prasyarat: ChromaDB + Backend + Vite hidup (lihat "Cara menjalankan"). Test CMS self-cleaning: user tes & record dibuang, file & vektor dihapus. Artefak gagal (screenshot/trace) di `frontend/test-results/` (git-ignored).
+
+> **Runbook cepat**: panduan ultra-ringkas (start, cek, tes, backup, jebakan) ada di `RUNBOOK.md`.
 
 > **Penting**: bila model embedding diganti, jalankan `npm run ingest` (atau `node scripts/_reindex.mjs`) agar seluruh vektor di ChromaDB dihitung ulang dengan model baru. Vektor lama dari model lain tidak kompatibel.
 
@@ -259,6 +271,23 @@ node scripts/_updatePrintedPages.mjs  # hitung ulang nomor halaman tercetak di c
 1. Pastikan backend tidak sedang memproses dokumen (atau hentikan dulu).
 2. Salin folder di tabel ke lokasi aman **di luar folder proyek** (mis. `C:\Users\<user>\Documents\backup\...`).
 3. Simpan salinan `.env` secara terpisah dan rahasia.
+
+### Backup otomatis (disarankan)
+
+```
+cd backend
+npm run backup
+```
+
+Script `scripts/backupChroma.mjs` melakukan semuanya dalam satu perintah:
+
+1. Menghentikan Chroma sementara (agar SQLite tidak korup saat disalin),
+2. menyalin `backend/chroma/` + `data/files.json` + `data/users.json` ke `backup/<waktu>/` di akar repo (folder `backup/` di-ignore git),
+3. menulis `manifest.json`,
+4. menghidupkan Chroma lagi dan **memverifikasi jumlah vektor**,
+5. mempertahankan hanya **5 backup terbaru** (yang lebih lama dihapus otomatis).
+
+> Setiap kali selesai menambah/menyetujui dokumen baru, jalankan `npm run backup` agar vektor baru ikut tercadangkan. Bisa juga dijadwalkan via **Windows Task Scheduler** (mis. tiap hari pukul 22:00).
 
 ### Prosedur pemulihan dari nol
 

@@ -6,12 +6,17 @@ Ringkasan ini dimuat otomatis oleh opencode setiap sesi baru. Baca sebelum menge
 
 - Proyek di C:\dev\pkl-kemendag-ai-assistant (SUDAH dipindah keluar OneDrive - jangan pindahkan lagi).
 - Sistem 100% sehat: ChromaDB :8000, Backend :3001, Frontend :5173. Login CMS: admin / AdminKemendag2026! (password lain ada di backend/.env - jangan commit .env).
-- Git: branch main, semua commit ter-push. Commit terakhir = performa-pipeline (antrean ingest asinkron + batch embedding + rerank 10).
+- Git: branch main, semua commit ter-push. Commit terakhir = fitur-fase-2 (riwayat chat multi-turn, feedback, statistik, hybrid BM25, evaluasi RAG, unit test, Swagger, export chat).
 - npm audit backend = 0 vuln (overrides protobufjs 7.6.5, js-yaml 4.3.1, sharp@0.32.6->0.35.3). npm install backend WAJIB --legacy-peer-deps.
 - Approve dokumen ASINKRON: POST approve -> status "processing" (antrean latar belakang ingestQueue.js, 1 worker FIFO) -> "approved"/"error". Frontend polling 5 dtk saat ada "processing". Jangan harap langsung "approved".
 - Embedding ingest memakai BATCH (EMBED_BATCH=16 di ingest.js, createEmbeddingsBatch di embedderService.js — menangani semua bentuk output transform.js). Rerank width = 10 (retrieverService.js).
+- CHAT BARU (fase-2): riwayat multi-turn via sessionId (disimpan data/chats.json, owner = user:<id> bila token Bearer, client:<id> bila clientId, else guest). Endpoint: POST /api/chat (body sessionId/clientId), GET /api/chat/history, GET|DELETE /api/chat/history/:sessionId, POST /api/chat/feedback (rating up/down + komentar), GET /api/chat/history/:sessionId/export?format=html|doc. Konteks 6 pesan terakhir dikirim ke LLM.
+- RETRIEVAL hybrid: BM25 (bm25Service.js, korpus dari chunks/*.json, cache mtime) di-union dengan kandidat vektor (BM25_WIDTH=60, BM25_BONUS=0.3) sebelum rerank. Perilaku vektor lama tidak berubah.
+- Dokumentasi API: GET /api/docs (Swagger UI), GET /api/docs.json (OpenAPI). Statistik: GET /api/stats (publik), GET /api/cms/stats (admin: dokumen/vektor/user/chat+feedback).
 - Tes CMS E2E: 28 PASS / 0 FAIL (node scripts/testCmsFullLifecycle.mjs).
 - Tes dokumen BARU end-to-end: 11 PASS / 0 FAIL (node scripts/testNewDocE2E.mjs: upload->approve->chunk JSON->vektor Chroma->sitasi chat->hapus->bersih).
+- Unit test service inti: 14 PASS / 0 FAIL (npm test = node --test "tests/*.test.mjs"; bm25Service, chatHistoryService, chunkService; TANPA dependency baru).
+- Evaluasi RAG: 14 PASS / 0 FAIL (node scripts/evalRag.mjs: recall@7 = 7/7 + sitasi jawaban benar; --no-llm untuk retrieval saja).
 - Tes UI browser (Playwright, frontend/): npx playwright test = 3 PASS (chat streaming + siklus CMS upload->approve->delete via UI, self-cleaning). Instal browser: npx playwright install chromium.
 - Cek kesehatan cepat: node scripts/healthCheck.mjs (5 PASS: backend, frontend, Chroma v2, 631 vektor, chat RAG end-to-end; flag --no-chat untuk skip LLM).
 - Runbook ultra-ringkas: RUNBOOK.md (start, cek, tes, backup, kredensial, jebakan).

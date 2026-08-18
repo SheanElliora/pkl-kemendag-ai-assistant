@@ -29,11 +29,23 @@ cd "C:\dev\pkl-kemendag-ai-assistant\backend"; node scripts/healthCheck.mjs
 ```powershell
 cd "C:\dev\pkl-kemendag-ai-assistant\backend";  node scripts/testCmsFullLifecycle.mjs   # 28 tes API CMS
 cd "C:\dev\pkl-kemendag-ai-assistant\backend";  node scripts/testNewDocE2E.mjs          # 11 tes dokumen BARU (upload->approve->sitasi->hapus)
+cd "C:\dev\pkl-kemendag-ai-assistant\backend";  npm test                                # 14 unit test (bm25, chatHistory, chunk)
+cd "C:\dev\pkl-kemendag-ai-assistant\backend";  node scripts/evalRag.mjs                # 14 evaluasi RAG (recall@7 + sitasi; --no-llm utk retrieval saja)
 cd "C:\dev\pkl-kemendag-ai-assistant\frontend"; npx playwright test                     # 3 tes browser UI
 ```
 
 Catatan: approve dokumen sekarang ASINKRON (antrean latar belakang) — status langsung
 `processing`, lalu poll sampai `approved` (test di atas sudah otomatis menunggu).
+
+## 3b. Fitur & endpoint baru (fase-2)
+
+- Riwayat chat multi-turn: `POST /api/chat` (body `sessionId`/`clientId`) -> riwayat di
+  `data/chats.json`; `GET /api/chat/history`, `GET|DELETE /api/chat/history/:sessionId`.
+- Feedback: `POST /api/chat/feedback` (rating up/down + komentar).
+- Export: `GET /api/chat/history/:sessionId/export?format=html|doc` (HTML bisa print-to-PDF; DOC dibuka Word).
+- Dokumentasi API: `GET /api/docs` (Swagger UI) & `GET /api/docs.json` (OpenAPI).
+- Statistik: `GET /api/stats` (publik), `GET /api/cms/stats` (admin).
+- Retrieval hybrid: BM25 (bm25Service.js, korpus `chunks/*.json`) + vektor + rerank.
 
 ## 4. Backup (tiap selesai approve dokumen baru)
 

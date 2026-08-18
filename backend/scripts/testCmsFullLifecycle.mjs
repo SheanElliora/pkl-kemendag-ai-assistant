@@ -266,7 +266,7 @@ async function main() {
     );
 
 
-    // 8) Admin APPROVE dokumen #1 (ingest dijalankan server)
+    // 8) Admin APPROVE dokumen #1 (ingest berjalan DI LATAR BELAKANG)
     let appr1;
     try {
         appr1 = await api(`/api/cms/files/${fileId1}/approve`, { method: "POST", token: adminToken });
@@ -277,9 +277,26 @@ async function main() {
     }
     const apprStatus = appr1.json?.file?.status;
     record(
+        "Approve #1 -> diantrekan (processing)",
+        appr1.status === 200 && apprStatus === "processing",
+        `status=${apprStatus}`
+    );
+
+    // Tunggu ingest selesai di latar belakang (polling status)
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    let finalStatus = apprStatus;
+    const deadline = Date.now() + 180000;
+    while (["processing", "pending"].includes(finalStatus) && Date.now() < deadline) {
+        await sleep(5000);
+        const poll = await api("/api/cms/files", { token: adminToken });
+        finalStatus = (poll.json.files || []).find((f) => f.id === fileId1)?.status;
+    }
+    const apprErr = (await api("/api/cms/files", { token: adminToken })).json.files
+        .find((f) => f.id === fileId1)?.error;
+    record(
         "Approve #1 -> approved (ingest)",
-        appr1.status === 200 && apprStatus === "approved",
-        `status=${apprStatus}${appr1.json?.file?.error ? " · err=" + appr1.json.file.error.slice(0, 60) : ""}`
+        finalStatus === "approved",
+        `status=${finalStatus}${apprErr ? " · err=" + apprErr.slice(0, 60) : ""}`
     );
 
 

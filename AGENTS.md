@@ -6,9 +6,12 @@ Ringkasan ini dimuat otomatis oleh opencode setiap sesi baru. Baca sebelum menge
 
 - Proyek di C:\dev\pkl-kemendag-ai-assistant (SUDAH dipindah keluar OneDrive - jangan pindahkan lagi).
 - Sistem 100% sehat: ChromaDB :8000, Backend :3001, Frontend :5173. Login CMS: admin / AdminKemendag2026! (password lain ada di backend/.env - jangan commit .env).
-- Git: branch main, semua commit ter-push. Commit terakhir = 5454666 (E2E Playwright + backup otomatis + runbook).
+- Git: branch main, semua commit ter-push. Commit terakhir = performa-pipeline (antrean ingest asinkron + batch embedding + rerank 10).
 - npm audit backend = 0 vuln (overrides protobufjs 7.6.5, js-yaml 4.3.1, sharp@0.32.6->0.35.3). npm install backend WAJIB --legacy-peer-deps.
-- Tes CMS E2E: 27 PASS / 0 FAIL (node scripts/testCmsFullLifecycle.mjs).
+- Approve dokumen ASINKRON: POST approve -> status "processing" (antrean latar belakang ingestQueue.js, 1 worker FIFO) -> "approved"/"error". Frontend polling 5 dtk saat ada "processing". Jangan harap langsung "approved".
+- Embedding ingest memakai BATCH (EMBED_BATCH=16 di ingest.js, createEmbeddingsBatch di embedderService.js — menangani semua bentuk output transform.js). Rerank width = 10 (retrieverService.js).
+- Tes CMS E2E: 28 PASS / 0 FAIL (node scripts/testCmsFullLifecycle.mjs).
+- Tes dokumen BARU end-to-end: 11 PASS / 0 FAIL (node scripts/testNewDocE2E.mjs: upload->approve->chunk JSON->vektor Chroma->sitasi chat->hapus->bersih).
 - Tes UI browser (Playwright, frontend/): npx playwright test = 3 PASS (chat streaming + siklus CMS upload->approve->delete via UI, self-cleaning). Instal browser: npx playwright install chromium.
 - Cek kesehatan cepat: node scripts/healthCheck.mjs (5 PASS: backend, frontend, Chroma v2, 631 vektor, chat RAG end-to-end; flag --no-chat untuk skip LLM).
 - Runbook ultra-ringkas: RUNBOOK.md (start, cek, tes, backup, kredensial, jebakan).
@@ -26,7 +29,7 @@ Detail lengkap di DEMO.md dan README.md (seksi Cadangan & Pemulihan).
 
 ## Catatan penting
 
-- backend/data/files.json berisi 11 record (8 dokumen approved + artefak tes) - JANGAN dihapus.
+- backend/data/files.json berisi 11 record (8 dokumen approved + artefak tes) - JANGAN dihapus. Folder data: docs/, uploads/, ocr_text/, chunks/ ada di backend/ (chunk file = <nama>_chunks.json di backend/chunks/).
 - Cache model lokal backend\node_modules\@xenova\transformers\.cache = 434 MB (ikut terhapus bila node_modules dibersihkan).
 - ChromaDB memakai API v2: /api/v2/tenants/default_tenant/databases/default_database/collections/... (root /api/v1 -> 410; /count -> 400; retrieval tetap jalan).
 - Backup tersimpan di C:\Users\shean\AppData\Local\Temp\opencode\: KONTEKS_PEMULIHAN.md (lengkap + kredensial), backup_chroma_chunks, users_backup.json. Backup aktif sekarang di C:\dev\pkl-kemendag-ai-assistant\backup\ (lihat npm run backup).

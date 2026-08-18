@@ -3,13 +3,23 @@ import {
     loadSinglePDF
 } from "./services/pdfLoader.js";
 
-import { createEmbedding } from "./services/embedderService.js";
+import { createEmbeddingsBatch } from "./services/embedderService.js";
 
 import {
     saveVector,
     getExistingIds,
     deleteVectorsByFilename
 } from "./services/vectorStorage.js";
+
+
+// ======================================
+// Ukuran batch embedding: berapa chunk
+// yang di-embed dalam SATU panggilan
+// model ONNX. Lebih besar = lebih cepat,
+// namun menaikkan puncak memori.
+// ======================================
+
+const EMBED_BATCH = 16;
 
 
 
@@ -54,6 +64,66 @@ async function processDocuments(documents){
     let total = 0;
     let baru = 0;
     let skip = 0;
+
+    // Batch chunk yang menunggu di-embed. Di-flush
+    // tiap EMBED_BATCH item atau di akhir dokumen.
+    let pendingBatch = [];
+
+    async function flushBatch() {
+
+        if (pendingBatch.length === 0) return;
+
+        console.log(
+            `Embedding batch (${pendingBatch.length} chunk)...`
+        );
+
+        const vectors =
+        await createEmbeddingsBatch(
+            pendingBatch.map((p) => p.chunk.text)
+        );
+
+        for (let k = 0; k < pendingBatch.length; k++) {
+
+            const { id, chunk, doc } = pendingBatch[k];
+
+            await saveVector(
+
+                {
+
+                    id,
+
+                    filename:
+                    doc.filename,
+
+                    title:
+                    doc.title,
+
+                    page:
+                    chunk.page,
+
+                    printedPage:
+                    chunk.printedPage,
+
+                    text:
+                    chunk.text
+
+                },
+
+                vectors[k]
+
+            );
+
+            baru++;
+
+        }
+
+        console.log(
+            `Selesai ${baru}`
+        );
+
+        pendingBatch = [];
+
+    }
 
 
 
@@ -127,58 +197,28 @@ async function processDocuments(documents){
             }
 
 
-
-            console.log(
-                `Embedding ${total}`
-            );
-
-
-
-            const vector =
-            await createEmbedding(
-                chunk.text
-            );
+            // Kumpulkan chunk yang belum punya vektor
+            // lalu embed SECARA BATCH (satu panggilan
+            // model untuk banyak chunk) — jauh lebih
+            // cepat daripada satu per satu.
 
 
 
-            await saveVector(
-
-                {
-
-                    id,
-
-                    filename:
-                    doc.filename,
-
-                    title:
-                    doc.title,
-
-                    page:
-                    chunk.page,
-
-                    printedPage:
-                    chunk.printedPage,
-
-                    text:
-                    chunk.text
-
-                },
-
-                vector
-
-            );
+            pendingBatch.push({ id, chunk, doc });
 
 
+            if (pendingBatch.length >= EMBED_BATCH) {
 
-            baru++;
+                await flushBatch();
 
-
-            console.log(
-                `Selesai ${baru}`
-            );
+            }
 
 
         }
+
+
+        // Flush sisa chunk dokumen ini
+        await flushBatch();
 
 
     }

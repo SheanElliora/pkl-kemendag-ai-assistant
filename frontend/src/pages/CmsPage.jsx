@@ -200,6 +200,7 @@ export default function CmsPage() {
   const [processingAll, setProcessingAll] = useState(false);
   const [approveAllOpen, setApproveAllOpen] = useState(false);
   const [approveAllProgress, setApproveAllProgress] = useState({ total: 0, done: 0 });
+  const processingRef = useRef(false);
 
   const isAdmin = user?.role === "admin";
 
@@ -237,8 +238,8 @@ export default function CmsPage() {
       const data = await api("/api/cms/files");
       const all = data.files || [];
       setFiles(all);
-      setPending(all.filter((f) => f.status === "pending"));
-      setHistory(all.filter((f) => f.status !== "pending"));
+      setPending(all.filter((f) => f.status === "pending" || f.status === "processing"));
+      setHistory(all.filter((f) => f.status !== "pending" && f.status !== "processing"));
     } catch (err) {
       showToast("error", err.message);
     } finally {
@@ -280,12 +281,28 @@ export default function CmsPage() {
     if (tab === "logs") refreshLogs();
   }, [tab]);
 
-  // Polling otomatis: segarkan daftar persetujuan setiap 30 detik.
+  // Polling otomatis: segarkan daftar persetujuan.
+  // Setiap 5 detik dicek: bila ada dokumen sedang
+  // diproses (status "processing") langsung refresh,
+  // bila tenang cukup sekali tiap 30 detik.
   useEffect(() => {
     if (tab !== "approval") return;
-    const id = setInterval(() => refreshApproval(), 30000);
+    let lastRefresh = 0;
+    const id = setInterval(() => {
+      const now = Date.now();
+      if (processingRef.current || now - lastRefresh >= 30000) {
+        lastRefresh = now;
+        refreshApproval();
+      }
+    }, 5000);
     return () => clearInterval(id);
   }, [tab]);
+
+  // Perbarui penanda "ada dokumen diproses" setiap
+  // daftar disegarkan (untuk interval polling di atas).
+  useEffect(() => {
+    processingRef.current = files.some((f) => f.status === "processing");
+  }, [files]);
 
   // Segarkan saat window kembali terlihat/difokuskan.
   useEffect(() => {
@@ -339,7 +356,7 @@ export default function CmsPage() {
     setProcessingId(id);
     try {
       await api(`/api/cms/files/${id}/approve`, { method: "POST", body: {} });
-      showToast("success", "Dokumen disetujui dan diproses.");
+      showToast("success", "Dokumen disetujui, sedang diproses.");
       refreshApproval();
     } catch (err) {
       showToast("error", err.message);
@@ -356,7 +373,7 @@ export default function CmsPage() {
 
   async function confirmApproveAll() {
     setApproveAllOpen(false);
-    const ids = pending.map((f) => f.id);
+    const ids = pending.filter((f) => f.status === "pending").map((f) => f.id);
     if (ids.length === 0) return;
     setProcessingAll(true);
     setApproveAllProgress({ total: ids.length, done: 0 });
@@ -959,7 +976,7 @@ export default function CmsPage() {
                       }}
                     >
                       <SIcon name="check" size={13} />
-                      {processingAll ? `Memproses ${approveAllProgress.done}/${approveAllProgress.total}…` : `Terima Semua (${pending.length})`}
+                      {processingAll ? `Memproses ${approveAllProgress.done}/${approveAllProgress.total}…` : `Terima Semua (${pending.filter((f) => f.status === "pending").length})`}
                     </button>
                     )}
                   </div>
@@ -989,9 +1006,17 @@ export default function CmsPage() {
                             <FileCell f={f} t={t} maxWidth={400} meta={`${formatSize(f.size)} · ${f.uploadedBy}`} />
                             <Td t={t} style={{ whiteSpace: "nowrap", width: 160 }}>{fmtDate(f.uploadedAt)}</Td>
                             <Td t={t} style={{ whiteSpace: "nowrap", width: 260 }}>
+                              {f.status === "processing" ? (
+                                <span title="Dokumen sedang diproses di latar belakang" style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 999, fontSize: 13, background: "#e9a3191f", color: "#e9a319" }}>
+                                  <span style={{ display: "inline-flex", marginRight: 2 }}><SIcon name="inbox" size={13} /></span>Diproses…
+                                </span>
+                              ) : (
+                              <>
                               <button onClick={() => previewFile(f)} style={{ ...smallBtn("#64748b"), ...(processingId !== null ? { opacity: 0.6, cursor: "not-allowed" } : {}) }} title="Pratinjau dokumen" disabled={processingId !== null}><span style={{ display: "inline-flex", marginRight: 5, verticalAlign: "middle" }}><SIcon name="file" size={13} /></span>Lihat</button>
                               <button onClick={() => approve(f.id)} style={{ ...smallBtn("#059669"), ...(processingId !== null ? { opacity: 0.6, cursor: "not-allowed" } : {}) }} title="Terima & proses dokumen" disabled={processingId !== null}><span style={{ display: "inline-flex", marginRight: 5, verticalAlign: "middle" }}><SIcon name="check" size={13} /></span>{processingId === f.id ? "Memproses…" : "Terima"}</button>
                               <button onClick={() => openReject(f)} style={{ ...smallBtn("#dc2626"), ...(processingId !== null ? { opacity: 0.6, cursor: "not-allowed" } : {}) }} title="Tolak dokumen" disabled={processingId !== null}><span style={{ display: "inline-flex", marginRight: 5, verticalAlign: "middle" }}><SIcon name="x" size={13} /></span>Tolak</button>
+                              </>
+                              )}
                             </Td>
                           </tr>
                         ))}
@@ -1415,7 +1440,7 @@ export default function CmsPage() {
               { label: "Ukuran", value: formatSize(detailTarget.size) },
               { label: "Pengunggah", value: detailTarget.uploadedBy },
               { label: "Waktu Unggah", value: fmtDate(detailTarget.uploadedAt) },
-              { label: "Status", value: detailTarget.status === "pending" ? "Menunggu" : detailTarget.status === "approved" ? "Disetujui" : detailTarget.status === "error" ? "Gagal Diproses" : detailTarget.status === "deleted" ? "Dihapus" : "Ditolak" },
+              { label: "Status", value: detailTarget.status === "pending" ? "Menunggu" : detailTarget.status === "processing" ? "Diproses…" : detailTarget.status === "approved" ? "Disetujui" : detailTarget.status === "error" ? "Gagal Diproses" : detailTarget.status === "deleted" ? "Dihapus" : "Ditolak" },
               ...(detailTarget.approvedAt ? [
                 { label: "Waktu Diproses", value: fmtDate(detailTarget.approvedAt) },
                 { label: "Diproses Oleh", value: detailTarget.approvedBy || "-" }
@@ -1979,6 +2004,7 @@ const roleColor = (role) => (role === "admin" ? "#e9a319" : "#10b981");
 function FileTable({ rows, empty, sub, title, onDelete, onDetail, onView, t, loading = false, sortable = false, sortKey, sortDir, onSort, fill = false, maxHeight, bare = false }) {
   const statusLabel = (status) =>
     status === "pending" ? "Menunggu"
+    : status === "processing" ? "Diproses…"
     : status === "approved" ? "Disetujui"
     : status === "error" ? "Gagal Diproses"
     : status === "deleted" ? "Dihapus"

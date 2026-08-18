@@ -27,9 +27,13 @@ cd "C:\dev\pkl-kemendag-ai-assistant\backend"; node scripts/healthCheck.mjs
 ## 3. Tes E2E (semua aman dijalankan ulang, self-cleaning)
 
 ```powershell
-cd "C:\dev\pkl-kemendag-ai-assistant\backend";  node scripts/testCmsFullLifecycle.mjs   # 27 tes API CMS
+cd "C:\dev\pkl-kemendag-ai-assistant\backend";  node scripts/testCmsFullLifecycle.mjs   # 28 tes API CMS
+cd "C:\dev\pkl-kemendag-ai-assistant\backend";  node scripts/testNewDocE2E.mjs          # 11 tes dokumen BARU (upload->approve->sitasi->hapus)
 cd "C:\dev\pkl-kemendag-ai-assistant\frontend"; npx playwright test                     # 3 tes browser UI
 ```
+
+Catatan: approve dokumen sekarang ASINKRON (antrean latar belakang) — status langsung
+`processing`, lalu poll sampai `approved` (test di atas sudah otomatis menunggu).
 
 ## 4. Backup (tiap selesai approve dokumen baru)
 
@@ -53,6 +57,7 @@ cd "C:\dev\pkl-kemendag-ai-assistant\backend"; npm run backup   # -> backup/<wak
 | Flood `/api/chat` -> backend macet / 429 | Limit: 20/mnt/IP (login 10x/15mnt/IP) |
 | Edit `files.json` dari PowerShell | JANGAN pakai `Set-Content -Encoding UTF8` (tulis BOM -> backend baca `[]` -> data tertimpa). Pakai Node/notepad biasa |
 | Backup di `%TEMP%` bisa hilang | Backup permanen: `npm run backup` |
+| Batch embedding transform.js | Output array bisa 1 tensor batch / banyak tensor — `createEmbeddingsBatch` sudah tangani semua bentuk |
 | Dua instance Chroma folder sama | 1 proses per `--path` (risiko korup SQLite) |
 | `node_modules` dihapus | Cache embedding 434 MB ikut hilang (unduh ulang otomatis) |
 | Dua proses di port 3001/8000 | `EADDRINUSE` -> matikan proses lama dulu |

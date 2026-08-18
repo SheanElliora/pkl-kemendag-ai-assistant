@@ -56,7 +56,7 @@ const SEARCH_WIDTH = 60;
 const KEYWORD_BONUS = 0.05;
 const FILENAME_BONUS = 0.15;
 const MIN_CHUNK_LENGTH = 40;
-const RERANK_WIDTH = 16;
+const RERANK_WIDTH = 10;
 const RERANK_WEIGHT = 0.5;
 
 // Kata umum yang bising untuk token 3 huruf.

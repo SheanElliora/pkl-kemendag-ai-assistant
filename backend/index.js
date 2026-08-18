@@ -11,6 +11,7 @@ import chatRouter from "./routes/chat.js";
 import { CORS_ORIGINS, DOCS_FOLDER } from "./config.js";
 import { ensureDefaultAdmin } from "./services/userService.js";
 import { ensureFolders } from "./services/fileService.js";
+import { recoverProcessingJobs } from "./services/ingestQueue.js";
 import { MODEL_CATALOG } from "./services/modelCatalog.js";
 import { createEmbedding } from "./services/embedderService.js";
 import { rerankDocuments } from "./services/rerankerService.js";
@@ -262,6 +263,11 @@ async function warmupModels() {
 // Pastikan user admin default tersedia
 // sebelum server menerima permintaan.
 ensureDefaultAdmin();
+
+// Pulihkan dokumen yang tertinggal status
+// "processing" (restart server di tengah
+// ingest) ke antrean latar belakang.
+recoverProcessingJobs();
 
 
 

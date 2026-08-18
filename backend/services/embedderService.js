@@ -88,3 +88,85 @@ export async function createEmbedding(
     return Array.from(output.data);
 
 }
+
+
+// ==============================
+// Embedding BATCH
+//
+// Memanggil model satu kali untuk
+// BANYAK teks sekaligus (jauh lebih
+// cepat daripada per-teks berurutan,
+// terutama saat ingest dokumen baru).
+//
+// CATATAN transformers.js: bentuk
+// keluaran bisa bervariasi antar
+// versi — tensor batch tunggal,
+// array Tensor per-teks, atau array
+// berisi satu tensor batch. Semua
+// bentuk digabung jadi flat lalu
+// dipotong per teks berdasarkan
+// dimensi model.
+// ==============================
+
+export async function createEmbeddingsBatch(
+    texts,
+    role = "passage"
+) {
+
+    const model = await getEmbedder();
+
+    const inputs =
+    texts.map(
+        (t) =>
+        role === "query"
+            ? "query: " + t
+            : "passage: " + t
+    );
+
+    const output =
+    await model(
+        inputs,
+        {
+            pooling: "mean",
+            normalize: true
+        }
+    );
+
+    const outputs =
+    Array.isArray(output)
+        ? output
+        : [output];
+
+    const flat =
+    new Float32Array(
+        outputs.reduce(
+            (acc, tensor) =>
+            acc.concat(
+                Array.from(tensor.data)
+            ),
+            []
+        )
+    );
+
+    const n = texts.length;
+
+    const dim = flat.length / n;
+
+    const result = [];
+
+    for (let i = 0; i < n; i++) {
+
+        result.push(
+            Array.from(
+                flat.slice(
+                    i * dim,
+                    (i + 1) * dim
+                )
+            )
+        );
+
+    }
+
+    return result;
+
+}

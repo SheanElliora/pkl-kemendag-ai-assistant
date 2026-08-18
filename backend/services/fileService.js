@@ -8,7 +8,7 @@ import {
     CHUNK_FOLDER
 } from "../config.js";
 import { readJson, writeJson } from "./storeService.js";
-import { ingestDocument } from "../ingest.js";
+import { enqueueIngest } from "./ingestQueue.js";
 import { deleteVectorsByFilename } from "./vectorStorage.js";
 
 
@@ -136,7 +136,12 @@ export function listFiles(user) {
 
 
 // =====================================
-// Approve: pindah file ke docs lalu ingest
+// Approve: pindah file ke docs lalu
+// antrekan ingest di latar belakang.
+// Request langsung balas (tidak nunggu
+// OCR/embedding selesai) — status record
+// jadi "processing" sampai job selesai
+// (approved) atau gagal (error).
 // =====================================
 
 export async function approveFile(id, approvedBy) {
@@ -207,32 +212,23 @@ export async function approveFile(id, approvedBy) {
 
     fs.renameSync(sourcePath, destPath);
 
-    try {
+    // Tandai "processing" lalu antrekan ingest.
+    // Pembersihan vektor lama (bila ada sisa) dilakukan
+    // otomatis oleh ingestDocument (jalan rebuilt).
+    record.status = "processing";
+    record.approvedBy = approvedBy;
+    record.approvedAt = new Date().toISOString();
+    record.error = undefined;
 
-        await ingestDocument(record.filename);
+    saveFiles(files);
 
-        record.status = "approved";
-        record.approvedBy = approvedBy;
-        record.approvedAt = new Date().toISOString();
-        record.error = undefined;
+    enqueueIngest({
+        recordId: record.id,
+        filename: record.filename,
+        approvedBy
+    });
 
-        saveFiles(files);
-
-        return { file: record };
-
-    }
-    catch (error) {
-
-        record.status = "error";
-        record.approvedBy = approvedBy;
-        record.approvedAt = new Date().toISOString();
-        record.error = error.message;
-
-        saveFiles(files);
-
-        return { error: "Proses dokumen gagal: " + error.message };
-
-    }
+    return { file: record };
 
 }
 

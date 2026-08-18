@@ -305,7 +305,7 @@ router.post(
         }
 
         res.json({
-            message: "Dokumen disetujui dan diproses.",
+            message: "Dokumen disetujui, sedang diproses di latar belakang.",
             file: result.file
         });
 

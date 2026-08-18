@@ -14,7 +14,20 @@ const client = new OpenAI({
 
 
 
-function buildPrompt(question, context) {
+function buildPrompt(question, context, history) {
+
+const historyBlock =
+(history && history.length > 0)
+    ? `
+
+RIWAYAT PERCAKAPAN (tanya-jawab sebelumnya):
+
+${history.map((h) => `- ${h.role === "user" ? "PENGGUNA" : "ASISTEN"}: ${h.content}`).join("\n")}
+
+Gunakan riwayat di atas hanya sebagai konteks lanjutan (mis. pertanyaan rujukan seperti "sebutkan yang kedua tadi", "di atas", "terakhir"). Jangan pernah menyebutkan riwayat ini sebagai sumber; kutipan [n] tetap merujuk FILE: pada CONTEXT.
+
+`
+    : "";
 
 return `
 
@@ -57,6 +70,7 @@ FORMAT JAWABAN:
 - Gunakan nomor kutipan HANYA untuk klaim yang benar-benar berasal dari file itu.
 - Jika jawaban berupa kalimat "Informasi tersebut tidak ditemukan dalam dokumen yang tersedia.", jangan menyertakan kutipan apa pun.
 
+${historyBlock}
 CONTEXT:
 
 ${context}
@@ -75,11 +89,12 @@ Jawaban:
 export async function generateAnswer(
     question,
     context,
-    model
+    model,
+    history
 ){
 
 
-const prompt = buildPrompt(question, context);
+const prompt = buildPrompt(question, context, history);
 
 
 
@@ -126,10 +141,11 @@ return completion
 export async function generateAnswerStream(
     question,
     context,
-    model
+    model,
+    history
 ){
 
-const prompt = buildPrompt(question, context);
+const prompt = buildPrompt(question, context, history);
 
 const stream =
 await client.chat.completions.create({

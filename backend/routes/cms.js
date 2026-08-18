@@ -22,6 +22,9 @@ import {
 import {
     listLoginLogs
 } from "../services/loginLogService.js";
+import { readJson } from "../services/storeService.js";
+import { countVectors } from "../services/vectorStorage.js";
+import { chatStats } from "../services/chatHistoryService.js";
 
 
 const router = Router();
@@ -506,6 +509,63 @@ router.get(
         res.json({
             logs: listLoginLogs()
         });
+
+    }
+);
+
+
+// ==============================
+// Statistik sistem (khusus admin)
+// Dokumen per status, jumlah vektor,
+// user, dan ringkasan percakapan.
+// ==============================
+
+router.get(
+    "/stats",
+    requireRole("admin"),
+    async (req, res) => {
+
+        try {
+
+            const files = readJson("files", []);
+
+            const byStatus = {};
+
+            files.forEach((f) => {
+                byStatus[f.status] = (byStatus[f.status] || 0) + 1;
+            });
+
+            const users = listUsers();
+
+            res.json({
+
+                documents: {
+                    total: files.length,
+                    byStatus,
+                    approved: files.filter((f) => f.status === "approved").length
+                },
+
+                vectors: await countVectors(),
+
+                users: {
+                    total: users.length,
+                    admins: users.filter((u) => u.role === "admin").length,
+                    maintainers: users.filter((u) => u.role === "maintainer").length
+                },
+
+                chats: chatStats()
+
+            });
+
+        }
+
+        catch (error) {
+
+            res.status(500).json({
+                error: "Gagal membaca statistik: " + error.message
+            });
+
+        }
 
     }
 );

@@ -117,3 +117,30 @@ export async function deleteVectorsByFilename(filename) {
     });
 
 }
+
+// ======================================================
+// Menghitung total vektor (untuk statistik dashboard)
+// ======================================================
+
+export async function countVectors() {
+
+    try {
+
+        const collection = await getCollection();
+
+        const result = await collection.get({
+            limit: 5000,
+            include: ["metadatas"]
+        });
+
+        return (result.ids || []).length;
+
+    }
+
+    catch {
+
+        return 0;
+
+    }
+
+}

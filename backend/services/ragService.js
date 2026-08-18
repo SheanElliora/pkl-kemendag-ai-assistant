@@ -75,7 +75,8 @@ function isNotFoundAnswer(answer) {
 
 export async function askRAG(
     question,
-    model
+    model,
+    history
 ){
 
 
@@ -210,7 +211,9 @@ ${doc}
 
         context,
 
-        model
+        model,
+
+        history
 
     );
 
@@ -260,7 +263,8 @@ return {
 
 export async function* streamRAG(
     question,
-    model
+    model,
+    history
 ){
 
     const result =
@@ -330,7 +334,8 @@ ${doc}
     await generateAnswerStream(
         question,
         context,
-        model
+        model,
+        history
     );
 
     let full = "";

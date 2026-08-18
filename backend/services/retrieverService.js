@@ -4,6 +4,7 @@ import path from "path";
 import { createEmbedding } from "./embedderService.js";
 import { rerankDocuments } from "./rerankerService.js";
 import { getQueryExpansion } from "./queryExpansionService.js";
+import { searchBM25 } from "./bm25Service.js";
 import { DOCS_FOLDER } from "../config.js";
 
 
@@ -58,6 +59,8 @@ const FILENAME_BONUS = 0.15;
 const MIN_CHUNK_LENGTH = 40;
 const RERANK_WIDTH = 10;
 const RERANK_WEIGHT = 0.5;
+const BM25_WIDTH = 60;
+const BM25_BONUS = 0.3;
 
 // Kata umum yang bising untuk token 3 huruf.
 const STOP3 = new Set([
@@ -588,7 +591,7 @@ result.documents[0].forEach(
 
 
 
-            candidates.push({
+candidates.push({
 
                 doc,
 
@@ -607,6 +610,91 @@ result.documents[0].forEach(
         }
 
     );
+
+
+
+    // ==================================
+    // Gabungkan kandidat BM25 (hybrid)
+    //
+    // BM25 menangkap istilah EKSAK (nomor peraturan,
+    // kode HS, tahun, nama produk) yang kadang luput
+    // dari pencarian vektor. Hasil BM25 di-union dengan
+    // kandidat vektor (dedupe berdasarkan teks), lalu
+    // semuanya di-ranking bersama di bawah.
+    //
+    // Kandidat yang HANYA muncul di BM25 tidak punya
+    // jarak vektor asli, jadi diberi jarak sintetis
+    // sedikit di atas jarak terburuk kandidat vektor,
+    // dengan bonus skor sebanding skor BM25-nya.
+    // ==================================
+
+    const bm25Results =
+    searchBM25(question, BM25_WIDTH);
+
+    if (bm25Results.length > 0) {
+
+        const worstDistance =
+        candidates.length > 0
+            ? Math.max(...candidates.map((c) => c.distance))
+            : 1.2;
+
+        const bm25Max =
+        Math.max(...bm25Results.map((r) => r.bm25Score));
+
+        const existingKeys =
+        new Set(
+            candidates.map(
+                (c) =>
+                (c.meta.filename || "") + "|" +
+                c.doc.trim().slice(0, 100).toLowerCase()
+            )
+        );
+
+        for (const hit of bm25Results) {
+
+            const lowerDoc =
+            hit.doc.toLowerCase();
+
+            // Filter yang sama dengan jalur vektor:
+            // dokumen tidak aktif, daftar isi, cover, chunk pendek.
+            if (!activeFiles.has((hit.meta.filename || "").toLowerCase())) continue;
+
+            if (
+                lowerDoc.includes("daftar isi") ||
+                lowerDoc.includes("table of contents") ||
+                lowerDoc.includes("daftar tabel") ||
+                lowerDoc.includes("daftar gambar")
+            ) continue;
+
+            if (
+                lowerDoc.includes("market intelligence") &&
+                lowerDoc.length < 500
+            ) continue;
+
+            if (hit.doc.trim().length < MIN_CHUNK_LENGTH) continue;
+
+            const key =
+            (hit.meta.filename || "") + "|" +
+            hit.doc.trim().slice(0, 100).toLowerCase();
+
+            if (existingKeys.has(key)) continue;
+
+            existingKeys.add(key);
+
+            const norm = hit.bm25Score / bm25Max;
+
+            candidates.push({
+                doc: hit.doc,
+                meta: hit.meta,
+                distance: worstDistance + (1 - norm) * 0.5,
+                keywordHits: 0,
+                filenameMatch: false,
+                bm25Bonus: norm * BM25_BONUS
+            });
+
+        }
+
+    }
 
 
 
@@ -630,7 +718,8 @@ result.documents[0].forEach(
         item.score =
         item.distance
         - KEYWORD_BONUS * item.keywordHits
-        - (item.filenameMatch ? FILENAME_BONUS : 0);
+        - (item.filenameMatch ? FILENAME_BONUS : 0)
+        - (item.bm25Bonus || 0);
 
     });
 

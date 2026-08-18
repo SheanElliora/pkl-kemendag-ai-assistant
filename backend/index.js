@@ -8,6 +8,7 @@ import fs from "fs";
 import authRouter from "./routes/auth.js";
 import cmsRouter from "./routes/cms.js";
 import chatRouter from "./routes/chat.js";
+import docsRouter from "./routes/docs.js";
 import { CORS_ORIGINS, DOCS_FOLDER } from "./config.js";
 import { ensureDefaultAdmin } from "./services/userService.js";
 import { ensureFolders } from "./services/fileService.js";
@@ -15,6 +16,8 @@ import { recoverProcessingJobs } from "./services/ingestQueue.js";
 import { MODEL_CATALOG } from "./services/modelCatalog.js";
 import { createEmbedding } from "./services/embedderService.js";
 import { rerankDocuments } from "./services/rerankerService.js";
+import { readJson } from "./services/storeService.js";
+import { countVectors } from "./services/vectorStorage.js";
 
 
 const app = express();
@@ -58,6 +61,14 @@ app.use("/api/cms", cmsRouter);
 
 app.use("/api/chat", chatRouter);
 
+
+// ==============================
+// Dokumentasi API (OpenAPI + UI)
+// Menyediakan /api/docs (UI) dan
+// /api/docs.json (spesifikasi).
+// ==============================
+
+app.use("/api", docsRouter);
 
 // ==============================
 // Cek Environment
@@ -169,6 +180,41 @@ app.get("/api/documents/:filename", (req, res) => {
     res.setHeader("Content-Disposition", `inline; filename="${encodeURIComponent(safeName)}"`);
 
     fs.createReadStream(filePath).pipe(res);
+
+});
+
+
+// ==============================
+// Statistik publik (ringan, untuk
+// halaman utama: jumlah dokumen &
+// vektor yang tersedia)
+// ==============================
+
+app.get("/api/stats", async (req, res) => {
+
+    try {
+
+        const files = readJson("files", []);
+
+        const approved = files.filter((f) => f.status === "approved");
+
+        res.json({
+            documents: {
+                total: files.length,
+                approved: approved.length
+            },
+            vectors: await countVectors()
+        });
+
+    }
+
+    catch (error) {
+
+        res.status(500).json({
+            error: "Gagal membaca statistik: " + error.message
+        });
+
+    }
 
 });
 

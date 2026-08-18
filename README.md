@@ -237,7 +237,7 @@ node scripts/_updatePrintedPages.mjs  # hitung ulang nomor halaman tercetak di c
 ### Tes UI browser (Playwright, dari folder `frontend/`)
 
 ```
-npx playwright test          # 3 tes: chat (2) + siklus hidup CMS via UI (1)
+npx playwright test          # 5 tes: chat (2) + siklus hidup CMS via UI (1) + feedback (1) + export (1)
 npx playwright test --headed # lihat browser berjalan
 ```
 

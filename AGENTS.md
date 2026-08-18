@@ -17,7 +17,7 @@ Ringkasan ini dimuat otomatis oleh opencode setiap sesi baru. Baca sebelum menge
 - Tes dokumen BARU end-to-end: 11 PASS / 0 FAIL (node scripts/testNewDocE2E.mjs: upload->approve->chunk JSON->vektor Chroma->sitasi chat->hapus->bersih).
 - Unit test service inti: 14 PASS / 0 FAIL (npm test = node --test "tests/*.test.mjs"; bm25Service, chatHistoryService, chunkService; TANPA dependency baru).
 - Evaluasi RAG: 14 PASS / 0 FAIL (node scripts/evalRag.mjs: recall@7 = 7/7 + sitasi jawaban benar; --no-llm untuk retrieval saja).
-- Tes UI browser (Playwright, frontend/): npx playwright test = 3 PASS (chat streaming + siklus CMS upload->approve->delete via UI, self-cleaning). Instal browser: npx playwright install chromium.
+- Tes UI browser (Playwright, frontend/): npx playwright test = 5 PASS (chat hero+streaming+cleanup, siklus CMS upload->approve->delete via UI, feedback ke server, export HTML/DOC — self-cleaning, chats.json bersih 0 sesi setelah suite). Instal browser: npx playwright install chromium. Jebakan: GET /api/chat/history TANPA clientId/token HANYA menampilkan sesi owner "guest" — sesi client:*/user:* harus dibersihkan per-id via DELETE /api/chat/history/:id (baca id langsung dari backend/data/chats.json).
 - Cek kesehatan cepat: node scripts/healthCheck.mjs (5 PASS: backend, frontend, Chroma v2, 631 vektor, chat RAG end-to-end; flag --no-chat untuk skip LLM).
 - Runbook ultra-ringkas: RUNBOOK.md (start, cek, tes, backup, kredensial, jebakan).
 - Backup Chroma terverifikasi bisa di-restore (631 vektor, ID collection sama). files.json sempat terhapus insiden BOM PowerShell (18-08-2026) dan BERHASIL di-restore dari backup/2026-08-17_20-58-28/files.json.

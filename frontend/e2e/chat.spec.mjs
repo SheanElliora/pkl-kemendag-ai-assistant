@@ -34,4 +34,14 @@ test("chat RAG menjawab dengan streaming + sumber referensi", async ({ page }) =
     const sources = page.locator("text=Sumber Referensi");
     await expect(sources.first()).toBeVisible({ timeout: 30000 });
     await expect(page.locator("text=PERMENDAG NOMOR 28 TAHUN 2024.pdf").first()).toBeVisible({ timeout: 10000 });
+
+    // Self-cleaning: hapus sesi server yang dibuat tes ini (clientId di localStorage)
+    const clientId = await page.evaluate(() => localStorage.getItem("cms_client_id"));
+    if (clientId) {
+        const res = await page.request.get("http://localhost:3001/api/chat/history?clientId=" + encodeURIComponent(clientId));
+        const data = await res.json();
+        for (const s of data.sessions || []) {
+            await page.request.delete("http://localhost:3001/api/chat/history/" + s.id);
+        }
+    }
 });

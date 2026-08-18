@@ -11,10 +11,12 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(null);
   const [feedback, setFeedback] = useState({});
+  const [fbComment, setFbComment] = useState({});
   const [previewDoc, setPreviewDoc] = useState(null);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
   const [newMsgIndex, setNewMsgIndex] = useState(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const [modelOpen, setModelOpen] = useState(false);
   const [cmsBtnVariant, setCmsBtnVariant] = useState(() => localStorage.getItem("cms_btn_variant_v2") || "chip");
   const [cmsBtnLabel, setCmsBtnLabel] = useState(() => localStorage.getItem("cms_btn_label_v2") || "Panel Admin");
@@ -141,6 +143,34 @@ export default function ChatPage() {
   useEffect(() => {
     saveConversations(conversations);
   }, [conversations]);
+
+  // ----- Sinkron riwayat dengan server (chats.json di backend) -----
+  // clientId persisten per browser -> sesi tamu aman antar refresh/perangkat.
+  const clientId = getClientId();
+
+  useEffect(() => {
+    api("/api/chat/history?clientId=" + encodeURIComponent(clientId))
+      .then((data) => {
+        if (!Array.isArray(data.sessions) || data.sessions.length === 0) return;
+        setConversations((prev) => {
+          const known = new Set(prev.map((c) => c.sessionId).filter(Boolean));
+          const server = data.sessions
+            .map((s) => ({
+              id: "srv_" + s.id,
+              sessionId: s.id,
+              title: s.title || "Percakapan baru",
+              createdAt: Date.parse(s.createdAt) || Date.now(),
+              updatedAt: Date.parse(s.updatedAt) || Date.now(),
+              messages: [],
+              msgCount: s.messageCount || 0
+            }))
+            .filter((s) => !known.has(s.sessionId));
+          return server.length ? [...prev, ...server] : prev;
+        });
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const isMobile = useMediaQuery("(max-width: 768px)");
 
@@ -283,6 +313,32 @@ export default function ChatPage() {
     const conv = conversations.find((c) => c.id === id);
     if (!conv) return;
     setModel(conv.model || model);
+    // Sesi server yang belum pernah dibuka: muat isi percakapan dari backend.
+    if (conv.sessionId && conv.messages.length === 0) {
+      api("/api/chat/history/" + conv.sessionId)
+        .then((data) => {
+          const msgs = (data.session?.messages || []).map((m) => ({
+            role: m.role === "assistant" ? "bot" : "user",
+            text: m.content || "",
+            sources: m.sources || [],
+            model: m.model || conv.model || model,
+            time: Date.parse(m.createdAt) || Date.now(),
+            messageId: m.id,
+            feedback: m.feedback || null,
+            streaming: false
+          }));
+          setConversations((prev) =>
+            prev.map((c) => (c.id === id ? { ...c, messages: msgs } : c))
+          );
+          // Pulihkan feedback yang sudah pernah diberikan (dari server).
+          const restored = {};
+          for (const m of msgs) {
+            if (m.feedback) restored["m" + m.messageId] = { rating: m.feedback.rating, comment: m.feedback.comment || "" };
+          }
+          if (Object.keys(restored).length) setFeedback((prev) => ({ ...prev, ...restored }));
+        })
+        .catch(() => {});
+    }
     setActiveConvId(id);
     activeIdRef.current = id;
     setSidebarOpen(false);
@@ -301,6 +357,10 @@ export default function ChatPage() {
   function deleteConversation(id, e) {
     e?.stopPropagation();
     if (loading) return;
+    const conv = conversations.find((c) => c.id === id);
+    if (conv?.sessionId) {
+      api("/api/chat/history/" + conv.sessionId, { method: "DELETE" }).catch(() => {});
+    }
     setConversations((prev) => prev.filter((c) => c.id !== id));
     if (activeIdRef.current === id) {
       setActiveConvId(null);
@@ -373,17 +433,27 @@ export default function ChatPage() {
   }
 
   // Jalankan permintaan chat; hasilnya streaming (SSE)
-  async function consumeStream(message, mdl, question) {
+  async function consumeStream(message, mdl, question, convId) {
     const controller = new AbortController();
     abortRef.current = controller;
     setLoading(true);
     let completed = false;
 
+    // Ikatan ke sesi server (bila percakapan sudah punya sessionId).
+    const conv = conversations.find((c) => c.id === convId);
+    const body = {
+      message,
+      model: mdl,
+      stream: true,
+      clientId,
+      ...(conv?.sessionId ? { sessionId: conv.sessionId } : {})
+    };
+
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, model: mdl, stream: true }),
+        body: JSON.stringify(body),
         signal: controller.signal
       });
 
@@ -394,6 +464,7 @@ export default function ChatPage() {
         const data = await res.json();
         const answer = data.reply ?? data.answer ?? data.error ?? "Tidak ada jawaban.";
         finalizeStream(answer, data.sources ?? [], question, mdl);
+        if (data.sessionId) attachSessionInfo(convId, data.sessionId, data.messageId);
         completed = true;
       } else {
         const reader = res.body.getReader();
@@ -426,10 +497,12 @@ export default function ChatPage() {
             } else if (data.type === "done") {
               const ans = (data.answer ?? full).trim();
               finalizeStream(ans, data.sources ?? [], question, mdl);
+              if (data.sessionId) attachSessionInfo(convId, data.sessionId, data.messageId);
               completed = true;
             } else if (data.type === "error") {
               const msg = "Terjadi kesalahan: " + (data.message || "server.");
               finalizeStream(msg, [], question, mdl);
+              if (data.sessionId) attachSessionInfo(convId, data.sessionId, data.messageId);
               completed = true;
             }
           }
@@ -487,7 +560,54 @@ export default function ChatPage() {
       setNewMsgIndex(currentMessages.length);
     }
 
-    await consumeStream(text, model, text);
+    await consumeStream(text, model, text, id);
+  }
+
+  // Tempel sessionId/messageId hasil server ke percakapan & pesan bot terakhir.
+  function attachSessionInfo(convId, sessionId, messageId) {
+    if (!convId || !sessionId) return;
+    setConversations((prev) =>
+      prev.map((c) => {
+        if (c.id !== convId) return c;
+        let messages = c.messages;
+        if (messageId) {
+          const arr = [...messages];
+          const lastBot = arr.reduce((acc, m, i) => (m.role === "bot" ? i : acc), -1);
+          if (lastBot !== -1) arr[lastBot] = { ...arr[lastBot], messageId };
+          messages = arr;
+        }
+        return { ...c, sessionId, messages };
+      })
+    );
+  }
+
+  // Kunci feedback per pesan: messageId server bila ada, fallback indeks lokal.
+  function msgKey(m, index) {
+    return m.messageId ? "m" + m.messageId : "i" + index;
+  }
+
+  // Kirim rating feedback (up/down) ke server; komentar opsional menyusul.
+  function submitFeedback(index, rating, m) {
+    const key = msgKey(m, index);
+    const conv = conversations.find((c) => c.id === activeIdRef.current);
+    if (!conv?.sessionId || !m.messageId) return;
+    const comment = fbComment[key] || "";
+    setFeedback((prev) => ({ ...prev, [key]: { rating, comment } }));
+    api("/api/chat/feedback", {
+      method: "POST",
+      body: { sessionId: conv.sessionId, messageId: m.messageId, rating, comment }
+    })
+      .catch(() => {
+        setFeedback((prev) => ({ ...prev, [key]: { ...(prev[key] || {}), error: true } }));
+      });
+  }
+
+  // Kirim ulang rating + komentar (backend menimpa feedback per pesan).
+  function sendFeedbackComment(index, m) {
+    const key = msgKey(m, index);
+    const rating = feedback[key]?.rating;
+    if (!rating) return;
+    submitFeedback(index, rating, m);
   }
 
   // Tanya ulang: hapus jawaban bot lama, jawab lagi dengan model aktif
@@ -507,7 +627,7 @@ export default function ChatPage() {
       )
     );
 
-    await consumeStream(userMsg.text, model, userMsg.text);
+    await consumeStream(userMsg.text, model, userMsg.text, id);
   }
 
   // Batalkan proses AI yang sedang berjalan
@@ -537,6 +657,19 @@ export default function ChatPage() {
 
   function scrollToBottom() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }
+
+  // Unduh percakapan aktif dari server (HTML untuk print-ke-PDF, DOC untuk Word).
+  function downloadChat(format) {
+    const conv = conversations.find((c) => c.id === activeIdRef.current);
+    if (!conv?.sessionId) return;
+    const a = document.createElement("a");
+    a.href = "/api/chat/history/" + conv.sessionId + "/export?format=" + format;
+    a.download = "";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setExportOpen(false);
   }
 
   function logout() {
@@ -947,6 +1080,7 @@ export default function ChatPage() {
 
           {currentMessages.length > 0 && !loading && (
             <div style={{ display: "flex", justifyContent: "center", margin: "0 0 12px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", position: "relative" }}>
               {showResetConfirm ? (
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", background: t.card, border: "1px solid " + t.borderSoft, borderRadius: "999px", padding: "6px 12px", boxShadow: "0 4px 12px rgba(0,0,0,0.06)" }}>
                   <span style={{ fontSize: "13px", color: t.textSoft }}>Mulai ulang percakapan?</span>
@@ -977,6 +1111,98 @@ export default function ChatPage() {
                   <span>↻</span> Mulai ulang percakapan
                 </button>
               )}
+              {(() => {
+                const activeConv = conversations.find((c) => c.id === activeConvId);
+                if (!activeConv?.sessionId) return null;
+                return (
+                  <>
+                    <button
+                      onClick={() => setExportOpen((v) => !v)}
+                      title="Unduh percakapan ini"
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        background: "linear-gradient(135deg,#001845,#00439c)",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "999px",
+                        padding: "6px 14px",
+                        fontSize: "12.5px",
+                        fontFamily: 'inherit',
+                        cursor: "pointer",
+                        boxShadow: "0 3px 10px rgba(0,67,156,0.3)"
+                      }}
+                    >
+                      <span>⬇</span> Unduh
+                    </button>
+                    {exportOpen && (
+                      <div
+                        className="pop-in"
+                        style={{
+                          position: "absolute",
+                          top: "calc(100% + 6px)",
+                          left: "50%",
+                          transform: "translateX(-50%)",
+                          background: t.card,
+                          border: "1px solid " + t.border,
+                          borderRadius: "12px",
+                          boxShadow: "0 10px 26px rgba(0,0,0,0.16)",
+                          padding: "6px",
+                          zIndex: 25,
+                          minWidth: "190px"
+                        }}
+                      >
+                        <button
+                          onClick={() => downloadChat("html")}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            width: "100%",
+                            textAlign: "left",
+                            padding: "9px 12px",
+                            borderRadius: "8px",
+                            border: "none",
+                            background: "transparent",
+                            color: t.text,
+                            fontSize: "13px",
+                            cursor: "pointer",
+                            fontFamily: 'inherit'
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = t.bgSoft; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                        >
+                          <span>📄</span> HTML — cetak ke PDF
+                        </button>
+                        <button
+                          onClick={() => downloadChat("doc")}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            width: "100%",
+                            textAlign: "left",
+                            padding: "9px 12px",
+                            borderRadius: "8px",
+                            border: "none",
+                            background: "transparent",
+                            color: t.text,
+                            fontSize: "13px",
+                            cursor: "pointer",
+                            fontFamily: 'inherit'
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = t.bgSoft; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+                        >
+                          <span>📝</span> DOC — buka di Word
+                        </button>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+              </div>
             </div>
           )}
 
@@ -1200,31 +1426,60 @@ export default function ChatPage() {
                       )}
 
                       {m.role === "bot" && !m.streaming && (
-                        <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
+                        <div style={{ display: "flex", gap: "8px", marginTop: "12px", flexWrap: "wrap", alignItems: "center" }}>
                           <button
-                            onClick={() => setFeedback((prev) => ({ ...prev, [index]: prev[index] === "up" ? null : "up" }))}
+                            onClick={() => submitFeedback(index, "up", m)}
                             title="Jawaban membantu"
                             style={{
                               ...miniActionStyle(dark),
-                              background: feedback[index] === "up" ? "#dcfce7" : "transparent",
-                              borderColor: feedback[index] === "up" ? "#16a75c" : t.borderSoft,
-                              color: feedback[index] === "up" ? "#16a75c" : t.textMute
+                              background: feedback[msgKey(m, index)]?.rating === "up" ? "#dcfce7" : "transparent",
+                              borderColor: feedback[msgKey(m, index)]?.rating === "up" ? "#16a75c" : t.borderSoft,
+                              color: feedback[msgKey(m, index)]?.rating === "up" ? "#16a75c" : t.textMute
                             }}
                           >
                             👍
                           </button>
                           <button
-                            onClick={() => setFeedback((prev) => ({ ...prev, [index]: prev[index] === "down" ? null : "down" }))}
+                            onClick={() => submitFeedback(index, "down", m)}
                             title="Jawaban kurang membantu"
                             style={{
                               ...miniActionStyle(dark),
-                              background: feedback[index] === "down" ? "#fee2e2" : "transparent",
-                              borderColor: feedback[index] === "down" ? "#ff1c3e" : t.borderSoft,
-                              color: feedback[index] === "down" ? "#ff1c3e" : t.textMute
+                              background: feedback[msgKey(m, index)]?.rating === "down" ? "#fee2e2" : "transparent",
+                              borderColor: feedback[msgKey(m, index)]?.rating === "down" ? "#ff1c3e" : t.borderSoft,
+                              color: feedback[msgKey(m, index)]?.rating === "down" ? "#ff1c3e" : t.textMute
                             }}
                           >
                             👎
                           </button>
+                          {feedback[msgKey(m, index)]?.rating && (
+                            <div style={{ display: "flex", gap: "6px", alignItems: "center", flex: 1, minWidth: "180px" }}>
+                              <input
+                                value={fbComment[msgKey(m, index)] || ""}
+                                onChange={(e) => setFbComment((prev) => ({ ...prev, [msgKey(m, index)]: e.target.value }))}
+                                onKeyDown={(e) => e.key === "Enter" && sendFeedbackComment(index, m)}
+                                placeholder="Komentar (opsional)…"
+                                style={{
+                                  flex: 1,
+                                  minWidth: 0,
+                                  background: "transparent",
+                                  border: "1px solid " + t.borderSoft,
+                                  borderRadius: "999px",
+                                  padding: "6px 12px",
+                                  fontSize: "12px",
+                                  outline: "none",
+                                  fontFamily: 'inherit',
+                                  color: t.text
+                                }}
+                              />
+                              <button
+                                onClick={() => sendFeedbackComment(index, m)}
+                                title="Kirim komentar"
+                                style={miniActionStyle(dark)}
+                              >
+                                ➤
+                              </button>
+                            </div>
+                          )}
                         </div>
                       )}
 
@@ -1840,7 +2095,7 @@ export default function ChatPage() {
                             {c.title || "Percakapan baru"}
                           </span>
                           <span style={{ display: "block", fontSize: "11px", color: t.textMute, marginTop: 2 }}>
-                            {c.messages.length} pesan · {new Date(c.updatedAt || c.createdAt).toLocaleDateString("id-ID")}
+                            {(c.msgCount ?? c.messages.length)} pesan · {new Date(c.updatedAt || c.createdAt).toLocaleDateString("id-ID")}
                           </span>
                         </span>
                         <span
@@ -2167,6 +2422,28 @@ function providerBadge(modelId) {
 // ---------- Helper localStorage & topik ----------
 
 const CONV_KEY = "cms_conversations_v1";
+
+// Identitas anonim persisten per browser (untuk sesi server guest).
+let cachedClientId = null;
+function getClientId() {
+  if (cachedClientId) return cachedClientId;
+  let id = null;
+  try {
+    id = localStorage.getItem("cms_client_id");
+  } catch {
+    // abaikan
+  }
+  if (!id) {
+    id = "web_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    try {
+      localStorage.setItem("cms_client_id", id);
+    } catch {
+      // abaikan
+    }
+  }
+  cachedClientId = id;
+  return id;
+}
 
 function loadConversations() {
   try {

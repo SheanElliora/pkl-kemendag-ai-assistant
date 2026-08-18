@@ -20,6 +20,12 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
         },
       },
+      watch: {
+        // File sementara tes E2E (.tmp, test-results, dist) tidak perlu
+        // dipantau; mengawasinya bisa mematikan dev server di Windows
+        // (EBUSY: resource busy or locked saat file PDF uji ditulis/dihapus).
+        ignored: ['**/e2e/.tmp/**', '**/test-results/**', '**/dist/**', '**/node_modules/**'],
+      },
     },
   };
 });

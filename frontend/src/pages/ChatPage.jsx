@@ -44,10 +44,10 @@ export default function ChatPage() {
     inputBg: dark ? "#0f1a2f" : "#f1f5f9",
     bubbleBot: dark ? "#223254" : "#e2e7ee",
     bubbleUser: dark ? "#0e5c9e" : "#9fc7ef",
-    accentText: dark ? "#7fb1e8" : "#00439c",
+    accentText: dark ? "#7fb1e8" : "#004DAF",
     chatBg: dark
-      ? "radial-gradient(rgba(0,67,156,0.12) 1px, transparent 1.4px) 0 0 / 22px 22px, #0d1526"
-      : "radial-gradient(rgba(0,67,156,0.06) 1px, transparent 1.4px) 0 0 / 22px 22px, #eef2f756"
+      ? "radial-gradient(rgba(0,77,175,0.12) 1px, transparent 1.4px) 0 0 / 22px 22px, #0d1526"
+      : "radial-gradient(rgba(0,77,175,0.06) 1px, transparent 1.4px) 0 0 / 22px 22px, #eef2f756"
   };
 
   useEffect(() => {
@@ -860,7 +860,7 @@ export default function ChatPage() {
         <div
           className="app-header"
           style={{
-            background: "linear-gradient(135deg, #001845, #00439c)",
+            background: "linear-gradient(135deg, #001845, #004DAF)",
             color: "white",
             boxShadow: "inset 0 -3px 0 0 rgba(233,163,25,0.55)",
             padding: isMobile ? "16px 16px" : "22px 32px",
@@ -1090,7 +1090,7 @@ export default function ChatPage() {
                     height: 380,
                     top: -90,
                     left: -100,
-                    background: "radial-gradient(circle, rgba(0,67,156,0.95), rgba(0,67,156,0) 68%)",
+                    background: "radial-gradient(circle, rgba(0,77,175,0.95), rgba(0,77,175,0) 68%)",
                     opacity: 0.55,
                     animation: "auroraDrift 16s ease-in-out infinite"
                   }}
@@ -1140,11 +1140,11 @@ export default function ChatPage() {
                       height: isMobile ? "60px" : "84px",
                       objectFit: "cover",
                       mixBlendMode: "multiply",
-                      filter: "drop-shadow(0 6px 14px rgba(0,67,156,0.18))"
+                      filter: "drop-shadow(0 6px 14px rgba(0,77,175,0.18))"
                     }}
                   />
                 </div>
-                <h2 className="rise" style={{ margin: "0", fontSize: isMobile ? "21px" : "24px", fontWeight: 700, letterSpacing: "-0.4px", color: t.accentText, fontFamily: '"Sora", sans-serif', animationDelay: "0.06s" }}>
+                <h2 className="rise" style={{ margin: "0", fontSize: isMobile ? "21px" : "24px", fontWeight: 800, letterSpacing: "-0.5px", color: t.accentText, fontFamily: '"Inter", sans-serif', animationDelay: "0.06s" }}>
                   AI Document Intelligence – Kemendag
                 </h2>
                 <div className="rise" style={{ width: "56px", height: "3px", margin: "8px auto 0", borderRadius: "3px", background: "linear-gradient(90deg,#e9a319,#f6c453)", animationDelay: "0.08s" }} />
@@ -1214,7 +1214,7 @@ export default function ChatPage() {
                     title="Kirim pertanyaan (Enter)"
                     aria-label="Kirim pertanyaan"
                     style={{
-                      background: !input.trim() || loading ? (dark ? "#26324d" : "#cbd5e1") : "linear-gradient(135deg, #001845, #00439c)",
+                      background: !input.trim() || loading ? (dark ? "#26324d" : "#cbd5e1") : "linear-gradient(135deg, #001845, #004DAF)",
                       color: "white",
                       border: "none",
                       borderRadius: "999px",
@@ -1224,7 +1224,7 @@ export default function ChatPage() {
                       cursor: !input.trim() || loading ? "not-allowed" : "pointer",
                       fontSize: "16px",
                       fontFamily: 'inherit',
-                      boxShadow: !input.trim() || loading ? "none" : "0 4px 12px rgba(0,67,156,0.35)",
+                      boxShadow: !input.trim() || loading ? "none" : "0 4px 12px rgba(0,77,175,0.35)",
                       transition: "transform 0.15s ease, box-shadow 0.15s ease"
                     }}
                     onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.transform = "scale(1.06)"; }}
@@ -1296,7 +1296,7 @@ export default function ChatPage() {
                     cursor: "pointer",
                     transition: "color 0.15s ease, border-color 0.15s ease"
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "#00439c"; e.currentTarget.style.borderColor = "#c7d2fe"; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "#004DAF"; e.currentTarget.style.borderColor = "#c7d2fe"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.color = t.textMute; e.currentTarget.style.borderColor = t.border; }}
                 >
                   <span style={{ display: "inline-flex", alignItems: "center" }}>{IconRefresh(13)}</span> Mulai ulang percakapan
@@ -1314,7 +1314,7 @@ export default function ChatPage() {
                         display: "flex",
                         alignItems: "center",
                         gap: "6px",
-                        background: "linear-gradient(135deg,#001845,#00439c)",
+                        background: "linear-gradient(135deg,#001845,#004DAF)",
                         color: "white",
                         border: "none",
                         borderRadius: "999px",
@@ -1322,7 +1322,7 @@ export default function ChatPage() {
                         fontSize: "12.5px",
                         fontFamily: 'inherit',
                         cursor: "pointer",
-                        boxShadow: "0 3px 10px rgba(0,67,156,0.3)"
+                        boxShadow: "0 3px 10px rgba(0,77,175,0.3)"
                       }}
                     >
                       <span style={{ display: "inline-flex", alignItems: "center" }}>{IconDownload(14)}</span> Unduh
@@ -1455,7 +1455,7 @@ export default function ChatPage() {
                         height: "38px",
                         borderRadius: "12px",
                         flexShrink: 0,
-                        background: "linear-gradient(135deg,#001845,#00439c)",
+                        background: "linear-gradient(135deg,#001845,#004DAF)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -1490,12 +1490,12 @@ export default function ChatPage() {
                         borderRadius: m.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
                         boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
                         border: m.role === "bot" ? "1px solid rgba(0,0,0,0.04)" : "none",
-                        borderLeft: m.role === "bot" ? "4px solid #00439c" : "none",
+                        borderLeft: m.role === "bot" ? "4px solid #004DAF" : "none",
                         borderRight: m.role === "user" ? "4px solid #e9a319" : "none"
                       }}
                     >
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px" }}>
-                        <b style={{ fontSize: "14px", color: m.role === "user" ? (dark ? "#ffffff" : "#00439c") : t.text }}>
+                        <b style={{ fontSize: "14px", color: m.role === "user" ? (dark ? "#ffffff" : "#004DAF") : t.text }}>
                           {m.role === "user" ? (
                             "Anda"
                           ) : (
@@ -1844,7 +1844,7 @@ export default function ChatPage() {
                   height: "38px",
                   borderRadius: "12px",
                   flexShrink: 0,
-                  background: "linear-gradient(135deg,#001845,#00439c)",
+                  background: "linear-gradient(135deg,#001845,#004DAF)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -1881,7 +1881,7 @@ export default function ChatPage() {
                 bottom: "12px",
                 margin: "0 auto",
                 display: "block",
-                background: "#00439c",
+                background: "#004DAF",
                 color: "white",
                 border: "none",
                 borderRadius: "50%",
@@ -1935,7 +1935,7 @@ export default function ChatPage() {
                   justifyContent: "space-between",
                   gap: "12px",
                   padding: "14px 20px",
-                  background: "linear-gradient(135deg,#001845,#00439c)",
+                  background: "linear-gradient(135deg,#001845,#004DAF)",
                   color: "white",
                   flexShrink: 0
                 }}
@@ -2073,7 +2073,7 @@ export default function ChatPage() {
                 height: isMobile ? "32px" : "34px",
                 borderRadius: "50%",
                 flexShrink: 0,
-                background: loading ? "#dc2626" : "linear-gradient(135deg,#001845,#00439c)",
+                background: loading ? "#dc2626" : "linear-gradient(135deg,#001845,#004DAF)",
                 color: "white",
                 border: "none",
                 cursor: "pointer",
@@ -2083,7 +2083,7 @@ export default function ChatPage() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow: loading ? "none" : "0 4px 12px rgba(0,67,156,0.35)"
+                boxShadow: loading ? "none" : "0 4px 12px rgba(0,77,175,0.35)"
               }}
             >
               {loading ? IconStop(16) : IconSend(16)}
@@ -2147,14 +2147,14 @@ export default function ChatPage() {
             <div
               style={{
                 padding: "16px 18px",
-                background: "linear-gradient(135deg,#001845,#00439c)",
+                background: "linear-gradient(135deg,#001845,#004DAF)",
                 color: "white",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between"
               }}
             >
-              <b style={{ fontSize: "15px", fontFamily: '"Sora", sans-serif', display: "flex", alignItems: "center", gap: "8px" }}>
+              <b style={{ fontSize: "15px", fontFamily: '"Inter", sans-serif', fontWeight: 800, display: "flex", alignItems: "center", gap: "8px" }}>
                 <span style={{ display: "inline-flex" }}>{IconChat(15)}</span>
                 Riwayat Percakapan
               </b>
@@ -2184,7 +2184,7 @@ export default function ChatPage() {
                   width: "100%",
                   background: t.card,
                   border: "1px solid " + t.borderSoft,
-                  color: dark ? "white" : "#00439c",
+                  color: dark ? "white" : "#004DAF",
                   borderRadius: "999px",
                   padding: "12px",
                   fontSize: "14px",
@@ -2267,7 +2267,7 @@ export default function ChatPage() {
                           padding: "10px 12px",
                           marginTop: "6px",
                           borderRadius: "10px",
-                          border: activeConvId === c.id ? (dark ? "1px solid #3f6db8" : "1px solid #00439c") : "1px solid transparent",
+                          border: activeConvId === c.id ? (dark ? "1px solid #3f6db8" : "1px solid #004DAF") : "1px solid transparent",
                           background: activeConvId === c.id ? (dark ? "#1c3a63" : "#eef6fd") : t.card,
                           cursor: "pointer",
                           fontFamily: 'inherit',
@@ -2461,7 +2461,7 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
           gap: "7px",
           padding: "6px 12px",
           borderRadius: "999px",
-          border: open ? "2px solid #00439c" : "2px solid " + (dark ? "#2b3a5c" : "#c7d2fe"),
+          border: open ? "2px solid #004DAF" : "2px solid " + (dark ? "#2b3a5c" : "#c7d2fe"),
           fontSize: "13px",
           background: open ? mt.itemBg : mt.card,
           color: mt.text,
@@ -2600,7 +2600,7 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
                     </div>
                   </div>
                   {m.id === model && (
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", color: "#00439c", fontSize: "12px", fontWeight: 700, flexShrink: 0 }}>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", color: "#004DAF", fontSize: "12px", fontWeight: 700, flexShrink: 0 }}>
                       ✓ Aktif
                     </span>
                   )}
@@ -2641,7 +2641,7 @@ function Typewriter({ phrases, delay = 90, pause = 1600 }) {
   return (
     <span style={{ display: "inline-flex", alignItems: "baseline" }}>
       <span>{text}</span>
-      <span style={{ animation: "blinkCaret 1s step-end infinite", marginLeft: 2, color: "#00439c" }}>▍</span>
+      <span style={{ animation: "blinkCaret 1s step-end infinite", marginLeft: 2, color: "#004DAF" }}>▍</span>
     </span>
   );
 }
@@ -2846,7 +2846,7 @@ function SourceSkeleton({ dark }) {
 // Ilustrasi hero layar selamat datang
 function HeroArt({ size = 170 }) {
   return (
-    <svg width={size} height={Math.round((size * 118) / 170)} viewBox="0 0 200 145" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginBottom: "2px", filter: "drop-shadow(0 10px 24px rgba(0,67,156,0.18))" }}>
+    <svg width={size} height={Math.round((size * 118) / 170)} viewBox="0 0 200 145" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginBottom: "2px", filter: "drop-shadow(0 10px 24px rgba(0,77,175,0.18))" }}>
       <defs>
         <linearGradient id="heroBg" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#E8F2F8" />
@@ -2872,8 +2872,8 @@ function HeroArt({ size = 170 }) {
       <line x1="113" y1="56" x2="138" y2="58" stroke="#7dd3fc" strokeWidth="2.5" strokeLinecap="round" />
       <line x1="113" y1="65" x2="132" y2="67" stroke="#7dd3fc" strokeWidth="2.5" strokeLinecap="round" />
       {/* Badge AI di tengah */}
-      <circle cx="161" cy="66" r="20" fill="#ffffff" stroke="#00439c" strokeWidth="4.5" />
-      <line x1="177" y1="81" x2="190" y2="94" stroke="#00439c" strokeWidth="5" strokeLinecap="round" />
+      <circle cx="161" cy="66" r="20" fill="#ffffff" stroke="#004DAF" strokeWidth="4.5" />
+      <line x1="177" y1="81" x2="190" y2="94" stroke="#004DAF" strokeWidth="5" strokeLinecap="round" />
       {/* Bintang */}
       <text x="88" y="138" fontSize="22" fill="#3b82f6" fontFamily="inherit">✦</text>
       <text x="180" y="42" fontSize="16" fill="#60a5fa" fontFamily="inherit">✦</text>
@@ -2910,7 +2910,7 @@ const citeStyle = {
   alignItems: "center",
   justifyContent: "center",
   background: "#e0f2fe",
-  color: "#00439c",
+  color: "#004DAF",
   border: "1px solid #bae6fd",
   borderRadius: "6px",
   padding: "0 5px",

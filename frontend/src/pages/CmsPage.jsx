@@ -49,7 +49,7 @@ function Modal({ title, onClose, onConfirm, children, confirmLabel = "Simpan", c
           color: t.text
         }}
       >
-        <h3 style={{ margin: "0 0 16px", fontSize: 17, fontFamily: '"Sora", sans-serif', color: t.text }}>{title}</h3>
+        <h3 style={{ margin: "0 0 16px", fontSize: 17, fontFamily: '"Inter", sans-serif', color: t.text }}>{title}</h3>
         {children}
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 20 }}>
           <button
@@ -128,7 +128,7 @@ export default function CmsPage() {
     text: dark ? "#e5edf7" : "#1e293b",
     textSoft: dark ? "#c3cede" : "#475569",
     textMute: dark ? "#8b98ad" : "#64748b",
-    accent: dark ? "#7fb1e8" : "#00439c",
+    accent: dark ? "#7fb1e8" : "#004DAF",
     gold: "#e9a319",
     dark
   };
@@ -548,7 +548,7 @@ export default function CmsPage() {
         <div
           style={{
             width: "100%",
-            background: "linear-gradient(135deg,#001845,#00439c)",
+            background: "linear-gradient(135deg,#001845,#004DAF)",
             color: "#fff",
             padding: "10px 14px",
             position: "sticky",
@@ -904,7 +904,7 @@ export default function CmsPage() {
                       <SIcon name={s.icon} size={17} />
                     </div>
                     <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 20, fontWeight: 700, fontFamily: '"Sora", sans-serif', lineHeight: 1.1, color: t.text }}>{s.value}</div>
+                      <div style={{ fontSize: 20, fontWeight: 700, fontFamily: '"Inter", sans-serif', lineHeight: 1.1, color: t.text }}>{s.value}</div>
                       <div style={{ fontSize: 11, color: t.textMute, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.label}</div>
                     </div>
                   </button>
@@ -1180,7 +1180,7 @@ export default function CmsPage() {
                       <SIcon name={s.icon} size={17} />
                     </div>
                     <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 20, fontWeight: 700, fontFamily: '"Sora", sans-serif', lineHeight: 1.1, color: t.text }}>{s.value}</div>
+                      <div style={{ fontSize: 20, fontWeight: 700, fontFamily: '"Inter", sans-serif', lineHeight: 1.1, color: t.text }}>{s.value}</div>
                       <div style={{ fontSize: 11, color: t.textMute, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.label}</div>
                     </div>
                   </button>
@@ -1866,7 +1866,7 @@ function RoleSelect({ role, onSelect, t, dark }) {
           height: 40,
           padding: "6px 12px",
           borderRadius: 999,
-          border: open ? "2px solid " + (dark ? "#60a5fa" : "#00439c") : "1px solid " + t.border,
+          border: open ? "2px solid " + (dark ? "#60a5fa" : "#004DAF") : "1px solid " + t.border,
           background: open ? mt.itemBg : t.inputBg,
           color: t.text,
           outline: "none",
@@ -2132,7 +2132,7 @@ function FileTable({ rows, empty, sub, title, onDelete, onDetail, onView, t, loa
   );
 }
 
-const h3Style = { margin: "0 0 14px", fontSize: 17, fontFamily: '"Sora", sans-serif', letterSpacing: "-0.3px" };
+const h3Style = { margin: "0 0 14px", fontSize: 17, fontFamily: '"Inter", sans-serif', letterSpacing: "-0.3px" };
 
 function LoadingBlock({ t, text = "Memuat…" }) {
   return (
@@ -2180,7 +2180,7 @@ function inputStyle(t) {
 }
 
 const primaryBtn = {
-  background: "linear-gradient(135deg,#001845,#00439c)",
+  background: "linear-gradient(135deg,#001845,#004DAF)",
   color: "#fff",
   border: "none",
   padding: "0 22px",
@@ -2188,7 +2188,7 @@ const primaryBtn = {
   cursor: "pointer",
   fontWeight: 600,
   fontFamily: "inherit",
-  boxShadow: "0 4px 14px rgba(0,67,156,0.35)"
+  boxShadow: "0 4px 14px rgba(0,77,175,0.35)"
 };
 
 function okStyle(t) {

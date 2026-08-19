@@ -43,7 +43,7 @@ export default function LoginPage() {
     inputBg: dark ? "#1b2944" : "#f8fafc",
     text: dark ? "#e5edf7" : "#1e293b",
     textMute: dark ? "#8b98ad" : "#64748b",
-    accent: dark ? "#7fb1e8" : "#00439c",
+    accent: dark ? "#7fb1e8" : "#004DAF",
     gold: "#e9a319"
   };
 
@@ -98,7 +98,7 @@ export default function LoginPage() {
       fontSize: 14,
       outline: "none",
       transition: "border-color 0.15s ease, box-shadow 0.15s ease",
-      boxShadow: focused ? "0 0 0 3px rgba(0,67,156,0.15)" : "none",
+      boxShadow: focused ? "0 0 0 3px rgba(0,77,175,0.15)" : "none",
       ...extra
     };
   }
@@ -137,7 +137,7 @@ export default function LoginPage() {
           height: 320,
           bottom: -100,
           left: -60,
-          background: "radial-gradient(circle, rgba(0,67,156,0.75), rgba(0,67,156,0) 70%)",
+          background: "radial-gradient(circle, rgba(0,77,175,0.75), rgba(0,77,175,0) 70%)",
           opacity: dark ? 0.45 : 0.3,
           animation: "auroraDrift 26s ease-in-out -5s infinite"
         }}
@@ -168,7 +168,7 @@ export default function LoginPage() {
             filter: dark ? "drop-shadow(0 4px 10px rgba(0,0,0,0.4))" : "none"
           }}
         />
-        <h2 className="rise" style={{ margin: "18px 0 4px", fontSize: 22, fontFamily: '"Sora", sans-serif', color: t.accent, animationDelay: "0.06s" }}>
+        <h2 className="rise" style={{ margin: "18px 0 4px", fontSize: 22, fontFamily: '"Inter", sans-serif', color: t.accent, animationDelay: "0.06s" }}>
           Panel Admin
         </h2>
         <div className="rise" style={{ width: "48px", height: "3px", margin: "10px auto 0", borderRadius: "3px", background: "linear-gradient(90deg,#e9a319,#f6c453)", animationDelay: "0.08s" }} />
@@ -307,7 +307,7 @@ export default function LoginPage() {
             onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
             style={{
               width: "100%",
-              background: "linear-gradient(135deg,#001845,#00439c)",
+              background: "linear-gradient(135deg,#001845,#004DAF)",
               color: "#fff",
               border: "none",
               padding: "13px",
@@ -322,7 +322,7 @@ export default function LoginPage() {
               gap: "10px",
               opacity: loading ? 0.85 : 1,
               transition: "transform 0.15s ease, box-shadow 0.15s ease",
-              boxShadow: "0 6px 16px rgba(0,67,156,0.35)"
+              boxShadow: "0 6px 16px rgba(0,77,175,0.35)"
             }}
           >
             {loading ? (

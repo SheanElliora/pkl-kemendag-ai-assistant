@@ -227,7 +227,7 @@ tr.hover-row:hover td {
 }
 
 .textbox-pill:focus-within {
-  border-color: #00439c;
+  border-color: #004DAF;
   box-shadow: 0 0 0 4px rgba(0, 67, 156, 0.12), 0 8px 24px rgba(0, 28, 69, 0.10);
 }
 
@@ -273,7 +273,7 @@ body.theme-dark .hero-input::placeholder {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #00439c;
+  background: #004DAF;
   display: inline-block;
   animation: typingBlink 1.2s infinite;
 }
@@ -499,7 +499,7 @@ input:focus-visible {
 
 .markdown-body th {
   background: linear-gradient(180deg, #f1f7fc, #e8f0fa);
-  color: #00439c;
+  color: #004DAF;
   font-weight: 700;
   text-align: left;
   padding: 8px 12px;

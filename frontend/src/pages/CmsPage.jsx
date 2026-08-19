@@ -128,7 +128,7 @@ export default function CmsPage() {
     text: dark ? "#e5edf7" : "#1e293b",
     textSoft: dark ? "#c3cede" : "#475569",
     textMute: dark ? "#8b98ad" : "#64748b",
-    accent: dark ? "#7fb1e8" : "#004DAF",
+    accent: dark ? "#7fb1e8" : "#00439c",
     gold: "#e9a319",
     dark
   };
@@ -548,7 +548,7 @@ export default function CmsPage() {
         <div
           style={{
             width: "100%",
-background: "#004DAF",
+            background: "linear-gradient(135deg,#001845,#00439c)",
             color: "#fff",
             padding: "10px 14px",
             position: "sticky",
@@ -1866,7 +1866,7 @@ function RoleSelect({ role, onSelect, t, dark }) {
           height: 40,
           padding: "6px 12px",
           borderRadius: 999,
-          border: open ? "2px solid " + (dark ? "#60a5fa" : "#004DAF") : "1px solid " + t.border,
+          border: open ? "2px solid " + (dark ? "#60a5fa" : "#00439c") : "1px solid " + t.border,
           background: open ? mt.itemBg : t.inputBg,
           color: t.text,
           outline: "none",
@@ -2180,7 +2180,7 @@ function inputStyle(t) {
 }
 
 const primaryBtn = {
-  background: "#004DAF",
+  background: "linear-gradient(135deg,#001845,#00439c)",
   color: "#fff",
   border: "none",
   padding: "0 22px",
@@ -2188,7 +2188,7 @@ const primaryBtn = {
   cursor: "pointer",
   fontWeight: 600,
   fontFamily: "inherit",
-  boxShadow: "0 4px 14px rgba(0,77,175,0.35)"
+  boxShadow: "0 4px 14px rgba(0,67,156,0.35)"
 };
 
 function okStyle(t) {

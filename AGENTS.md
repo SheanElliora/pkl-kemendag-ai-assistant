@@ -2,11 +2,11 @@
 
 Ringkasan ini dimuat otomatis oleh opencode setiap sesi baru. Baca sebelum mengerjakan apa pun.
 
-## Status (terakhir diperbarui 18-08-2026)
+## Status (terakhir diperbarui 19-08-2026)
 
 - Proyek di C:\dev\pkl-kemendag-ai-assistant (SUDAH dipindah keluar OneDrive - jangan pindahkan lagi).
 - Sistem 100% sehat: ChromaDB :8000, Backend :3001, Frontend :5173. Login CMS: admin / AdminKemendag2026! (password lain ada di backend/.env - jangan commit .env).
-- Git: branch main, semua commit ter-push. Commit terakhir = fitur-fase-2 (riwayat chat multi-turn, feedback, statistik, hybrid BM25, evaluasi RAG, unit test, Swagger, export chat).
+- Git: branch main, semua commit ter-push. Commit terakhir = Polish UI resmi (biru #004DAF, aksen hijau #16a75c, header solid + teks identitas, logo putih di dark mode, aurora tipis, shadow flat, "Enter untuk kirim" dihapus).
 - npm audit backend = 0 vuln (overrides protobufjs 7.6.5, js-yaml 4.3.1, sharp@0.32.6->0.35.3). npm install backend WAJIB --legacy-peer-deps.
 - Approve dokumen ASINKRON: POST approve -> status "processing" (antrean latar belakang ingestQueue.js, 1 worker FIFO) -> "approved"/"error". Frontend polling 5 dtk saat ada "processing". Jangan harap langsung "approved".
 - Embedding ingest memakai BATCH (EMBED_BATCH=16 di ingest.js, createEmbeddingsBatch di embedderService.js — menangani semua bentuk output transform.js). Rerank width = 10 (retrieverService.js).
@@ -23,6 +23,7 @@ Ringkasan ini dimuat otomatis oleh opencode setiap sesi baru. Baca sebelum menge
 - Backup Chroma terverifikasi bisa di-restore (631 vektor, ID collection sama). files.json sempat terhapus insiden BOM PowerShell (18-08-2026) dan BERHASIL di-restore dari backup/2026-08-17_20-58-28/files.json.
 - Backup otomatis: `npm run backup` (scripts/backupChroma.mjs) -> backup/<waktu>/ di akar repo (git-ignored), berisi chroma/ + files.json + users.json + manifest; stop-hidupkan Chroma, verifikasi vektor, simpan 5 terbaru. Jalankan tiap kali dokumen baru di-approve (atau via Task Scheduler).
 - Rate-limit: login 10x/15mnt/IP, chat 20/mnt/IP -> 429.
+- DESAIN UI (referensi situs resmi kemendag.go.id): biru brand = #004DAF (aksen utama, header solid, tombol), hijau #16a75c (aksen kedua: toggle tema, garis pemisah hero, "Sumber Referensi", border bubble user, status "Terhubung"), emas TIDAK dipakai di halaman chat (tetap dipakai di CMS). Header: logo putih + teks "KEMENTERIAN PERDAGANGAN / Republik Indonesia" (desktop). Hero: logo berwarna (mixBlend multiply) di light, logo putih di dark. Aurora tipis (opacity 0.12-0.22). Shadow flat (card 0 2px 10px). Font: Inter + Sora (heading). Tombol riwayat = icon-only 40px (IconMenu) di kiri-atas area chat (zIndex 12, top 116px desktop / 90px mobile).
 
 ## Cara menjalankan (3 terminal)
 

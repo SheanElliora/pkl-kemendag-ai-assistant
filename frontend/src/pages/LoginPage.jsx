@@ -153,7 +153,7 @@ fontFamily: FONT_BODY
           width: 420,
           maxWidth: "92%",
           position: "relative",
-          background: dark ? "#263956" : "#f2f4f9",
+          background: dark ? "#22304e" : "#e8ebf3",
           border: "1px solid " + t.cardBorder,
           borderRadius: 20,
           boxShadow: (dark

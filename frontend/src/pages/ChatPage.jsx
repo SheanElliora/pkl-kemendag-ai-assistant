@@ -45,6 +45,7 @@ export default function ChatPage() {
     bubbleBot: dark ? "#223254" : "#e2e7ee",
     bubbleUser: dark ? "#0e5c9e" : "#9fc7ef",
     accentText: dark ? "#7fb1e8" : "#004DAF",
+    accentSoft: "#004DAF",
     chatBg: dark
       ? "radial-gradient(rgba(0,77,175,0.12) 1px, transparent 1.4px) 0 0 / 22px 22px, #0d1526"
       : "radial-gradient(rgba(0,77,175,0.06) 1px, transparent 1.4px) 0 0 / 22px 22px, #eef2f756"
@@ -328,6 +329,20 @@ export default function ChatPage() {
     "Mencari jawaban dari dokumen yang tersedia, lengkap dengan referensinya.",
     "Pertanyaan terjawab dengan konteks dari dokumen resmi Kemendag."
   ];
+
+  // Pertanyaan contoh di halaman awal (klik langsung terkirim, jawaban ada di dokumen).
+  const exampleQuestions = [
+    "Bagaimana tahapan mendirikan restoran di Jepang?",
+    "Siapa pemasok terbesar kain Ankara ke Nigeria?",
+    "Apa saja persyaratan impor decoration lights ke Nigeria?"
+  ];
+
+  const [suggestionIdx, setSuggestionIdx] = useState(0);
+  useEffect(() => {
+    if (online !== true) return;
+    const iv = setInterval(() => setSuggestionIdx((i) => (i + 1) % exampleQuestions.length), 2600);
+    return () => clearInterval(iv);
+  }, [online]);
 
   useEffect(() => {
     api("/api/models")
@@ -1158,6 +1173,42 @@ export default function ChatPage() {
 
               <div className="rise" style={{ width: "190px", height: "1px", margin: "18px auto 0", background: "linear-gradient(90deg, transparent, #c7d2fe, transparent)", animationDelay: "0.24s" }} />
 
+              {online === true && (
+                <button
+                  key={suggestionIdx}
+                  className="rise"
+                  onClick={() => sendMessage(exampleQuestions[suggestionIdx])}
+                  disabled={loading}
+                  title={exampleQuestions[suggestionIdx]}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "7px",
+                    margin: "14px auto 0",
+                    maxWidth: "100%",
+                    background: t.inputBg,
+                    border: "1px solid " + t.borderSoft,
+                    borderRadius: "999px",
+                    padding: "7px 16px",
+                    fontSize: "12.5px",
+                    fontWeight: 600,
+                    fontFamily: 'inherit',
+                    color: t.accentText,
+                    cursor: loading ? "not-allowed" : "pointer",
+                    opacity: loading ? 0.6 : 1,
+                    animationDelay: "0.26s",
+                    visibility: modelOpen ? "hidden" : "visible",
+                    transition: "background 0.15s ease, color 0.15s ease"
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = t.accentSoft; e.currentTarget.style.color = "#fff"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = t.inputBg; e.currentTarget.style.color = t.accentText; }}
+                >
+                  <span style={{ display: "inline-flex", flexShrink: 0 }}>{IconSearchModule(13)}</span>
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{exampleQuestions[suggestionIdx]}</span>
+                </button>
+              )}
+
               <div
                 className="rise"
                 style={{
@@ -1165,7 +1216,7 @@ export default function ChatPage() {
                   alignItems: "center",
                   justifyContent: "center",
                   gap: "10px",
-                  margin: "14px auto 0",
+                  margin: "10px auto 0",
                   width: "100%",
                   animationDelay: "0.28s"
                 }}

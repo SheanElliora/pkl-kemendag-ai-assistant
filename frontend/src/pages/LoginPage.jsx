@@ -194,25 +194,13 @@ export default function LoginPage() {
           background: t.card,
           border: "1px solid " + t.cardBorder,
           borderRadius: 20,
-          boxShadow: dark
+          boxShadow: (dark
             ? "0 20px 60px rgba(0,0,0,0.5)"
-            : "0 18px 50px rgba(15,40,80,0.14)",
+            : "0 18px 50px rgba(15,40,80,0.14)") + ", inset 0 3px 0 rgba(233,163,25,0.55)",
           padding: 40,
           textAlign: "center"
         }}
       >
-        <div
-          style={{
-            position: "absolute",
-            top: -1,
-            left: -1,
-            right: -1,
-            height: 4,
-            borderRadius: "20px 20px 0 0",
-            background: "linear-gradient(90deg,#e9a319,#f6c453)",
-            pointerEvents: "none"
-          }}
-        />
         <img
           className="rise"
           src="/logo-kemendag.png"

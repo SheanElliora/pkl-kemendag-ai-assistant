@@ -204,12 +204,13 @@ export default function LoginPage() {
         <div
           style={{
             position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 3,
+            top: -1,
+            left: -1,
+            right: -1,
+            height: 4,
             borderRadius: "20px 20px 0 0",
-            background: "linear-gradient(90deg,#e9a319,#f6c453)"
+            background: "linear-gradient(90deg,#e9a319,#f6c453)",
+            pointerEvents: "none"
           }}
         />
         <img

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, saveSession } from "../api.js";
+import { createTheme, FONT_HEADING, FONT_BODY } from "../theme.js";
 
 export default function LoginPage() {
 
@@ -34,18 +35,7 @@ export default function LoginPage() {
     }
   }, []);
 
-  const t = {
-    pageBg: dark
-      ? "#0b1120"
-      : "linear-gradient(180deg,#e9edf4,#f6f8fb)",
-    card: dark ? "#2a3d63" : "#ffffff",
-    cardBorder: dark ? "#26324d" : "#d4dce8",
-    inputBg: dark ? "#0f1a2f" : "#f1f5f9",
-    text: dark ? "#e5edf7" : "#1e293b",
-    textMute: dark ? "#8b98ad" : "#64748b",
-    accent: dark ? "#7fb1e8" : "#004DAF",
-    gold: "#e9a319"
-  };
+  const t = createTheme(dark);
 
   async function submit(e) {
 
@@ -114,7 +104,7 @@ export default function LoginPage() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        fontFamily: '"Inter", sans-serif'
+fontFamily: FONT_BODY
       }}
     >
       <button
@@ -212,7 +202,7 @@ export default function LoginPage() {
             filter: dark ? "drop-shadow(0 6px 14px rgba(0,0,0,0.45))" : "drop-shadow(0 6px 14px rgba(0,77,175,0.18))"
           }}
         />
-        <h2 className="rise" style={{ margin: "18px 0 4px", fontSize: 22, fontWeight: 800, letterSpacing: "-0.5px", fontFamily: '"Inter", sans-serif', color: t.accent, animationDelay: "0.06s" }}>
+        <h2 className="rise" style={{ margin: "18px 0 4px", fontSize: 22, fontWeight: 800, letterSpacing: "-0.5px", fontFamily: FONT_HEADING, color: t.accent, animationDelay: "0.06s" }}>
           Panel Admin
         </h2>
         <div className="rise" style={{ width: "48px", height: "3px", margin: "10px auto 0", borderRadius: "3px", background: "linear-gradient(90deg,#e9a319,#f6c453)", animationDelay: "0.08s" }} />

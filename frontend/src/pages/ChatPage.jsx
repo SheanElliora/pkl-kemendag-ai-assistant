@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useNavigate } from 'react-router-dom';
 import { api, getUser, clearSession } from '../api.js';
+import { createTheme, FONT_HEADING, FONT_BODY } from '../theme.js';
 
 export default function ChatPage() {
 
@@ -28,28 +29,8 @@ export default function ChatPage() {
     return typeof window !== "undefined" && window.matchMedia?.("(prefers-color-scheme: dark)").matches;
   });
 
-  // Palet warna tema (light/dark) — satu sumber warna.
-  const t = {
-    pageBg: dark ? "#0b1120" : "linear-gradient(180deg,#e9edf4,#f6f8fb)",
-    card: dark ? "#2a3d63" : "#ffffff",
-    cardSoft: dark ? "#304266" : "#f8fafc",
-    sidebar: dark ? "#0f182c" : "#f8fafc",
-    bgSoft: dark ? "#3a4b6b" : "#eef2f7",
-    bar: dark ? "#1b2944" : "#ffffff",
-    border: dark ? "#26324d" : "#d4dce8",
-    borderSoft: dark ? "#2b3a58" : "#e2e8f0",
-    text: dark ? "#e5edf7" : "#1e293b",
-    textSoft: dark ? "#c3cede" : "#475569",
-    textMute: dark ? "#8b98ad" : "#64748b",
-    inputBg: dark ? "#0f1a2f" : "#f1f5f9",
-    bubbleBot: dark ? "#223254" : "#e2e7ee",
-    bubbleUser: dark ? "#0e5c9e" : "#9fc7ef",
-    accentText: dark ? "#7fb1e8" : "#004DAF",
-    accentSoft: "#004DAF",
-    chatBg: dark
-      ? "radial-gradient(rgba(0,77,175,0.12) 1px, transparent 1.4px) 0 0 / 22px 22px, #0d1526"
-      : "radial-gradient(rgba(0,77,175,0.06) 1px, transparent 1.4px) 0 0 / 22px 22px, #eef2f756"
-  };
+  // Palet warna tema (light/dark) — satu sumber warna dari theme.js.
+  const t = createTheme(dark);
 
   useEffect(() => {
     localStorage.setItem("cms_theme", dark ? "dark" : "light");
@@ -851,7 +832,7 @@ export default function ChatPage() {
         height: "100vh",
         background: t.pageBg,
         padding: isMobile ? "8px" : "18px",
-        fontFamily: '"Inter", sans-serif',
+        fontFamily: FONT_BODY,
         boxSizing: "border-box",
         overflow: "hidden",
       }}
@@ -1159,7 +1140,7 @@ export default function ChatPage() {
                     }}
                   />
                 </div>
-                <h2 className="rise" style={{ margin: "0", fontSize: isMobile ? "21px" : "26px", fontWeight: 800, letterSpacing: "-0.5px", color: t.accentText, fontFamily: '"Inter", sans-serif', animationDelay: "0.06s" }}>
+                <h2 className="rise" style={{ margin: "0", fontSize: isMobile ? "21px" : "26px", fontWeight: 800, letterSpacing: "-0.5px", color: t.accentText, fontFamily: FONT_HEADING, animationDelay: "0.06s" }}>
                   AI Document Intelligence – Kemendag
                 </h2>
                 <div className="rise" style={{ width: "56px", height: "3px", margin: "8px auto 0", borderRadius: "3px", background: "linear-gradient(90deg,#e9a319,#f6c453)", animationDelay: "0.08s" }} />
@@ -1460,7 +1441,7 @@ export default function ChatPage() {
               <div key={index}>
                 {index === newMsgIndex && (
                   <div style={{ display: "flex", justifyContent: "center", margin: "14px 0 4px", padding: "0 18px" }}>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: "10px", width: "100%", maxWidth: "280px", color: t.textMute, fontSize: "11px", fontWeight: 700, fontFamily: '"Inter", sans-serif' }}>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "10px", width: "100%", maxWidth: "280px", color: t.textMute, fontSize: "11px", fontWeight: 700, fontFamily: FONT_BODY }}>
                       <span style={{ flex: 1, height: "1px", background: t.border }} />
                       Pesan baru
                       <span style={{ flex: 1, height: "1px", background: t.border }} />
@@ -2205,7 +2186,7 @@ export default function ChatPage() {
                 justifyContent: "space-between"
               }}
             >
-              <b style={{ fontSize: "15px", fontFamily: '"Inter", sans-serif', fontWeight: 800, display: "flex", alignItems: "center", gap: "8px" }}>
+              <b style={{ fontSize: "15px", fontFamily: FONT_HEADING, fontWeight: 800, display: "flex", alignItems: "center", gap: "8px" }}>
                 <span style={{ display: "inline-flex" }}>{IconChat(15)}</span>
                 Riwayat Percakapan
               </b>

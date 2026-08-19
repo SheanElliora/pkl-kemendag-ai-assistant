@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, getUser, clearSession, fmtDate, openPdf } from "../api.js";
+import { createTheme, FONT_HEADING, FONT_BODY } from "../theme.js";
 
 const MAX_SIZE = 20 * 1024 * 1024; // 20 MB, sama dengan backend
 
@@ -49,7 +50,7 @@ function Modal({ title, onClose, onConfirm, children, confirmLabel = "Simpan", c
           color: t.text
         }}
       >
-        <h3 style={{ margin: "0 0 16px", fontSize: 17, fontFamily: '"Inter", sans-serif', color: t.text }}>{title}</h3>
+        <h3 style={{ margin: "0 0 16px", fontSize: 17, fontFamily: FONT_HEADING, color: t.text }}>{title}</h3>
         {children}
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 20 }}>
           <button
@@ -117,21 +118,7 @@ export default function CmsPage() {
   });
 
   // Palet warna tema (light/dark) — satu sumber warna, serasi dgn chat & login.
-  const t = {
-    pageBg: dark
-      ? "linear-gradient(160deg,#0b1120,#001845)"
-      : "linear-gradient(180deg,#f6f7f9,#ffffff)",
-    card: dark ? "#17233e" : "#ffffff",
-    cardSoft: dark ? "#1b2944" : "#f8fafc",
-    border: dark ? "#2b3a58" : "#e6e9f0",
-    inputBg: dark ? "#1b2944" : "#f8fafc",
-    text: dark ? "#e5edf7" : "#1e293b",
-    textSoft: dark ? "#c3cede" : "#475569",
-    textMute: dark ? "#8b98ad" : "#64748b",
-    accent: dark ? "#7fb1e8" : "#004DAF",
-    gold: "#e9a319",
-    dark
-  };
+  const t = createTheme(dark);
 
   useEffect(() => {
     localStorage.setItem("cms_theme", dark ? "dark" : "light");
@@ -537,7 +524,7 @@ export default function CmsPage() {
         height: "100vh",
         background: t.pageBg,
         color: t.text,
-        fontFamily: '"Inter", sans-serif',
+        fontFamily: FONT_HEADING,
         transition: "background 0.3s ease",
         display: "flex",
         overflow: "hidden"
@@ -904,7 +891,7 @@ export default function CmsPage() {
                       <SIcon name={s.icon} size={17} />
                     </div>
                     <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 20, fontWeight: 700, fontFamily: '"Inter", sans-serif', lineHeight: 1.1, color: t.text }}>{s.value}</div>
+                      <div style={{ fontSize: 20, fontWeight: 700, fontFamily: FONT_HEADING, lineHeight: 1.1, color: t.text }}>{s.value}</div>
                       <div style={{ fontSize: 11, color: t.textMute, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.label}</div>
                     </div>
                   </button>
@@ -1180,7 +1167,7 @@ export default function CmsPage() {
                       <SIcon name={s.icon} size={17} />
                     </div>
                     <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 20, fontWeight: 700, fontFamily: '"Inter", sans-serif', lineHeight: 1.1, color: t.text }}>{s.value}</div>
+                      <div style={{ fontSize: 20, fontWeight: 700, fontFamily: FONT_HEADING, lineHeight: 1.1, color: t.text }}>{s.value}</div>
                       <div style={{ fontSize: 11, color: t.textMute, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.label}</div>
                     </div>
                   </button>
@@ -2132,7 +2119,7 @@ function FileTable({ rows, empty, sub, title, onDelete, onDetail, onView, t, loa
   );
 }
 
-const h3Style = { margin: "0 0 14px", fontSize: 17, fontFamily: '"Inter", sans-serif', letterSpacing: "-0.3px" };
+const h3Style = { margin: "0 0 14px", fontSize: 17, fontFamily: FONT_HEADING, letterSpacing: "-0.3px" };
 
 function LoadingBlock({ t, text = "Memuat…" }) {
   return (

@@ -1246,7 +1246,7 @@ export default function ChatPage() {
                     title="Kirim pertanyaan (Enter)"
                     aria-label="Kirim pertanyaan"
                     style={{
-                      background: !input.trim() || loading ? (dark ? "#26324d" : "#cbd5e1") : "linear-gradient(135deg, #001845, #004DAF)",
+                      background: !input.trim() || loading ? (dark ? "#26324d" : "#cbd5e1") : "#004DAF",
                       color: "white",
                       border: "none",
                       borderRadius: "999px",
@@ -1321,7 +1321,7 @@ export default function ChatPage() {
                     background: "transparent",
                     color: t.textMute,
                     border: "1px dashed " + t.border,
-                    borderRadius: "999px",
+                    borderRadius: "12px",
                     padding: "6px 14px",
                     fontSize: "12.5px",
                     fontFamily: 'inherit',
@@ -1346,10 +1346,10 @@ export default function ChatPage() {
                         display: "flex",
                         alignItems: "center",
                         gap: "6px",
-                        background: "linear-gradient(135deg,#001845,#004DAF)",
+                        background: "#004DAF",
                         color: "white",
                         border: "none",
-                        borderRadius: "999px",
+                        borderRadius: "12px",
                         padding: "6px 14px",
                         fontSize: "12.5px",
                         fontFamily: 'inherit',
@@ -2105,7 +2105,7 @@ export default function ChatPage() {
                 height: isMobile ? "32px" : "34px",
                 borderRadius: "50%",
                 flexShrink: 0,
-                background: loading ? "#dc2626" : "linear-gradient(135deg,#001845,#004DAF)",
+                background: loading ? "#dc2626" : "#004DAF",
                 color: "white",
                 border: "none",
                 cursor: "pointer",
@@ -2117,6 +2117,8 @@ export default function ChatPage() {
                 justifyContent: "center",
                 boxShadow: loading ? "none" : "0 4px 12px rgba(0,77,175,0.35)"
               }}
+              onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.background = "#003d94"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = loading ? "#dc2626" : "#004DAF"; }}
             >
               {loading ? IconStop(16) : IconSend(16)}
             </button>
@@ -2217,7 +2219,7 @@ export default function ChatPage() {
                   background: t.card,
                   border: "1px solid " + t.borderSoft,
                   color: dark ? "white" : "#004DAF",
-                  borderRadius: "999px",
+                  borderRadius: "12px",
                   padding: "12px",
                   fontSize: "14px",
                   fontWeight: 700,

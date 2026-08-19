@@ -11,6 +11,7 @@ export const FONT_BODY = '"Source Sans 3", "Plus Jakarta Sans", sans-serif';
 
 export const COLORS = {
   blue: "#004DAF",
+  blueDark: "#003d94",
   blueLight: "#7fb1e8",
   green: "#16a75c",
   navy: "#13182B",

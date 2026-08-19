@@ -337,15 +337,15 @@ fontFamily: FONT_BODY
           <button
             type="submit"
             disabled={loading}
-            onMouseEnter={(e) => { if (!loading) { e.currentTarget.style.transform = "scale(1.02)"; e.currentTarget.style.boxShadow = "0 8px 22px rgba(0,77,175,0.45)"; } }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "0 6px 16px rgba(0,77,175,0.35)"; }}
+            onMouseEnter={(e) => { if (!loading) { e.currentTarget.style.transform = "scale(1.02)"; e.currentTarget.style.background = "#003d94"; e.currentTarget.style.boxShadow = "0 8px 22px rgba(0,77,175,0.45)"; } }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.background = "#004DAF"; e.currentTarget.style.boxShadow = "0 6px 16px rgba(0,77,175,0.35)"; }}
             style={{
               width: "100%",
-              background: "linear-gradient(135deg,#001845,#004DAF)",
+              background: "#004DAF",
               color: "#fff",
               border: "none",
               padding: "13px",
-              borderRadius: "999px",
+              borderRadius: "12px",
               cursor: loading ? "not-allowed" : "pointer",
               fontWeight: 600,
               fontSize: 15,
@@ -382,7 +382,7 @@ fontFamily: FONT_BODY
             border: "1px solid " + t.accent,
             color: t.accent,
             padding: "10px 22px",
-            borderRadius: "999px",
+            borderRadius: "12px",
             cursor: "pointer",
             fontSize: 14,
             fontFamily: "inherit",

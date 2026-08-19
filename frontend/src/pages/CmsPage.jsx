@@ -60,7 +60,7 @@ function Modal({ title, onClose, onConfirm, children, confirmLabel = "Simpan", c
               border: "1px solid " + t.border,
               color: t.textSoft,
               padding: "8px 16px",
-              borderRadius: 999,
+              borderRadius: 12,
               cursor: "pointer",
               fontSize: 13,
               fontWeight: 600,
@@ -1419,7 +1419,7 @@ export default function CmsPage() {
           onClose={() => setDetailTarget(null)}
           onConfirm={() => setDetailTarget(null)}
           confirmLabel="Tutup"
-          confirmColor="#001845"
+          confirmColor="#004DAF"
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: 14 }}>
             {[
@@ -2167,11 +2167,11 @@ function inputStyle(t) {
 }
 
 const primaryBtn = {
-  background: "linear-gradient(135deg,#001845,#004DAF)",
+  background: "#004DAF",
   color: "#fff",
   border: "none",
   padding: "0 22px",
-  borderRadius: 999,
+  borderRadius: 12,
   cursor: "pointer",
   fontWeight: 600,
   fontFamily: "inherit",
@@ -2272,7 +2272,7 @@ function smallBtn(color) {
     color: "#fff",
     border: "none",
     padding: "7px 14px",
-    borderRadius: 999,
+    borderRadius: 12,
     cursor: "pointer",
     fontSize: 13,
     fontWeight: 600,

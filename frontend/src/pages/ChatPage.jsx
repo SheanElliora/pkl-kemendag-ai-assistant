@@ -304,13 +304,6 @@ export default function ChatPage() {
 
   const user = getUser();
 
-  // Frasa yang diketik di halaman awal (berotasi, satu efek ketik).
-  const typedPhrases = [
-    "Menjawab dari dokumen perdagangan resmi, disertai referensi sumber dokumen.",
-    "Mencari jawaban dari dokumen yang tersedia, lengkap dengan referensinya.",
-    "Pertanyaan terjawab dengan konteks dari dokumen resmi Kemendag."
-  ];
-
   // Pertanyaan contoh di halaman awal (klik langsung terkirim, jawaban ada di dokumen).
   const exampleQuestions = [
     "Bagaimana tahapan mendirikan restoran di Jepang?",
@@ -1078,46 +1071,6 @@ export default function ChatPage() {
             }}
           >
             {currentMessages.length === 0 && !loading && (
-              <div className="aurora" aria-hidden="true">
-                <div
-                  className="aurora-blob"
-                  style={{
-                    width: 380,
-                    height: 380,
-                    top: -90,
-                    left: -100,
-                    background: "radial-gradient(circle, rgba(0,77,175,0.95), rgba(0,77,175,0) 68%)",
-                    opacity: 0.55,
-                    animation: "auroraDrift 16s ease-in-out infinite"
-                  }}
-                />
-                <div
-                  className="aurora-blob"
-                  style={{
-                    width: 340,
-                    height: 340,
-                    top: -50,
-                    right: -100,
-                    background: "radial-gradient(circle, rgba(56,189,248,0.95), rgba(56,189,248,0) 68%)",
-                    animation: "auroraDrift 20s ease-in-out -4s infinite"
-                  }}
-                />
-                <div
-                  className="aurora-blob"
-                  style={{
-                    width: 280,
-                    height: 280,
-                    bottom: -90,
-                    left: -40,
-                    background: "radial-gradient(circle, rgba(233,163,25,0.85), rgba(233,163,25,0) 70%)",
-                    opacity: 0.3,
-                    animation: "auroraDrift 24s ease-in-out -9s infinite"
-                  }}
-                />
-              </div>
-            )}
-
-            {currentMessages.length === 0 && !loading && (
             <div
               className="fade-in hero-panel"
               style={{
@@ -1147,9 +1100,9 @@ export default function ChatPage() {
                 <p className="rise" style={{ margin: "7px 0 0", fontSize: "12.5px", color: t.textSoft, fontWeight: 600, animationDelay: "0.1s" }}>
                   {todayLabel()}
                 </p>
-                <div className="rise" style={{ margin: "10px auto 0", fontSize: "15px", color: t.textSoft, lineHeight: "1.5", width: "100%", minHeight: "20px", animationDelay: "0.12s" }}>
-                  <Typewriter phrases={typedPhrases} delay={120} pause={2000} />
-                </div>
+                <p className="rise" style={{ margin: "10px auto 0", fontSize: "15px", color: t.textSoft, lineHeight: "1.5", width: "100%", animationDelay: "0.12s" }}>
+                  Asisten informasi perdagangan — jawaban bersumber dari dokumen resmi Kementerian Perdagangan.
+                </p>
               </div>
 
               <div className="rise" style={{ width: "190px", height: "1px", margin: "18px auto 0", background: "linear-gradient(90deg, transparent, #c7d2fe, transparent)", animationDelay: "0.24s" }} />
@@ -2673,38 +2626,6 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
         </div>
       )}
     </div>
-  );
-}
-
-// Efek ketik-maju (typewriter) yang terus berulang:
-// ketik frasa -> jeda singkat -> hapus -> ketik lagi, tanpa henti.
-function Typewriter({ phrases, delay = 90, pause = 1600 }) {
-  const [index, setIndex] = useState(0);
-  const [text, setText] = useState("");
-  const [deleting, setDeleting] = useState(false);
-
-  useEffect(() => {
-    const current = phrases[index % phrases.length];
-    let timer;
-    if (!deleting && text === current) {
-      timer = setTimeout(() => setDeleting(true), pause);
-    } else if (deleting && text === "") {
-      setDeleting(false);
-      setIndex((i) => (i + 1) % phrases.length);
-    } else {
-      timer = setTimeout(
-        () => setText(current.slice(0, text.length + (deleting ? -1 : 1))),
-        deleting ? 40 : delay
-      );
-    }
-    return () => clearTimeout(timer);
-  }, [text, deleting, index, phrases, delay, pause]);
-
-  return (
-    <span style={{ display: "inline-flex", alignItems: "baseline" }}>
-      <span>{text}</span>
-      <span style={{ animation: "blinkCaret 1s step-end infinite", marginLeft: 2, color: "#004DAF" }}>▍</span>
-    </span>
   );
 }
 

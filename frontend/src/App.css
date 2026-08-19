@@ -620,62 +620,12 @@ input:focus-visible {
 
 
 /* =====================================
-   Latar aurora di halaman utama chat
-   Anchor ke AREA CHAT (bukan hero-panel
-   yang ter-centering), sehingga glow
-   berada di pojok atas area chat.
-   chat-scroll sudah overflow:hidden
-   saat halaman kosong jadi tidak scroll.
+   Latar halaman utama chat
    ===================================== */
 
 .hero-panel {
   position: relative;
 }
-
-.aurora {
-  position: absolute;
-  inset: -50px -70px;
-  z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-/* Konten chat selalu tampil di atas aurora */
-.chat-scroll > *:not(.aurora) {
-  position: relative;
-  z-index: 1;
-}
-
-/* Hormati preferensi pengguna yang mengurangi animasi */
-@media (prefers-reduced-motion: reduce) {
-  .aurora-blob {
-    animation: none !important;
-  }
-}
-
-@keyframes auroraDrift {
-  0% {
-    transform: translate(0, 0) scale(1);
-  }
-  33% {
-    transform: translate(28px, -24px) scale(1.12);
-  }
-  66% {
-    transform: translate(-22px, 18px) scale(0.92);
-  }
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-}
-
-.aurora-blob {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(64px);
-  opacity: 0.45;
-  will-change: transform;
-}
-
 
 /* =====================================
    Dark mode (body.theme-dark) — override

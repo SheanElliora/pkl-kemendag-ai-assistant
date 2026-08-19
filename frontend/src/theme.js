@@ -20,8 +20,8 @@ export const COLORS = {
   goldLight: "#f6c453",
   goldSoft: "rgba(233,163,25,0.55)",
 
-  pageBgLight: "linear-gradient(180deg,#e2e9f3,#eef2f7)",
-  pageBgDark: "#0b1120",
+  pageBgLight: "linear-gradient(180deg,#dce4f0,#e9eef6)",
+  pageBgDark: "#070b14",
 
   cardLight: "#ffffff",
   cardDark: "#2a3d63",

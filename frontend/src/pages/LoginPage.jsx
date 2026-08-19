@@ -146,34 +146,6 @@ fontFamily: FONT_BODY
           </svg>
         )}
       </button>
-              <div
-        className="aurora-blob"
-        style={{
-          position: "absolute",
-          width: 360,
-          height: 360,
-          top: -120,
-          right: -80,
-          pointerEvents: "none",
-          background: "radial-gradient(circle, rgba(233,163,25,0.7), rgba(233,163,25,0) 70%)",
-          opacity: dark ? 0.4 : 0.3,
-          animation: "auroraDrift 24s ease-in-out -9s infinite"
-        }}
-      />
-      <div
-        className="aurora-blob"
-        style={{
-          position: "absolute",
-          width: 320,
-          height: 320,
-          bottom: -100,
-          left: -60,
-          pointerEvents: "none",
-          background: "radial-gradient(circle, rgba(0,77,175,0.75), rgba(0,77,175,0) 70%)",
-          opacity: dark ? 0.45 : 0.3,
-          animation: "auroraDrift 26s ease-in-out -5s infinite"
-        }}
-      />
 
       <div
         className="pop-in"
@@ -181,7 +153,7 @@ fontFamily: FONT_BODY
           width: 420,
           maxWidth: "92%",
           position: "relative",
-          background: t.card,
+          background: dark ? "#263956" : "#f2f4f9",
           border: "1px solid " + t.cardBorder,
           borderRadius: 20,
           boxShadow: (dark

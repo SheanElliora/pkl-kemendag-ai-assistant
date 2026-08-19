@@ -6,25 +6,75 @@ Ringkasan ini dimuat otomatis oleh opencode setiap sesi baru. Baca sebelum menge
 
 - Proyek di C:\dev\pkl-kemendag-ai-assistant (SUDAH dipindah keluar OneDrive - jangan pindahkan lagi).
 - Sistem 100% sehat: ChromaDB :8000, Backend :3001, Frontend :5173. Login CMS: admin / AdminKemendag2026! (password lain ada di backend/.env - jangan commit .env).
-- Git: branch main, semua commit ter-push. Commit terakhir = UI dikembalikan ke desain semula (gradient header #001845->#00439c + garis emas, logo hero berwarna multiply, aurora kuat, toggle emas/teal, shadow besar) — yang dipertahankan: tombol riwayat icon-only 40px (IconMenu) di kiri-atas area chat, scrollbar seragam .thin-scroll, label "Enter untuk kirim" dihapus dari input box.
+- Git: branch main, semua commit ter-push. Riwayat UI terkini (urutan):
+  - `1e86f9a` Sora->Inter + biru #004DAF
+  - `d4e9c96` login selaras + toggle tema + pill saran pertanyaan berputar
+  - `4b3ffe5` login garis emas + hero 26px
+  - `2fc29df`/`0e8745a` garis emas kartu login -> inset shadow (ikuti kurva)
+  - `67b0507` Inter dimuat beneran (Google Fonts + body base font)
+  - `de5db82` DESIGN SYSTEM: theme.js + font Plus Jakarta Sans/Source Sans 3
+  - `c79e6e4` tombol aksi utama biru solid #004DAF radius 12
 - npm audit backend = 0 vuln (overrides protobufjs 7.6.5, js-yaml 4.3.1, sharp@0.32.6->0.35.3). npm install backend WAJIB --legacy-peer-deps.
 - Approve dokumen ASINKRON: POST approve -> status "processing" (antrean latar belakang ingestQueue.js, 1 worker FIFO) -> "approved"/"error". Frontend polling 5 dtk saat ada "processing". Jangan harap langsung "approved".
 - Embedding ingest memakai BATCH (EMBED_BATCH=16 di ingest.js, createEmbeddingsBatch di embedderService.js — menangani semua bentuk output transform.js). Rerank width = 10 (retrieverService.js).
-- CHAT BARU (fase-2): riwayat multi-turn via sessionId (disimpan data/chats.json, owner = user:<id> bila token Bearer, client:<id> bila clientId, else guest). Endpoint: POST /api/chat (body sessionId/clientId), GET /api/chat/history, GET|DELETE /api/chat/history/:sessionId, POST /api/chat/feedback (rating up/down + komentar), GET /api/chat/history/:sessionId/export?format=html|doc. Konteks 6 pesan terakhir dikirim ke LLM.
+- CHAT BARU (fase-2): riwayat multi-turn via sessionId (disimpan data/chats.json, owner = user:<id> bila token Bearer, client:<id> bila clientId, else guest). Endpoint: POST /api/chat (body sessionId/clientId), GET /api/chat/history, GET|DELETE /api/chat/history/:sessionId, POST /api/chat/feedback (rating up/down + komentar), GET /api/chat/history/:sessionId/export?format=html|doc. Konteks 6 pesan terakhir dikirim ke LLM. Field sesi = `id` (bukan sessionId); cleanup via DELETE per id.
 - RETRIEVAL hybrid: BM25 (bm25Service.js, korpus dari chunks/*.json, cache mtime) di-union dengan kandidat vektor (BM25_WIDTH=60, BM25_BONUS=0.3) sebelum rerank. Perilaku vektor lama tidak berubah.
-- Dokumentasi API: GET /api/docs (Swagger UI), GET /api/docs.json (OpenAPI). Statistik: GET /api/stats (publik), GET /api/cms/stats (admin: dokumen/vektor/user/chat+feedback).
+- Dokumentasi API: GET /api/docs (Swagger UI), GET /api/docs.json (OpenAPI). Statistik: GET /api/stats (publik), GET /api/cms/stats (admin).
 - Tes CMS E2E: 28 PASS / 0 FAIL (node scripts/testCmsFullLifecycle.mjs).
-- Tes dokumen BARU end-to-end: 11 PASS / 0 FAIL (node scripts/testNewDocE2E.mjs: upload->approve->chunk JSON->vektor Chroma->sitasi chat->hapus->bersih).
-- Unit test service inti: 14 PASS / 0 FAIL (npm test = node --test "tests/*.test.mjs"; bm25Service, chatHistoryService, chunkService; TANPA dependency baru).
-- Evaluasi RAG: 14 PASS / 0 FAIL (node scripts/evalRag.mjs: recall@7 = 7/7 + sitasi jawaban benar; --no-llm untuk retrieval saja).
-- Tes UI browser (Playwright, frontend/): npx playwright test = 5 PASS (chat hero+streaming+cleanup, siklus CMS upload->approve->delete via UI, feedback ke server, export HTML/DOC — self-cleaning, chats.json bersih 0 sesi setelah suite). Instal browser: npx playwright install chromium. Jebakan: GET /api/chat/history TANPA clientId/token HANYA menampilkan sesi owner "guest" — sesi client:*/user:* harus dibersihkan per-id via DELETE /api/chat/history/:id (baca id langsung dari backend/data/chats.json).
-- Cek kesehatan cepat: node scripts/healthCheck.mjs (5 PASS: backend, frontend, Chroma v2, 631 vektor, chat RAG end-to-end; flag --no-chat untuk skip LLM).
-- Runbook ultra-ringkas: RUNBOOK.md (start, cek, tes, backup, kredensial, jebakan).
-- Backup Chroma terverifikasi bisa di-restore (631 vektor, ID collection sama). files.json sempat terhapus insiden BOM PowerShell (18-08-2026) dan BERHASIL di-restore dari backup/2026-08-17_20-58-28/files.json.
-- Backup otomatis: `npm run backup` (scripts/backupChroma.mjs) -> backup/<waktu>/ di akar repo (git-ignored), berisi chroma/ + files.json + users.json + manifest; stop-hidupkan Chroma, verifikasi vektor, simpan 5 terbaru. Jalankan tiap kali dokumen baru di-approve (atau via Task Scheduler).
+- Tes dokumen BARU end-to-end: 11 PASS / 0 FAIL (node scripts/testNewDocE2E.mjs).
+- Unit test service inti: 14 PASS / 0 FAIL (npm test = node --test "tests/*.test.mjs").
+- Evaluasi RAG: 14 PASS / 0 FAIL (node scripts/evalRag.mjs: recall@7 = 7/7; --no-llm utk retrieval saja).
+- Tes UI browser (Playwright, frontend/): npx playwright test = 5 PASS (chat hero+streaming, CMS upload->approve->delete, feedback, export HTML/DOC — self-cleaning). Jalankan background: Start-Process cmd /c "npx playwright test --reporter=line --timeout=300000 > log 2>&1", poll ~130 dtk. Jebakan: GET /api/chat/history TANPA clientId/token hanya menampilkan owner "guest".
+- Cek kesehatan cepat: node scripts/healthCheck.mjs (5 PASS; --no-chat untuk skip LLM).
+- Runbook ultra-ringkas: RUNBOOK.md.
+- Backup: npm run backup -> backup/<waktu>/ (git-ignored, chroma/ + files.json + users.json + manifest); simpan 5 terbaru. Jalankan tiap dokumen baru di-approve.
 - Rate-limit: login 10x/15mnt/IP, chat 20/mnt/IP -> 429.
-- DESAIN UI (halaman chat): header gradient #001845->#00439c + garis emas inset rgba(233,163,25,0.55), logo putih header + hero logo berwarna mixBlend multiply (dua mode tema), aurora kuat (opacity 0.55/0.3, blob biru/sky/emas), toggle tema emas (#e9a319) / teal (#14b8a6, knob #78350f/#0f766e), aksen emas (divider hero, "Sumber Referensi" #c98500, borderRight bubble user), shadow card besar 0 18px 50px rgba(15,40,80,0.14). KONTRAS (commit 7b4df79): background light abu-biru kalem linear-gradient(180deg,#e9edf4,#f6f8fb) + border card #d4dce8 (kartu putih kontras), kartu dark #2a3d63 (vs bg #0b1120). Tombol riwayat = icon-only 40px (IconMenu) di kiri-atas area chat (zIndex 12, top 116px desktop / 90px mobile). Scrollbar seragam .thin-scroll. Label "Enter untuk kirim" TIDAK ada.
-- DESAIN UI (referensi situs resmi kemendag.go.id): biru brand = #004DAF (aksen utama, header solid, tombol), hijau #16a75c (aksen kedua: toggle tema, garis pemisah hero, "Sumber Referensi", border bubble user, status "Terhubung"), emas TIDAK dipakai di halaman chat (tetap dipakai di CMS). Header: logo putih + teks "KEMENTERIAN PERDAGANGAN / Republik Indonesia" (desktop). Hero: logo berwarna (mixBlend multiply) di light, logo putih di dark. Aurora tipis (opacity 0.12-0.22). Shadow flat (card 0 2px 10px). Font: Inter + Sora (heading). Tombol riwayat = icon-only 40px (IconMenu) di kiri-atas area chat (zIndex 12, top 116px desktop / 90px mobile).
+
+## DESAIN UI (FINAL — pakai ini, JANGAN kembali ke desain lama)
+
+**Satu-satunya sumber warna & font = `frontend/src/theme.js`** (`createTheme(dark)` + `COLORS` + `FONT_HEADING` + `FONT_BODY`). Ketiga halaman (ChatPage, LoginPage, CmsPage) memakai `const t = createTheme(dark)`. Kalau mau ubah warna, ubah theme.js saja. Tambahan token: `dark` (dipakai CmsPage sbg t.dark), `accentText`/`accent`/`cardBorder` alias.
+
+### PALET WARNA (final)
+- Biru resmi #004DAF (aksen utama, tombol aksi); hover #003d94 (tambah di COLORS.blueDark)
+- Biru muda dark-mode #7fb1e8 (accentText/accent)
+- Hijau resmi #16a75c — HANYA untuk status (Terhubung, badge Tersimpan, feedback up, badge approved CMS)
+- Navy #13182B (referensi) — praktis: header gradient #001845->#004DAF; bg dark #0b1120
+- Emas #e9a319 / #f6c453 — identitas: garis header inset rgba(233,163,25,0.55), divider hero, toggle tema (knob #78350f), chip Panel Admin (teks #0b1e3a), avatar bubble user, borderRight bubble user 4px solid #e9a319, garis atas kartu login (inset shadow), CMS admin (tab/gold)
+- Background light: linear-gradient(180deg,#e9edf4,#f6f8fb); dark: #0b1120
+- Kartu: #ffffff / #2a3d63; cardSoft #f8fafc / #304266; border #d4dce8 / #26324d; borderSoft #e2e8f0 / #2b3a58; inputBg #f1f5f9 / #0f1a2f
+- Teks: #1e293b / #e5edf7; textSoft #475569 / #c3cede; textMute #64748b / #8b98ad
+- Bubble bot #e2e7ee / #223254; bubble user #9fc7ef / #0e5c9e; chatBg dot pattern biru
+- Sidebar #f8fafc / #0f182c; bar #ffffff / #1b2944; bgSoft #eef2f7 / #3a4b6b
+
+### TEMPLATE FONT (final — BUKAN Inter lagi)
+- Heading/judul (hero h2, judul sidebar, h2 login "Panel Admin", h3 CMS, statistik): **Plus Jakarta Sans** weight 800 (700 utk h3) — `FONT_HEADING`
+- Isi/deskripsi/input/tombol: **Source Sans 3** weight 400/500/600 — `FONT_BODY`
+- Dimuat via Google Fonts di index.html (Plus Jakarta Sans 600;700;800 + Source Sans 3 400;500;600) + `body { font-family: "Source Sans 3"... }` di App.css
+- PELAJARAN: Inter & Sora dulu cuma deklarasi tanpa link font -> ter-render font default. Selalu verifikasi `document.fonts.check()`.
+
+### TOMBOL (seragam, commit c79e6e4)
+- Tombol aksi utama (teks): **biru solid #004DAF, radius 12px**, teks putih, hover #003d94, shadow rgba(0,77,175,0.35). Berlaku: Login, kirim chat, Unduh, Upload CMS, primaryBtn, smallBtn CMS, modal Batal/confirm
+- Tombol ikon-only (kirim di pill, stop): bulat (radius 50%/999)
+- Ghost/outline (Kembali ke Chat, Mulai ulang, Percakapan Baru): radius 12, outline biru/putus-putus
+- TIDAK ada gradient navy pada tombol lagi. Header/sidebar/topbar gradient #001845->#004DAF TETAP (bukan tombol). Emas (Panel Admin, toggle) & hijau (Terima) = warna fungsi, tetap.
+
+### ELEMEN LAIN (final)
+- Header chat: gradient + inset garis emas; logo putih; toggle tema emas; chip Panel Admin emas; status badge hijau. Tombol riwayat = icon-only 40px (IconMenu) kiri-atas area chat (zIndex 12, top 116px desktop / 90px mobile). Scrollbar seragam .thin-scroll. Label "Enter untuk kirim" TIDAK ada.
+- Hero: logo berwarna mixBlend multiply (light) / putih (dark) + drop-shadow rgba(0,77,175,0.18); judul Inter->PJS 26px (mobile 21px) weight 800; tanggal 12.5px 600 textSoft; divider emas 56x3; typewriter; divider tipis #c7d2fe; aurora kuat (opacity 0.3-0.55, blob biru/sky/emas, pointerEvents none di login); shadow kartu 0 18px 50px rgba(15,40,80,0.14) (dark: 0 20px 60px rgba(0,0,0,0.5))
+- PILL SARAN PERTANYAAN (TAMBAHAN): 1 pill di ATAS kotak input hero (bukan 3 chip statis di bawah!), berisi 1 pertanyaan contoh yang berotasi tiap 2.6 dtk (key=suggestionIdx + animasi rise), ikon IconSearchModule, click langsung sendMessage(q), disabled saat loading, tersembunyi saat modelOpen. Pertanyaan = dari isi dokumen (tidak boleh mengarang): "Bagaimana tahapan mendirikan restoran di Jepang?" (Jepang_Data_Restoran), "Siapa pemasok terbesar kain Ankara ke Nigeria?" (Nigeria_Martel, jawab: Tiongkok), "Apa saja persyaratan impor decoration lights ke Nigeria?" (ND208)
+- Login: bg/palet SAMA dgn chat; kartu radius 20 + garis emas = inset shadow 0 3px 0 rgba(233,163,25,0.55) (JANGAN pakai div overlay — tidak sinkron dgn kurva); toggle tema bulat kanan-atas (set localStorage cms_theme); logo drop-shadow; input font FONT_BODY (form field TIDAK inherit font browser)
+- CMS: sidebar gradient #001845->#002d6e, topbar mobile gradient; tab/statistik emas; approved hijau; animasi sama (rise/pop-in/shake/spin/auroraDrift/pulseDot di App.css)
+- Footer kartu chat (desktop): disclaimer "Jawaban bersumber dari dokumen..." + nama app — SUDAH ADA, jangan tambah footer kredit duplikat.
+
+### KEPUTUSAN USER YANG SUDAH DIKONFIRMASI (JANGAN ulang/diubah tanpa diminta)
+- TOLAK restyle "resmi kemendag" solid (header flat #004DAF, hijau ganti emas, teks identitas, aurora tipis, shadow flat). TETAP: gradient + emas + aurora kuat + shadow besar.
+- Emas dipilih (bukan teal/hijau) utk toggle, chip, bubble user, borderRight bubble user.
+- Kontras bg light #e9edf4 (opsi 1); opsi 2 (bg kebiruan) & 3 (blob) DITOLAK.
+- Font: user minta BUKAN Inter; keputusan: PJS + SS3 (dokumentasikan di sini).
+- Tombol: biru solid radius 12 (opsi 1 yang disarankan, disetujui).
+- Pill saran: bentuknya pill berputar di ATAS input (bukan chip di bawah) — revisi user.
+- Hero 26px + tanggal tegas: disetujui. Footer kredit: sudah ada.
+- Model opencode = deepseek-v4-flash-free: TIDAK BISA membaca gambar (screenshot). Kalau user minta evaluasi visual, minta user lihat sendiri atau pakai verifikasi DOM/computed style.
 
 ## Cara menjalankan (3 terminal)
 

@@ -191,17 +191,20 @@ fontFamily: FONT_BODY
           textAlign: "center"
         }}
       >
-        <img
-          className="rise"
-          src="/logo-kemendag.png"
-          alt="Logo Kemendag"
-          style={{
-            width: 88,
-            height: 88,
-            objectFit: "cover",
-            filter: dark ? "drop-shadow(0 6px 14px rgba(0,0,0,0.45))" : "drop-shadow(0 6px 14px rgba(0,77,175,0.18))"
-          }}
-        />
+        <div className="rise" style={{ display: "flex", justifyContent: "center", marginBottom: "4px" }}>
+          <img
+            src="/logo-kemendag.png"
+            alt="Logo Kemendag"
+            className="logo-hover"
+            style={{
+              width: 88,
+              height: 88,
+              objectFit: "cover",
+              cursor: "pointer",
+              filter: "drop-shadow(0 6px 14px rgba(0,77,175,0.18))"
+            }}
+          />
+        </div>
         <h2 className="rise" style={{ margin: "18px 0 4px", fontSize: 22, fontWeight: 800, letterSpacing: "-0.5px", fontFamily: FONT_HEADING, color: t.accent, animationDelay: "0.06s" }}>
           Panel Admin
         </h2>

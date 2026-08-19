@@ -1256,6 +1256,11 @@ export default function ChatPage() {
                       width: "32px",
                       height: "32px",
                       flexShrink: 0,
+                      padding: 0,
+                      boxSizing: "border-box",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                       cursor: !input.trim() || loading ? "not-allowed" : "pointer",
                       fontSize: "16px",
                       fontFamily: 'inherit',
@@ -1265,7 +1270,7 @@ export default function ChatPage() {
                     onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.transform = "scale(1.06)"; }}
                     onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
                   >
-                    <span style={{ display: "inline-flex", transform: "translate(1px, 1px)" }}>{IconSend(15)}</span>
+                    <span style={{ display: "inline-flex", transform: "translate(-1.15px, 1.15px)" }}>{IconSend(15)}</span>
                   </button>
                 </div>
               </div>
@@ -2111,6 +2116,8 @@ export default function ChatPage() {
                 height: isMobile ? "32px" : "34px",
                 borderRadius: "50%",
                 flexShrink: 0,
+                padding: 0,
+                boxSizing: "border-box",
                 background: loading ? "#dc2626" : "#004DAF",
                 color: "white",
                 border: "none",
@@ -2126,7 +2133,7 @@ export default function ChatPage() {
               onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.background = "#003d94"; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = loading ? "#dc2626" : "#004DAF"; }}
             >
-              {loading ? IconStop(16) : <span style={{ display: "inline-flex", transform: "translate(1px, 1px)" }}>{IconSend(16)}</span>}
+              {loading ? IconStop(16) : <span style={{ display: "inline-flex", transform: "translate(-1.2px, 1.2px)" }}>{IconSend(16)}</span>}
             </button>
             </div>
           </div>

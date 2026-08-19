@@ -1159,11 +1159,11 @@ export default function ChatPage() {
                     }}
                   />
                 </div>
-                <h2 className="rise" style={{ margin: "0", fontSize: isMobile ? "21px" : "24px", fontWeight: 800, letterSpacing: "-0.5px", color: t.accentText, fontFamily: '"Inter", sans-serif', animationDelay: "0.06s" }}>
+                <h2 className="rise" style={{ margin: "0", fontSize: isMobile ? "21px" : "26px", fontWeight: 800, letterSpacing: "-0.5px", color: t.accentText, fontFamily: '"Inter", sans-serif', animationDelay: "0.06s" }}>
                   AI Document Intelligence – Kemendag
                 </h2>
                 <div className="rise" style={{ width: "56px", height: "3px", margin: "8px auto 0", borderRadius: "3px", background: "linear-gradient(90deg,#e9a319,#f6c453)", animationDelay: "0.08s" }} />
-                <p className="rise" style={{ margin: "6px 0 0", fontSize: "12px", color: t.textMute, fontWeight: 500, animationDelay: "0.1s" }}>
+                <p className="rise" style={{ margin: "7px 0 0", fontSize: "12.5px", color: t.textSoft, fontWeight: 600, animationDelay: "0.1s" }}>
                   {todayLabel()}
                 </p>
                 <div className="rise" style={{ margin: "10px auto 0", fontSize: "15px", color: t.textSoft, lineHeight: "1.5", width: "100%", minHeight: "20px", animationDelay: "0.12s" }}>
@@ -1749,9 +1749,9 @@ export default function ChatPage() {
                                   Informasi ini tidak ditemukan pada dokumen yang tersedia.
                                   Silakan coba pertanyaan lain atau gunakan kata kunci berbeda.
                                 </span>
-                              </div>
-                            </div>
-                          )}
+              </div>
+            </div>
+          )}
                           {m.sources && m.sources.length > 0 && (
                         <div
                           style={{

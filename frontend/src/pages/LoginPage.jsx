@@ -201,6 +201,17 @@ export default function LoginPage() {
           textAlign: "center"
         }}
       >
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 3,
+            borderRadius: "20px 20px 0 0",
+            background: "linear-gradient(90deg,#e9a319,#f6c453)"
+          }}
+        />
         <img
           className="rise"
           src="/logo-kemendag.png"
@@ -347,8 +358,8 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            onMouseEnter={(e) => { if (!loading) e.currentTarget.style.transform = "scale(1.02)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
+            onMouseEnter={(e) => { if (!loading) { e.currentTarget.style.transform = "scale(1.02)"; e.currentTarget.style.boxShadow = "0 8px 22px rgba(0,77,175,0.45)"; } }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "0 6px 16px rgba(0,77,175,0.35)"; }}
             style={{
               width: "100%",
               background: "linear-gradient(135deg,#001845,#004DAF)",

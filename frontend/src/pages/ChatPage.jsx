@@ -17,6 +17,7 @@ export default function ChatPage() {
   const [newMsgIndex, setNewMsgIndex] = useState(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [modelOpen, setModelOpen] = useState(false);
   const [cmsBtnVariant, setCmsBtnVariant] = useState(() => localStorage.getItem("cms_btn_variant_v2") || "chip");
   const [cmsBtnLabel, setCmsBtnLabel] = useState(() => localStorage.getItem("cms_btn_label_v2") || "Panel Admin");
@@ -80,6 +81,148 @@ export default function ChatPage() {
   const IconChat = (s) => (
     <svg width={s} height={s} viewBox="0 0 24 24" {...iconStroke}>
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+  const IconBot = (s) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" {...iconStroke}>
+      <path d="M12 8V4H8" />
+      <rect x="4" y="8" width="16" height="12" rx="2" />
+      <path d="M2 14h2M20 14h2" />
+      <circle cx="9" cy="13" r="1.1" fill="currentColor" stroke="none" />
+      <circle cx="15" cy="13" r="1.1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+  const IconUser = (s) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" {...iconStroke}>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
+    </svg>
+  );
+  const IconCopy = (s) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" {...iconStroke}>
+      <rect x="9" y="9" width="13" height="13" rx="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
+  );
+  const IconCheck = (s) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" {...iconStroke}>
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+  const IconTrash = (s) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" {...iconStroke}>
+      <path d="M3 6h18" />
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+      <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      <line x1="10" y1="11" x2="10" y2="17" />
+      <line x1="14" y1="11" x2="14" y2="17" />
+    </svg>
+  );
+  const IconRefresh = (s) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" {...iconStroke}>
+      <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+      <path d="M21 3v5h-5" />
+    </svg>
+  );
+  const IconSend = (s) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" {...iconStroke}>
+      <path d="m22 2-7 20-4-9-9-4Z" />
+      <path d="M22 2 11 13" />
+    </svg>
+  );
+  const IconStop = (s) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" {...iconStroke}>
+      <rect x="6" y="6" width="12" height="12" rx="2" />
+    </svg>
+  );
+  const IconDownload = (s) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" {...iconStroke}>
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  );
+  const IconX = (s) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" {...iconStroke}>
+      <path d="M18 6 6 18" />
+      <path d="m6 6 12 12" />
+    </svg>
+  );
+  const IconArrowDown = (s) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" {...iconStroke}>
+      <path d="M12 5v14" />
+      <path d="m19 12-7 7-7-7" />
+    </svg>
+  );
+  const IconFileText = (s) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" {...iconStroke}>
+      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+      <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+      <path d="M10 9H8M16 13H8M16 17H8" />
+    </svg>
+  );
+  const IconDoc = (s) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" {...iconStroke}>
+      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+      <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+      <path d="M8 13h8M8 17h5" />
+    </svg>
+  );
+  const IconSearch = (s) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" {...iconStroke}>
+      <circle cx="11" cy="11" r="8" />
+      <path d="m21 21-4.3-4.3" />
+    </svg>
+  );
+  const IconWarning = (s) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" {...iconStroke}>
+      <path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+      <path d="M12 9v4" />
+      <path d="M12 17h.01" />
+    </svg>
+  );
+  const IconBook = (s) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" {...iconStroke}>
+      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+    </svg>
+  );
+  const IconMenu = (s) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" {...iconStroke}>
+      <line x1="4" y1="6" x2="20" y2="6" />
+      <line x1="4" y1="12" x2="20" y2="12" />
+      <line x1="4" y1="18" x2="20" y2="18" />
+    </svg>
+  );
+  const IconPlus = (s) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" {...iconStroke}>
+      <path d="M12 5v14" />
+      <path d="M5 12h14" />
+    </svg>
+  );
+  const IconThumbsUp = (s) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" {...iconStroke}>
+      <path d="M7 10v12" />
+      <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z" />
+    </svg>
+  );
+  const IconThumbsDown = (s) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" {...iconStroke}>
+      <path d="M17 14V2" />
+      <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z" />
+    </svg>
+  );
+  const IconCloud = (s) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" {...iconStroke}>
+      <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
+    </svg>
+  );
+  const IconHardDrive = (s) => (
+    <svg width={s} height={s} viewBox="0 0 24 24" {...iconStroke}>
+      <path d="M22 12H2" />
+      <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+      <line x1="6" y1="16" x2="6.01" y2="16" />
+      <line x1="10" y1="16" x2="10.01" y2="16" />
     </svg>
   );
 
@@ -342,6 +485,7 @@ export default function ChatPage() {
     setActiveConvId(id);
     activeIdRef.current = id;
     setSidebarOpen(false);
+    setConfirmDeleteId(null);
     setPreviewDoc(null);
   }
 
@@ -350,6 +494,7 @@ export default function ChatPage() {
     setActiveConvId(null);
     activeIdRef.current = null;
     setSidebarOpen(false);
+    setConfirmDeleteId(null);
     setPreviewDoc(null);
     setNewMsgIndex(null);
   }
@@ -366,6 +511,7 @@ export default function ChatPage() {
       setActiveConvId(null);
       activeIdRef.current = null;
     }
+    setConfirmDeleteId(null);
   }
 
   function deleteMessage(index) {
@@ -711,6 +857,7 @@ export default function ChatPage() {
       >
         {/* HEADER */}
         <div
+          className="app-header"
           style={{
             background: "linear-gradient(135deg, #001845, #00439c)",
             color: "white",
@@ -724,14 +871,22 @@ export default function ChatPage() {
             flexWrap: isMobile ? "wrap" : "nowrap"
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: isMobile ? "8px" : "14px", minWidth: 0 }}>
+            <button
+              onClick={() => setSidebarOpen(true)}
+              title="Buka riwayat percakapan"
+              aria-label="Buka riwayat percakapan"
+              style={{ ...navButtonStyle(dark), width: "42px", height: "42px", padding: "0", borderRadius: "10px" }}
+            >
+              {IconMenu(18)}
+            </button>
             <img
               src="/logo-kemendag-putih.png"
               alt="Logo Kementerian Perdagangan Republik Indonesia"
               style={{
                 height: isMobile ? "46px" : "56px",
                 width: "auto",
-                maxWidth: isMobile ? "170px" : "200px",
+                maxWidth: isMobile ? "150px" : "200px",
                 objectFit: "contain",
                 flexShrink: 0,
                 display: "block"
@@ -757,7 +912,7 @@ export default function ChatPage() {
                   fontFamily: 'inherit'
                 }}
               >
-                <span style={{ fontSize: "12px", fontWeight: 700 }}>{online === null ? "…" : "✕"}</span>
+                <span style={{ fontSize: "12px", fontWeight: 700, display: "inline-flex", alignItems: "center" }}>{online === null ? "…" : IconX(11)}</span>
                 {online === null ? "Menghubungi" : "Tidak merespons"}
               </span>
             )}
@@ -835,7 +990,7 @@ export default function ChatPage() {
               </button>
               {user ? (
                 <>
-                  {cmsEntryButton(dark, cmsBtnVariant, "CMS (" + user.username + ")", () => window.open("/#/cms", "_blank"), "Buka panel CMS")}
+                  {cmsEntryButton(dark, isMobile ? "icon-only" : cmsBtnVariant, "CMS (" + user.username + ")", () => window.open("/#/cms", "_blank"), "Buka panel CMS")}
                   <button
                     onClick={logout}
                     style={navButtonStyle(dark)}
@@ -844,7 +999,7 @@ export default function ChatPage() {
                   </button>
                 </>
               ) : (
-                cmsEntryButton(dark, cmsBtnVariant, cmsBtnLabel, () => window.open("/#/cms/login", "_blank"), "Masuk ke panel administrasi CMS")
+                cmsEntryButton(dark, isMobile ? "icon-only" : cmsBtnVariant, cmsBtnLabel, () => window.open("/#/cms/login", "_blank"), "Masuk ke panel administrasi CMS")
               )}
             </div>
           </div>
@@ -869,7 +1024,7 @@ export default function ChatPage() {
               flexWrap: "wrap"
             }}
           >
-            <span>⚠️ Server tidak merespons — jawaban AI tidak dapat diproses saat ini.</span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>{IconWarning(15)} Server tidak merespons — jawaban AI tidak dapat diproses saat ini.</span>
             <button
               onClick={refreshHealth}
               style={{
@@ -884,7 +1039,7 @@ export default function ChatPage() {
                 fontFamily: 'inherit'
               }}
             >
-              ↻ Coba lagi
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>{IconRefresh(13)} Coba lagi</span>
             </button>
           </div>
         )}
@@ -1047,6 +1202,7 @@ export default function ChatPage() {
                     onClick={() => sendMessage()}
                     disabled={!input.trim() || loading}
                     title="Kirim pertanyaan (Enter)"
+                    aria-label="Kirim pertanyaan"
                     style={{
                       background: !input.trim() || loading ? (dark ? "#26324d" : "#cbd5e1") : "linear-gradient(135deg, #001845, #00439c)",
                       color: "white",
@@ -1064,7 +1220,7 @@ export default function ChatPage() {
                     onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.transform = "scale(1.06)"; }}
                     onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
                   >
-                    ➤
+                    {IconSend(15)}
                   </button>
                 </div>
               </div>
@@ -1081,6 +1237,31 @@ export default function ChatPage() {
           {currentMessages.length > 0 && !loading && (
             <div style={{ display: "flex", justifyContent: "center", margin: "0 0 12px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", position: "relative" }}>
+              {(() => {
+                const activeConv = conversations.find((c) => c.id === activeConvId);
+                if (!activeConv) return null;
+                const synced = !!activeConv.sessionId;
+                return (
+                  <span
+                    title={synced ? "Percakapan tersimpan di server" : "Percakapan hanya tersimpan di perangkat ini"}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "5px",
+                      fontSize: "11px",
+                      fontWeight: 700,
+                      color: synced ? "#16a75c" : "#d97706",
+                      border: "1px solid " + (synced ? "#16a75c" : "#d97706"),
+                      borderRadius: "999px",
+                      padding: "5px 11px",
+                      background: synced ? (dark ? "#12331f" : "#ecfdf5") : (dark ? "#33270f" : "#fffbeb"),
+                      flexShrink: 0
+                    }}
+                  >
+                    {synced ? IconCloud(12) : IconHardDrive(12)} {synced ? "Tersimpan" : "Lokal"}
+                  </span>
+                );
+              })()}
               {showResetConfirm ? (
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", background: t.card, border: "1px solid " + t.borderSoft, borderRadius: "999px", padding: "6px 12px", boxShadow: "0 4px 12px rgba(0,0,0,0.06)" }}>
                   <span style={{ fontSize: "13px", color: t.textSoft }}>Mulai ulang percakapan?</span>
@@ -1108,7 +1289,7 @@ export default function ChatPage() {
                   onMouseEnter={(e) => { e.currentTarget.style.color = "#00439c"; e.currentTarget.style.borderColor = "#c7d2fe"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.color = t.textMute; e.currentTarget.style.borderColor = t.border; }}
                 >
-                  <span>↻</span> Mulai ulang percakapan
+                  <span style={{ display: "inline-flex", alignItems: "center" }}>{IconRefresh(13)}</span> Mulai ulang percakapan
                 </button>
               )}
               {(() => {
@@ -1134,7 +1315,7 @@ export default function ChatPage() {
                         boxShadow: "0 3px 10px rgba(0,67,156,0.3)"
                       }}
                     >
-                      <span>⬇</span> Unduh
+                      <span style={{ display: "inline-flex", alignItems: "center" }}>{IconDownload(14)}</span> Unduh
                     </button>
                     {exportOpen && (
                       <div
@@ -1173,7 +1354,7 @@ export default function ChatPage() {
                           onMouseEnter={(e) => { e.currentTarget.style.background = t.bgSoft; }}
                           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                         >
-                          <span>📄</span> HTML — cetak ke PDF
+                          <span style={{ display: "inline-flex", alignItems: "center" }}>{IconFileText(15)}</span> HTML — cetak ke PDF
                         </button>
                         <button
                           onClick={() => downloadChat("doc")}
@@ -1195,7 +1376,7 @@ export default function ChatPage() {
                           onMouseEnter={(e) => { e.currentTarget.style.background = t.bgSoft; }}
                           onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                         >
-                          <span>📝</span> DOC — buka di Word
+                          <span style={{ display: "inline-flex", alignItems: "center" }}>{IconDoc(15)}</span> DOC — buka di Word
                         </button>
                       </div>
                     )}
@@ -1268,12 +1449,12 @@ export default function ChatPage() {
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        fontSize: "18px",
+                        color: "#ffffff",
                         alignSelf: "flex-start",
                         animation: m.streaming ? "pulseRing 1.5s infinite" : "none"
                       }}
                     >
-                      🤖
+                      {IconBot(20)}
                     </div>
                   )}
 
@@ -1372,25 +1553,28 @@ export default function ChatPage() {
                           <button
                             onClick={() => deleteMessage(index)}
                             title="Hapus pesan"
+                            aria-label="Hapus pesan"
                             style={miniActionStyle(dark)}
                           >
-                            ✕
+                            {IconTrash(14)}
                           </button>
                           {m.role === "bot" && !m.streaming && (
                             <>
                               <button
                                 onClick={() => copyText(m.text, index)}
                                 title={copied === index ? "Tersalin!" : "Salin jawaban"}
+                                aria-label="Salin jawaban"
                                 style={miniActionStyle(dark)}
                               >
-                                {copied === index ? "✓" : "⧉"}
+                                {copied === index ? IconCheck(14) : IconCopy(14)}
                               </button>
                               <button
                                 onClick={() => reask(index)}
                                 title="Ulangi pertanyaan (model berbeda)"
+                                aria-label="Ulangi pertanyaan"
                                 style={miniActionStyle(dark)}
                               >
-                                ↻
+                                {IconRefresh(14)}
                               </button>
                             </>
                           )}
@@ -1430,6 +1614,7 @@ export default function ChatPage() {
                           <button
                             onClick={() => submitFeedback(index, "up", m)}
                             title="Jawaban membantu"
+                            aria-label="Jawaban membantu"
                             style={{
                               ...miniActionStyle(dark),
                               background: feedback[msgKey(m, index)]?.rating === "up" ? "#dcfce7" : "transparent",
@@ -1437,11 +1622,12 @@ export default function ChatPage() {
                               color: feedback[msgKey(m, index)]?.rating === "up" ? "#16a75c" : t.textMute
                             }}
                           >
-                            👍
+                            {IconThumbsUp(15)}
                           </button>
                           <button
                             onClick={() => submitFeedback(index, "down", m)}
                             title="Jawaban kurang membantu"
+                            aria-label="Jawaban kurang membantu"
                             style={{
                               ...miniActionStyle(dark),
                               background: feedback[msgKey(m, index)]?.rating === "down" ? "#fee2e2" : "transparent",
@@ -1449,7 +1635,7 @@ export default function ChatPage() {
                               color: feedback[msgKey(m, index)]?.rating === "down" ? "#ff1c3e" : t.textMute
                             }}
                           >
-                            👎
+                            {IconThumbsDown(15)}
                           </button>
                           {feedback[msgKey(m, index)]?.rating && (
                             <div style={{ display: "flex", gap: "6px", alignItems: "center", flex: 1, minWidth: "180px" }}>
@@ -1474,9 +1660,10 @@ export default function ChatPage() {
                               <button
                                 onClick={() => sendFeedbackComment(index, m)}
                                 title="Kirim komentar"
+                                aria-label="Kirim komentar"
                                 style={miniActionStyle(dark)}
                               >
-                                ➤
+                                {IconSend(13)}
                               </button>
                             </div>
                           )}
@@ -1495,7 +1682,7 @@ export default function ChatPage() {
                                   color: "#92400e"
                                 }}
                               >
-                                <span style={{ fontSize: "15px", flexShrink: 0 }}>⚠️</span>
+                                <span style={{ display: "inline-flex", flexShrink: 0 }}>{IconWarning(15)}</span>
                                 <span>
                                   Informasi ini tidak ditemukan pada dokumen yang tersedia.
                                   Silakan coba pertanyaan lain atau gunakan kata kunci berbeda.
@@ -1512,7 +1699,7 @@ export default function ChatPage() {
                             fontSize: "13px"
                           }}
                         >
-                          <b style={{ color: "#c98500", fontSize: "13px", borderLeft: "3px solid #e9a319", paddingLeft: "8px" }}>📚 Sumber Referensi</b>
+                          <b style={{ color: "#c98500", fontSize: "13px", borderLeft: "3px solid #e9a319", paddingLeft: "8px", display: "flex", alignItems: "center", gap: "7px" }}>{IconBook(14)} Sumber Referensi</b>
                           <div style={{ fontSize: "11px", color: t.textMute, marginTop: "4px" }}>
                             Klik nomor halaman untuk membuka dokumen.
                           </div>
@@ -1623,11 +1810,11 @@ export default function ChatPage() {
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        fontSize: "17px",
+                        color: dark ? "#06281d" : "#78350f",
                         alignSelf: "flex-start"
                       }}
                     >
-                      👤
+                      {IconUser(19)}
                     </div>
                   )}
                 </div>
@@ -1650,11 +1837,11 @@ export default function ChatPage() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: "18px",
+                  color: "#ffffff",
                   animation: "pulseRing 1.5s infinite"
                 }}
               >
-                🤖
+                {IconBot(20)}
               </div>
               <div
                 style={{
@@ -1676,6 +1863,7 @@ export default function ChatPage() {
             <button
               onClick={scrollToBottom}
               title="Kembali ke pesan terbaru"
+              aria-label="Kembali ke pesan terbaru"
               className="pop-in"
               style={{
                 position: "sticky",
@@ -1693,7 +1881,7 @@ export default function ChatPage() {
                 boxShadow: "0 4px 14px rgba(0,114,188,0.35)"
               }}
             >
-              ↓
+              {IconArrowDown(18)}
             </button>
           )}
         </div>
@@ -1779,10 +1967,13 @@ export default function ChatPage() {
                       fontSize: "12px",
                       cursor: "pointer",
                       fontFamily: 'inherit',
-                      fontWeight: 600
+                      fontWeight: 600,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px"
                     }}
                   >
-                    ✕ Tutup
+                    {IconX(13)} Tutup
                   </button>
                 </div>
               </div>
@@ -1824,6 +2015,7 @@ export default function ChatPage() {
             >
               <textarea
               ref={inputRef}
+              className="chat-input"
               value={input}
               onChange={(e) => {
                 setInput(e.target.value);
@@ -1864,6 +2056,7 @@ export default function ChatPage() {
             <button
               onClick={loading ? stopAnswer : () => sendMessage()}
               title={loading ? "Hentikan jawaban AI" : "Kirim pertanyaan"}
+              aria-label={loading ? "Hentikan jawaban AI" : "Kirim pertanyaan"}
               style={{
                 width: isMobile ? "32px" : "34px",
                 height: isMobile ? "32px" : "34px",
@@ -1882,7 +2075,7 @@ export default function ChatPage() {
                 boxShadow: loading ? "none" : "0 4px 12px rgba(0,67,156,0.35)"
               }}
             >
-              {loading ? "⏹" : "➤"}
+              {loading ? IconStop(16) : IconSend(16)}
             </button>
             </div>
           </div>
@@ -1908,17 +2101,7 @@ export default function ChatPage() {
         )}
       </div>
 
-      {/* TOMBOL RIWAYAT — PIL MELAYANG DI KIRI ATAS */}
-      <button
-        onClick={() => setSidebarOpen(true)}
-        title="Buka riwayat percakapan"
-        className="fade-in hist-pill"
-        style={{ position: "fixed", left: 30, top: 28 }}
-      >
-        <span style={{ fontSize: "14px", lineHeight: 1 }}>☰</span>
-        <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#e9a319", flexShrink: 0 }} />
-        <span className="hist-pill-label">Riwayat</span>
-      </button>
+      {/* TOMBOL RIWAYAT — kini berada di header (kiri, sebelum logo) */}
 
       {/* SIDEBAR RIWAYAT PERCAKAPAN */}
       {sidebarOpen && (
@@ -1965,7 +2148,8 @@ export default function ChatPage() {
                 Riwayat Percakapan
               </b>
               <button
-                onClick={() => setSidebarOpen(false)}
+                onClick={() => { setSidebarOpen(false); setConfirmDeleteId(null); }}
+                aria-label="Tutup riwayat percakapan"
                 style={{
                   background: "transparent",
                   color: "white",
@@ -1978,7 +2162,7 @@ export default function ChatPage() {
                   fontWeight: 700
                 }}
               >
-                ✕
+                {IconX(16)}
               </button>
             </div>
 
@@ -1999,7 +2183,7 @@ export default function ChatPage() {
                   boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
                 }}
               >
-                ＋ Percakapan Baru
+                <span style={{ display: "inline-flex", alignItems: "center" }}>{IconPlus(15)}</span> Percakapan Baru
               </button>
             </div>
 
@@ -2094,27 +2278,68 @@ export default function ChatPage() {
                           >
                             {c.title || "Percakapan baru"}
                           </span>
-                          <span style={{ display: "block", fontSize: "11px", color: t.textMute, marginTop: 2 }}>
-                            {(c.msgCount ?? c.messages.length)} pesan · {new Date(c.updatedAt || c.createdAt).toLocaleDateString("id-ID")}
+                          <span style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "11px", color: t.textMute, marginTop: 3, minWidth: 0 }}>
+                            <span
+                              title={c.sessionId ? "Tersimpan di server" : "Hanya tersimpan di perangkat ini"}
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "3px",
+                                color: c.sessionId ? "#16a75c" : "#d97706",
+                                fontWeight: 700,
+                                flexShrink: 0
+                              }}
+                            >
+                              {c.sessionId ? IconCloud(11) : IconHardDrive(11)} {c.sessionId ? "tersimpan" : "lokal"}
+                            </span>
+                            <span style={{ flexShrink: 0 }}>·</span>
+                            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              {(c.msgCount ?? c.messages.length)} pesan · {new Date(c.updatedAt || c.createdAt).toLocaleDateString("id-ID")}
+                            </span>
                           </span>
                         </span>
-                        <span
-                          role="button"
-                          title="Hapus percakapan"
-                          onClick={(e) => deleteConversation(c.id, e)}
-                          style={{
-                            flexShrink: 0,
-                            color: t.textMute,
-                            fontSize: "14px",
-                            padding: "2px 6px",
-                            cursor: "pointer",
-                            borderRadius: "6px"
-                          }}
-                          onMouseEnter={(e) => { e.currentTarget.style.color = "#ff1c3e"; e.currentTarget.style.background = dark ? "#3a1220" : "#fee2e2"; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.color = t.textMute; e.currentTarget.style.background = "transparent"; }}
-                        >
-                          ✕
-                        </span>
+                        {confirmDeleteId === c.id ? (
+                          <span
+                            onClick={(e) => e.stopPropagation()}
+                            style={{ display: "inline-flex", alignItems: "center", gap: "4px", flexShrink: 0 }}
+                          >
+                            <span style={{ fontSize: "10px", color: t.textMute, fontWeight: 700 }}>Hapus?</span>
+                            <button
+                              onClick={(e) => deleteConversation(c.id, e)}
+                              title="Ya, hapus percakapan"
+                              style={{ background: "#ef4444", color: "#fff", border: "none", borderRadius: "6px", padding: "3px 9px", fontSize: "11px", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+                            >
+                              Ya
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(null); }}
+                              title="Batal"
+                              style={{ background: t.bgSoft, color: t.textSoft, border: "none", borderRadius: "6px", padding: "3px 9px", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
+                            >
+                              Batal
+                            </button>
+                          </span>
+                        ) : (
+                          <span
+                            role="button"
+                            title="Hapus percakapan"
+                            aria-label="Hapus percakapan"
+                            onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(c.id); }}
+                            style={{
+                              flexShrink: 0,
+                              color: t.textMute,
+                              fontSize: "14px",
+                              padding: "2px 6px",
+                              cursor: "pointer",
+                              borderRadius: "6px",
+                              display: "inline-flex"
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.color = "#ff1c3e"; e.currentTarget.style.background = dark ? "#3a1220" : "#fee2e2"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.color = t.textMute; e.currentTarget.style.background = "transparent"; }}
+                          >
+                            {IconTrash(15)}
+                          </span>
+                        )}
                       </button>
                     ))}
                   </div>
@@ -2565,12 +2790,22 @@ function ProcessingIndicator({ dark }) {
   );
 }
 
+// Ikon module-level untuk komponen di luar ChatPage (definisi sama
+// dengan yang ada di dalam ChatPage; dirapikan bila direfactor).
+const iconStrokeModule = { fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
+const IconSearchModule = (s) => (
+  <svg width={s} height={s} viewBox="0 0 24 24" {...iconStrokeModule}>
+    <circle cx="11" cy="11" r="8" />
+    <path d="m21 21-4.3-4.3" />
+  </svg>
+);
+
 // Kartu sumber "samar" (skeleton berkilau) saat AI mengetik
 function SourceSkeleton({ dark }) {
   return (
     <div className="fade-in" style={{ marginTop: "14px", paddingTop: "12px", borderTop: "1px solid " + (dark ? "#1e2a45" : "#e2e8f0") }}>
-      <div style={{ fontSize: "13px", color: dark ? "#8b98ad" : "#64748b", fontWeight: 600, marginBottom: "8px" }}>
-        🔍 Memeriksa dokumen sumber…
+      <div style={{ fontSize: "13px", color: dark ? "#8b98ad" : "#64748b", fontWeight: 600, marginBottom: "8px", display: "flex", alignItems: "center", gap: "7px" }}>
+        {IconSearchModule(13)} Memeriksa dokumen sumber…
       </div>
       {[0, 1].map((i) => (
         <div

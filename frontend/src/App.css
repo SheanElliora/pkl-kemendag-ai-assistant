@@ -426,6 +426,36 @@ button:disabled {
   opacity: 0.6;
 }
 
+/* =====================================
+   Fokus keyboard (a11y)
+   Ring yang jelas & konsisten saat
+   navigasi tab, tanpa merusak desain
+   saat memakai mouse/klik.
+   ===================================== */
+
+:focus-visible {
+  outline: 3px solid #1d6fd6;
+  outline-offset: 2px;
+}
+
+/* Kontras di header bergradasi biru tua: ring emas terang */
+.app-header :focus-visible {
+  outline-color: #fde047;
+}
+
+/* Kotak ketik: ring di dalam pill (outline inline "none" tidak menang atas ini) */
+.chat-input:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 67, 156, 0.45);
+  border-radius: 8px;
+}
+
+/* Input hero & pencarian: highlight pill sudah via .textbox-pill:focus-within */
+.hero-input:focus-visible,
+input:focus-visible {
+  outline: none;
+}
+
 /* Toggle tema: matikan efek terangkat/shrink bawaan semua tombol */
 .theme-toggle-btn:not(:disabled),
 .theme-toggle-btn:not(:disabled):hover,
@@ -561,41 +591,6 @@ button:disabled {
 
 .markdown-body strong {
   color: #0f172a;
-}
-
-
-/* =====================================
-   Tombol riwayat — pil melayang kiri atas
-   ===================================== */
-
-/* Pil melayang penuh */
-.hist-pill {
-  position: fixed;
-  left: 14px;
-  top: 14px;
-  z-index: 30;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 16px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #001845, #00439c);
-  color: white;
-  border: none;
-  cursor: pointer;
-  box-shadow: 0 4px 16px rgba(0, 28, 69, 0.35);
-  font-weight: 600;
-  font-family: "Inter", sans-serif;
-  transition: box-shadow 0.15s ease, transform 0.15s ease;
-}
-
-.hist-pill:hover {
-  box-shadow: 0 6px 20px rgba(0, 28, 69, 0.45);
-  transform: translateY(-1px);
-}
-
-.hist-pill-label {
-  font-size: 13px;
 }
 
 

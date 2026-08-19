@@ -4,8 +4,17 @@ import fs from "fs";
 const CHATS = "C:/dev/pkl-kemendag-ai-assistant/backend/data/chats.json";
 
 function latestSession() {
-  const chats = JSON.parse(fs.readFileSync(CHATS, "utf8"));
-  return chats[0] || null;
+  // Backend menulis chats.json dengan writeFileSync (bukan atomik) —
+  // baca ulang sebentar bila file sedang parsial/kosong saat ditulis.
+  for (let i = 0; i < 6; i++) {
+    try {
+      const chats = JSON.parse(fs.readFileSync(CHATS, "utf8"));
+      return Array.isArray(chats) ? chats[0] || null : null;
+    } catch {
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 250);
+    }
+  }
+  return null;
 }
 
 test("TAHAP 2: feedback up + komentar tersimpan ke server", async ({ page }) => {

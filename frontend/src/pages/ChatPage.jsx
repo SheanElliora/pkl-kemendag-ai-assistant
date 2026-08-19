@@ -30,13 +30,13 @@ export default function ChatPage() {
 
   // Palet warna tema (light/dark) — satu sumber warna.
   const t = {
-    pageBg: dark ? "#0b1120" : "linear-gradient(180deg,#f6f7f9,#ffffff)",
-    card: dark ? "#26385a" : "#ffffff",
+    pageBg: dark ? "#0b1120" : "linear-gradient(180deg,#e9edf4,#f6f8fb)",
+    card: dark ? "#2a3d63" : "#ffffff",
     cardSoft: dark ? "#304266" : "#f8fafc",
     sidebar: dark ? "#0f182c" : "#f8fafc",
     bgSoft: dark ? "#3a4b6b" : "#eef2f7",
     bar: dark ? "#1b2944" : "#ffffff",
-    border: dark ? "#26324d" : "#e6e9f0",
+    border: dark ? "#26324d" : "#d4dce8",
     borderSoft: dark ? "#2b3a58" : "#e2e8f0",
     text: dark ? "#e5edf7" : "#1e293b",
     textSoft: dark ? "#c3cede" : "#475569",

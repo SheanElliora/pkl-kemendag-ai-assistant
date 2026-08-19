@@ -238,21 +238,21 @@ export default function ChatPage() {
     }
     if (variant === "icon-only") {
       return (
-        <button onClick={onClick} title={title} aria-label={label} style={{ ...base, background: dark ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.12)", color: "white", border: "1px solid rgba(255,255,255,0.45)", width: "42px", height: "42px", padding: "0", borderRadius: "10px" }}>
+        <button onClick={onClick} title={title} aria-label={label} style={{ ...base, background: "linear-gradient(135deg, rgba(255,255,255,0.22), rgba(255,255,255,0.08))", color: "white", border: "1px solid rgba(255,255,255,0.45)", width: "42px", height: "42px", padding: "0", borderRadius: "10px" }}>
           {cmsGearIcon(18)}
         </button>
       );
     }
     if (variant === "chip") {
       return (
-        <button onClick={onClick} title={title} style={{ ...base, background: dark ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.12)", color: "white", border: "1px solid rgba(255,255,255,0.45)", padding: "4px 10px 4px 6px", borderRadius: "16px", fontSize: "12px", gap: "6px" }}>
-          <span style={{ width: "20px", height: "20px", borderRadius: "50%", background: dark ? "linear-gradient(135deg,#14b8a6,#065f46)" : "linear-gradient(135deg,#f6c453,#e9a319)", color: dark ? "#ffffff" : "#0b1e3a", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{cmsPersonIcon(11)}</span>
+        <button onClick={onClick} title={title} style={{ ...base, background: "linear-gradient(135deg, rgba(255,255,255,0.22), rgba(255,255,255,0.08))", color: "white", border: "1px solid rgba(255,255,255,0.45)", padding: "4px 10px 4px 6px", borderRadius: "16px", fontSize: "12px", gap: "6px" }}>
+          <span style={{ width: "20px", height: "20px", borderRadius: "50%", background: "linear-gradient(135deg,#f6c453,#e9a319)", color: "#0b1e3a", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{cmsPersonIcon(11)}</span>
           {label}
         </button>
       );
     }
     return (
-      <button onClick={onClick} title={title} style={{ ...base, background: dark ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.12)", color: "white", border: "1px solid rgba(255,255,255,0.45)", padding: "10px 14px", borderRadius: "10px" }}>
+      <button onClick={onClick} title={title} style={{ ...base, background: "linear-gradient(135deg, rgba(255,255,255,0.22), rgba(255,255,255,0.08))", color: "white", border: "1px solid rgba(255,255,255,0.45)", padding: "10px 14px", borderRadius: "10px" }}>
         {cmsGearIcon(15)}
         {label}
       </button>
@@ -924,7 +924,7 @@ export default function ChatPage() {
                   height: "22px",
                   borderRadius: "12px",
                   border: "1px solid rgba(255,255,255,0.55)",
-                  background: dark ? "#0f766e" : "#e9a319",
+                  background: "linear-gradient(135deg,#f6c453,#e9a319)",
                   cursor: "pointer",
                   flexShrink: 0,
                   padding: "0",
@@ -947,7 +947,7 @@ export default function ChatPage() {
                     position: "absolute",
                     inset: 0,
                     borderRadius: "12px",
-                    background: "linear-gradient(135deg,#14b8a6,#065f46)",
+                    background: "linear-gradient(135deg,#f6c453,#e9a319)",
                     opacity: dark ? 1 : 0,
                     transition: "opacity 0.4s ease"
                   }}
@@ -961,7 +961,7 @@ export default function ChatPage() {
                     height: "16px",
                     borderRadius: "50%",
                     background: "#ffffff",
-                    color: dark ? "#0f766e" : "#78350f",
+                    color: "#78350f",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -1491,7 +1491,7 @@ export default function ChatPage() {
                         boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
                         border: m.role === "bot" ? "1px solid rgba(0,0,0,0.04)" : "none",
                         borderLeft: m.role === "bot" ? "4px solid #00439c" : "none",
-                        borderRight: m.role === "user" ? (dark ? "4px solid #059669" : "4px solid #e9a319") : "none"
+                        borderRight: m.role === "user" ? "4px solid #e9a319" : "none"
                       }}
                     >
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px" }}>
@@ -1817,11 +1817,11 @@ export default function ChatPage() {
                         height: "38px",
                         borderRadius: "12px",
                         flexShrink: 0,
-                        background: dark ? "linear-gradient(135deg,#6ee7b7,#059669)" : "linear-gradient(135deg,#f6c453,#e9a319)",
+                        background: "linear-gradient(135deg,#f6c453,#e9a319)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        color: dark ? "#06281d" : "#78350f",
+                        color: "#0b1e3a",
                         alignSelf: "flex-start"
                       }}
                     >

@@ -1265,7 +1265,7 @@ export default function ChatPage() {
                     onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.transform = "scale(1.06)"; }}
                     onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
                   >
-                    {IconSend(15)}
+                    <span style={{ display: "inline-flex", transform: "translate(1px, 1px)" }}>{IconSend(15)}</span>
                   </button>
                 </div>
               </div>
@@ -2126,7 +2126,7 @@ export default function ChatPage() {
               onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.background = "#003d94"; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = loading ? "#dc2626" : "#004DAF"; }}
             >
-              {loading ? IconStop(16) : IconSend(16)}
+              {loading ? IconStop(16) : <span style={{ display: "inline-flex", transform: "translate(1px, 1px)" }}>{IconSend(16)}</span>}
             </button>
             </div>
           </div>
@@ -2616,10 +2616,14 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
                     gap: "10px",
                     width: "100%",
                     textAlign: "left",
-                    padding: "10px 10px",
+                    padding: "10px 12px",
+                    marginBottom: "5px",
                     borderRadius: "10px",
-                    border: "none",
+                    border: m.id === model
+                      ? (dark ? "1px solid #4f7fd4" : "1px solid #004DAF")
+                      : "1px solid " + (dark ? "#2a3752" : "#e2e8f0"),
                     background: m.id === model ? mt.itemBg : mt.itemIdle,
+                    boxShadow: m.id === model ? "0 2px 10px rgba(0,77,175,0.18)" : "0 1px 3px rgba(0,0,0,0.05)",
                     cursor: "pointer",
                     fontFamily: 'inherit',
                     color: mt.text
@@ -2651,7 +2655,7 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
                     </div>
                   </div>
                   {m.id === model && (
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", color: "#004DAF", fontSize: "12px", fontWeight: 700, flexShrink: 0 }}>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", color: dark ? "#7fb1e8" : "#004DAF", fontSize: "12px", fontWeight: 700, flexShrink: 0 }}>
                       ✓ Aktif
                     </span>
                   )}

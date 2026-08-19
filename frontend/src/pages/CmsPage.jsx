@@ -1911,10 +1911,14 @@ function RoleSelect({ role, onSelect, t, dark }) {
                   gap: 10,
                   width: "100%",
                   textAlign: "left",
-                  padding: "9px 10px",
+                  padding: "9px 12px",
+                  marginBottom: 5,
                   borderRadius: 10,
-                  border: "none",
+                  border: o.id === role
+                    ? (dark ? "1px solid #4f7fd4" : "1px solid #004DAF")
+                    : "1px solid " + (dark ? "#2a3752" : "#e2e8f0"),
                   background: o.id === role ? mt.itemBg : mt.itemIdle,
+                  boxShadow: o.id === role ? "0 2px 10px rgba(0,77,175,0.18)" : "0 1px 3px rgba(0,0,0,0.05)",
                   cursor: "pointer",
                   fontFamily: "inherit",
                   color: mt.text

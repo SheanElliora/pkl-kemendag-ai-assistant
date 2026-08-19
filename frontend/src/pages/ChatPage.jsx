@@ -831,7 +831,7 @@ export default function ChatPage() {
       style={{
         height: "100vh",
         background: t.pageBg,
-        padding: isMobile ? "8px" : "18px",
+        padding: isMobile ? "12px" : "28px",
         fontFamily: FONT_BODY,
         boxSizing: "border-box",
         overflow: "hidden",
@@ -839,7 +839,7 @@ export default function ChatPage() {
     >
       <div
         style={{
-          maxWidth: "1100px",
+          maxWidth: "1000px",
           margin: "auto",
           position: "relative",
           background: t.card,
@@ -849,7 +849,7 @@ export default function ChatPage() {
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
-          height: isMobile ? "calc(100vh - 16px)" : "calc(100vh - 36px)"
+          height: isMobile ? "calc(100vh - 24px)" : "calc(100vh - 56px)"
         }}
       >
         {/* HEADER */}

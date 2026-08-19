@@ -45,6 +45,7 @@ Ringkasan ini dimuat otomatis oleh opencode setiap sesi baru. Baca sebelum menge
 - Teks: #1e293b / #e5edf7; textSoft #475569 / #c3cede; textMute #64748b / #8b98ad
 - Bubble bot #e2e7ee / #223254; bubble user #9fc7ef / #0e5c9e; chatBg dot pattern biru
 - Sidebar #f8fafc / #0f182c; bar #ffffff / #1b2944; bgSoft #eef2f7 / #3a4b6b
+  - REVISI (commit 175ee44): sidebar light jadi #eef2f7 (kartu putih #fff kontras), kartu riwayat = putih + border #d4dce8 + shadow 0 2px 6px (dark: #304266 + border #3a4b6b), hover #f8fafc (light) / #36507e (dark), aktif #eef6fd + border #004DAF + glow; item dropdown model/role = #f8fafc idle (dark #1b2740) + hover #f1f5f9 (dark #24345a), aktif #eef6fd; panel dropdown border #d4dce8 (light)
 
 ### TEMPLATE FONT (final — BUKAN Inter lagi)
 - Heading/judul (hero h2, judul sidebar, h2 login "Panel Admin", h3 CMS, statistik): **Plus Jakarta Sans** weight 800 (700 utk h3) — `FONT_HEADING`
@@ -57,6 +58,7 @@ Ringkasan ini dimuat otomatis oleh opencode setiap sesi baru. Baca sebelum menge
 - Tombol ikon-only (kirim di pill, stop): bulat (radius 50%/999)
 - Ghost/outline (Kembali ke Chat, Mulai ulang, Percakapan Baru): radius 12, outline biru/putus-putus
 - TIDAK ada gradient navy pada tombol lagi. Header/sidebar/topbar gradient #001845->#004DAF TETAP (bukan tombol). Emas (Panel Admin, toggle) & hijau (Terima) = warna fungsi, tetap.
+- BOX INPUT MENYALA BIRU (commit 175ee44): hero pill & input chat bawah = border #004DAF (dark #3f6db8) + glow ring rgba(0,77,175,0.12) 4px + shadow biru (dark rgba(79,127,212,0.16)); fokus makin kuat. Input CMS: ring fokus biru via kelas `.cms-input:focus-visible` (dark border #7fb1e8).
 
 ### ELEMEN LAIN (final)
 - Header chat: gradient + inset garis emas; logo putih; toggle tema emas; chip Panel Admin emas; status badge hijau. Tombol riwayat = icon-only 40px (IconMenu) kiri-atas area chat (zIndex 12, top 116px desktop / 90px mobile). Scrollbar seragam .thin-scroll. Label "Enter untuk kirim" TIDAK ada.

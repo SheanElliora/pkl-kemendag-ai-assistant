@@ -52,7 +52,7 @@ export const COLORS = {
   barDark: "#1b2944",
   bgSoftLight: "#eef2f7",
   bgSoftDark: "#3a4b6b",
-  sidebarLight: "#f8fafc",
+  sidebarLight: "#eef2f7",
   sidebarDark: "#0f182c"
 };
 

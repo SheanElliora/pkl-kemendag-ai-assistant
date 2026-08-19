@@ -1215,9 +1215,12 @@ export default function ChatPage() {
                       height: "44px",
                       boxSizing: "border-box",
                       background: t.inputBg,
-                      border: "1px solid " + t.borderSoft,
+                      border: dark ? "1.5px solid #3f6db8" : "1.5px solid #004DAF",
                       borderRadius: "999px",
-                      padding: "0 6px 0 16px"
+                      padding: "0 6px 0 16px",
+                      boxShadow: dark
+                        ? "0 0 0 4px rgba(79,127,212,0.16), 0 6px 24px rgba(0,77,175,0.30)"
+                        : "0 0 0 4px rgba(0,77,175,0.12), 0 6px 24px rgba(0,77,175,0.25)"
                     }}
                   >
                   <input
@@ -2049,11 +2052,14 @@ export default function ChatPage() {
                 alignItems: "center",
                 gap: "8px",
                 flex: 1,
-                background: t.card,
-                border: "1px solid " + t.border,
+                background: t.inputBg,
+                border: dark ? "1.5px solid #3f6db8" : "1.5px solid #004DAF",
                 borderRadius: "999px",
                 padding: isMobile ? "4px 4px 4px 12px" : "6px 6px 6px 16px",
-                boxSizing: "border-box"
+                boxSizing: "border-box",
+                boxShadow: dark
+                  ? "0 0 0 3px rgba(79,127,212,0.14), 0 4px 16px rgba(0,77,175,0.26)"
+                  : "0 0 0 3px rgba(0,77,175,0.10), 0 4px 16px rgba(0,77,175,0.20)"
               }}
             >
               <textarea
@@ -2217,7 +2223,7 @@ export default function ChatPage() {
                 style={{
                   width: "100%",
                   background: t.card,
-                  border: "1px solid " + t.borderSoft,
+                  border: "1px solid " + t.border,
                   color: dark ? "white" : "#004DAF",
                   borderRadius: "12px",
                   padding: "12px",
@@ -2225,7 +2231,7 @@ export default function ChatPage() {
                   fontWeight: 700,
                   cursor: "pointer",
                   fontFamily: 'inherit',
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.08)"
                 }}
               >
                 <span style={{ display: "inline-flex", alignItems: "center" }}>{IconPlus(15)}</span> Percakapan Baru
@@ -2241,13 +2247,14 @@ export default function ChatPage() {
                   width: "100%",
                   boxSizing: "border-box",
                   background: t.card,
-                  border: "1px solid " + t.borderSoft,
+                  border: "1px solid " + t.border,
                   borderRadius: "999px",
                   padding: "9px 14px",
                   fontSize: "13px",
                   outline: "none",
                   fontFamily: 'inherit',
-                  color: t.text
+                  color: t.text,
+                  boxShadow: "0 1px 4px rgba(0,0,0,0.06)"
                 }}
               />
             </div>
@@ -2292,6 +2299,12 @@ export default function ChatPage() {
                       <button
                         key={c.id}
                         onClick={() => selectConversation(c.id)}
+                        onMouseEnter={(e) => {
+                          if (activeConvId !== c.id) e.currentTarget.style.background = dark ? "#36507e" : "#f8fafc";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = activeConvId === c.id ? (dark ? "#1c3a63" : "#eef6fd") : (dark ? "#304266" : "#ffffff");
+                        }}
                         style={{
                           display: "flex",
                           alignItems: "center",
@@ -2301,12 +2314,12 @@ export default function ChatPage() {
                           padding: "10px 12px",
                           marginTop: "6px",
                           borderRadius: "10px",
-                          border: activeConvId === c.id ? (dark ? "1px solid #3f6db8" : "1px solid #004DAF") : "1px solid transparent",
-                          background: activeConvId === c.id ? (dark ? "#1c3a63" : "#eef6fd") : t.card,
+                          border: activeConvId === c.id ? (dark ? "1px solid #4f7fd4" : "1px solid #004DAF") : "1px solid " + (dark ? "#3a4b6b" : "#d4dce8"),
+                          background: activeConvId === c.id ? (dark ? "#1c3a63" : "#eef6fd") : (dark ? "#304266" : "#ffffff"),
                           cursor: "pointer",
                           fontFamily: 'inherit',
                           color: t.text,
-                          boxShadow: "0 1px 3px rgba(0,0,0,0.06)"
+                          boxShadow: activeConvId === c.id ? "0 2px 10px rgba(0,77,175,0.18)" : "0 2px 6px rgba(0,0,0,0.08)"
                         }}
                       >
                         <span style={{ display: "inline-flex", flexShrink: 0, color: t.textMute }}>{IconChat(16)}</span>
@@ -2471,12 +2484,14 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
   const short = model.split("/").pop();
   const mt = {
     card: dark ? "#151f36" : "#ffffff",
-    border: dark ? "#2a3752" : "#e2e8f0",
-    borderSoft: dark ? "#1f2a44" : "#eef2f7",
+    border: dark ? "#2a3752" : "#d4dce8",
+    borderSoft: dark ? "#1f2a44" : "#e2e8f0",
     text: dark ? "#e5edf7" : "#1e293b",
     textMute: dark ? "#8b98ad" : "#64748b",
     textSoft: dark ? "#c3cede" : "#334155",
     itemBg: dark ? "#1b2740" : "#eef6fd",
+    itemHover: dark ? "#24345a" : "#f1f5f9",
+    itemIdle: dark ? "#1b2740" : "#f8fafc",
     softBg: dark ? "#1e2a45" : "#eef2f7"
   };
 
@@ -2593,6 +2608,8 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
                 <button
                   key={m.id}
                   onClick={() => { onSelect(m.id); setOpen(false); onOpenChange?.(false); }}
+                  onMouseEnter={(e) => { if (m.id !== model) e.currentTarget.style.background = mt.itemHover; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = m.id === model ? mt.itemBg : mt.itemIdle; }}
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -2602,7 +2619,7 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
                     padding: "10px 10px",
                     borderRadius: "10px",
                     border: "none",
-                    background: m.id === model ? mt.itemBg : "transparent",
+                    background: m.id === model ? mt.itemBg : mt.itemIdle,
                     cursor: "pointer",
                     fontFamily: 'inherit',
                     color: mt.text

@@ -908,6 +908,7 @@ export default function CmsPage() {
                         value={fileSearch}
                         onChange={(e) => setFileSearch(e.target.value)}
                         placeholder="Cari file atau pengunggah..."
+                        className="cms-input"
                         style={{
                           padding: "7px 30px 7px 14px",
                           borderRadius: 999,
@@ -1027,6 +1028,7 @@ export default function CmsPage() {
                         value={fileSearch}
                         onChange={(e) => setFileSearch(e.target.value)}
                         placeholder="Cari file atau pengunggah..."
+                        className="cms-input"
                         style={{
                           padding: "7px 30px 7px 14px",
                           borderRadius: 999,
@@ -1086,6 +1088,7 @@ export default function CmsPage() {
                         value={fileSearch}
                         onChange={(e) => setFileSearch(e.target.value)}
                         placeholder="Cari file atau pengunggah..."
+                        className="cms-input"
                         style={{
                           padding: "7px 30px 7px 14px",
                           borderRadius: 999,
@@ -1236,6 +1239,7 @@ export default function CmsPage() {
                       value={userQ}
                       onChange={(e) => setUserQ(e.target.value)}
                       placeholder="Cari pengguna..."
+                      className="cms-input"
                       style={{
                         padding: "7px 30px 7px 14px",
                         borderRadius: 999,
@@ -1833,11 +1837,13 @@ function RoleSelect({ role, onSelect, t, dark }) {
   const cur = options.find((o) => o.id === role) || options[0];
   const mt = {
     card: dark ? "#151f36" : "#ffffff",
-    border: dark ? "#2a3752" : "#e2e8f0",
-    borderSoft: dark ? "#1f2a44" : "#eef2f7",
+    border: dark ? "#2a3752" : "#d4dce8",
+    borderSoft: dark ? "#1f2a44" : "#e2e8f0",
     text: dark ? "#e5edf7" : "#1e293b",
     textMute: dark ? "#8b98ad" : "#64748b",
-    itemBg: dark ? "#1b2740" : "#eef6fd"
+    itemBg: dark ? "#1b2740" : "#eef6fd",
+    itemHover: dark ? "#24345a" : "#f1f5f9",
+    itemIdle: dark ? "#1b2740" : "#f8fafc"
   };
 
   return (
@@ -1897,6 +1903,8 @@ function RoleSelect({ role, onSelect, t, dark }) {
                 key={o.id}
                 type="button"
                 onClick={() => { onSelect(o.id); setOpen(false); }}
+                onMouseEnter={(e) => { if (o.id !== role) e.currentTarget.style.background = mt.itemHover; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = o.id === role ? mt.itemBg : mt.itemIdle; }}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -1906,7 +1914,7 @@ function RoleSelect({ role, onSelect, t, dark }) {
                   padding: "9px 10px",
                   borderRadius: 10,
                   border: "none",
-                  background: o.id === role ? mt.itemBg : "transparent",
+                  background: o.id === role ? mt.itemBg : mt.itemIdle,
                   cursor: "pointer",
                   fontFamily: "inherit",
                   color: mt.text

@@ -41,7 +41,7 @@ export default function ChatPage() {
     text: dark ? "#e5edf7" : "#1e293b",
     textSoft: dark ? "#c3cede" : "#475569",
     textMute: dark ? "#8b98ad" : "#64748b",
-    inputBg: dark ? "#0f1a2f" : "#fff",
+    inputBg: dark ? "#0f1a2f" : "#f1f5f9",
     bubbleBot: dark ? "#223254" : "#e2e7ee",
     bubbleUser: dark ? "#0e5c9e" : "#9fc7ef",
     accentText: dark ? "#7fb1e8" : "#00439c",
@@ -1139,7 +1139,8 @@ export default function ChatPage() {
                       width: isMobile ? "60px" : "84px",
                       height: isMobile ? "60px" : "84px",
                       objectFit: "cover",
-                      mixBlendMode: "multiply"
+                      mixBlendMode: "multiply",
+                      filter: "drop-shadow(0 6px 14px rgba(0,67,156,0.18))"
                     }}
                   />
                 </div>
@@ -1170,22 +1171,23 @@ export default function ChatPage() {
                 }}
               >
                 <ModelSelector models={models} model={model} onSelect={setModel} isMobile={isMobile} align="left" onOpenChange={setModelOpen} dark={dark} />
-                <div
-                  className="textbox-pill"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    flex: 1,
-                    minWidth: 0,
-                    maxWidth: "580px",
-                    height: "44px",
-                    boxSizing: "border-box",
-                    background: t.card,
-                    borderRadius: "999px",
-                    padding: "0 6px 0 16px"
-                  }}
-                >
+                  <div
+                    className="textbox-pill"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      flex: 1,
+                      minWidth: 0,
+                      maxWidth: "580px",
+                      height: "44px",
+                      boxSizing: "border-box",
+                      background: t.inputBg,
+                      border: "1px solid " + t.borderSoft,
+                      borderRadius: "999px",
+                      padding: "0 6px 0 16px"
+                    }}
+                  >
                   <input
                     ref={heroInputRef}
                     autoFocus
@@ -1271,7 +1273,7 @@ export default function ChatPage() {
                 );
               })()}
               {showResetConfirm ? (
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", background: t.card, border: "1px solid " + t.borderSoft, borderRadius: "999px", padding: "6px 12px", boxShadow: "0 4px 12px rgba(0,0,0,0.06)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", background: t.inputBg, border: "1px solid " + t.borderSoft, borderRadius: "999px", padding: "6px 12px", boxShadow: "0 4px 12px rgba(0,0,0,0.06)" }}>
                   <span style={{ fontSize: "13px", color: t.textSoft }}>Mulai ulang percakapan?</span>
                   <button onClick={() => { setShowResetConfirm(false); newConversation(); }} style={{ background: "#ef4444", color: "#fff", border: "none", borderRadius: "999px", padding: "5px 12px", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: 'inherit' }}>Ya</button>
                   <button onClick={() => setShowResetConfirm(false)} style={{ background: t.bgSoft, color: t.textSoft, border: "none", borderRadius: "999px", padding: "5px 12px", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: 'inherit' }}>Batal</button>
@@ -1487,6 +1489,7 @@ export default function ChatPage() {
                         padding: "11px 16px",
                         borderRadius: m.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
                         boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
+                        border: m.role === "bot" ? "1px solid rgba(0,0,0,0.04)" : "none",
                         borderLeft: m.role === "bot" ? "4px solid #00439c" : "none",
                         borderRight: m.role === "user" ? (dark ? "4px solid #059669" : "4px solid #e9a319") : "none"
                       }}

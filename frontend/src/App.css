@@ -227,8 +227,8 @@ tr.hover-row:hover td {
 }
 
 .textbox-pill:focus-within {
-  border-color: #00439c;
-  box-shadow: 0 0 0 4px rgba(0, 67, 156, 0.12), 0 8px 24px rgba(0, 28, 69, 0.10);
+  border-color: #004DAF;
+  box-shadow: 0 0 0 4px rgba(0, 77, 175, 0.12), 0 8px 24px rgba(0, 28, 69, 0.10);
 }
 
 body.theme-dark .textbox-pill {
@@ -251,10 +251,10 @@ body.theme-dark .hero-input::placeholder {
 
 @keyframes logoGlow {
   0% {
-    box-shadow: 0 0 0 0 rgba(0, 67, 156, 0.4), 0 6px 16px rgba(0, 67, 156, 0.12);
+    box-shadow: 0 0 0 0 rgba(0, 77, 175, 0.4), 0 6px 16px rgba(0, 77, 175, 0.12);
   }
   100% {
-    box-shadow: 0 0 0 20px rgba(0, 67, 156, 0), 0 6px 16px rgba(0, 67, 156, 0.12);
+    box-shadow: 0 0 0 20px rgba(0, 77, 175, 0), 0 6px 16px rgba(0, 77, 175, 0.12);
   }
 }
 
@@ -273,7 +273,7 @@ body.theme-dark .hero-input::placeholder {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #00439c;
+  background: #004DAF;
   display: inline-block;
   animation: typingBlink 1.2s infinite;
 }
@@ -348,22 +348,33 @@ body.theme-dark .hero-input::placeholder {
   animation: pulseDot 1s infinite;
 }
 
-/* Scrollbar tipis senada tema biru */
-.chat-scroll::-webkit-scrollbar {
+/* Scrollbar tipis senada tema biru — seragam di area chat & sidebar */
+.chat-scroll::-webkit-scrollbar,
+.thin-scroll::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 
-.chat-scroll::-webkit-scrollbar-thumb {
+.chat-scroll::-webkit-scrollbar-thumb,
+.thin-scroll::-webkit-scrollbar-thumb {
   background: #cbd5e1;
-  border-radius: 8px;
+  border-radius: 999px;
 }
 
-.chat-scroll::-webkit-scrollbar-thumb:hover {
+.chat-scroll::-webkit-scrollbar-thumb:hover,
+.thin-scroll::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
 
-.chat-scroll::-webkit-scrollbar-track {
+.chat-scroll::-webkit-scrollbar-track,
+.thin-scroll::-webkit-scrollbar-track {
   background: transparent;
+}
+
+.chat-scroll,
+.thin-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
 }
 
 /* Skeleton (kartu sedang dimuat) dengan efek kilau */
@@ -413,12 +424,12 @@ button:not(:disabled) {
 
 button:not(:disabled):hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 114, 188, 0.25);
+  box-shadow: 0 4px 10px rgba(0, 77, 175, 0.18);
 }
 
 button:not(:disabled):active {
   transform: translateY(0) scale(0.96);
-  box-shadow: 0 2px 8px rgba(0, 114, 188, 0.2);
+  box-shadow: 0 2px 6px rgba(0, 77, 175, 0.14);
 }
 
 button:disabled {
@@ -434,7 +445,7 @@ button:disabled {
    ===================================== */
 
 :focus-visible {
-  outline: 3px solid #1d6fd6;
+  outline: 3px solid #004DAF;
   outline-offset: 2px;
 }
 
@@ -446,7 +457,7 @@ button:disabled {
 /* Kotak ketik: ring di dalam pill (outline inline "none" tidak menang atas ini) */
 .chat-input:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(0, 67, 156, 0.45);
+  box-shadow: 0 0 0 2px rgba(0, 77, 175, 0.45);
   border-radius: 8px;
 }
 
@@ -488,7 +499,7 @@ input:focus-visible {
 
 .markdown-body th {
   background: linear-gradient(180deg, #f1f7fc, #e8f0fa);
-  color: #00439c;
+  color: #004DAF;
   font-weight: 700;
   text-align: left;
   padding: 8px 12px;
@@ -720,8 +731,14 @@ body.theme-dark .markdown-body a {
 }
 
 /* Scrollbar area chat */
-body.theme-dark .chat-scroll::-webkit-scrollbar-thumb {
+body.theme-dark .chat-scroll::-webkit-scrollbar-thumb,
+body.theme-dark .thin-scroll::-webkit-scrollbar-thumb {
   background: #2b3a5c;
+}
+
+body.theme-dark .chat-scroll,
+body.theme-dark .thin-scroll {
+  scrollbar-color: #2b3a5c transparent;
 }
 
 /* ===== Gaya scrollbar CMS (muncul saat hover) ===== */

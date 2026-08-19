@@ -1,3 +1,7 @@
+body {
+  font-family: "Inter", sans-serif;
+}
+
 @keyframes bounce {
 
   0%, 100% {

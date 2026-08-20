@@ -2,7 +2,7 @@
 
 Ringkasan ini dimuat otomatis oleh opencode setiap sesi baru. Baca sebelum mengerjakan apa pun.
 
-## Status (terakhir diperbarui 19-08-2026)
+## Status (terakhir diperbarui 20-08-2026)
 
 - Proyek di C:\dev\pkl-kemendag-ai-assistant (SUDAH dipindah keluar OneDrive - jangan pindahkan lagi).
 - Sistem 100% sehat: ChromaDB :8000, Backend :3001, Frontend :5173. Login CMS: admin / AdminKemendag2026! (password lain ada di backend/.env - jangan commit .env).
@@ -14,6 +14,12 @@ Ringkasan ini dimuat otomatis oleh opencode setiap sesi baru. Baca sebelum menge
   - `67b0507` Inter dimuat beneran (Google Fonts + body base font)
   - `de5db82` DESIGN SYSTEM: theme.js + font Plus Jakarta Sans/Source Sans 3
   - `c79e6e4` tombol aksi utama biru solid #004DAF radius 12
+  - `0fc8954` logo login: hover samakan dengan chat (scale 1.08 via .logo-hover), shadow biru tipis kedua mode
+  - `21d15d5` kontras bg vs kartu di chat = login: padding luar 28px + maxWidth 1000px
+  - `9d13fd6` bg light dipertajam #e2e9f3->#eef2f7 (supaya kartu putih kontras)
+  - `ce3771e` aurora & typewriter DIHAPUS (kesan non-AI), bg light #dce4f0->#e9eef6, bg dark #070b14, kartu login #f2f4f9/#263956
+  - `3d3a505` kartu login digelapkan lagi: light #e8ebf3, dark #22304e
+  - `fe9060d` SEMUA emoticon/glyph -> icon SVG inline (jam, cpu, check, chevron-down, dot, external-link, bintang); CMS font dasar FONT_BODY + sidebar gradient #001845->#004DAF
 - npm audit backend = 0 vuln (overrides protobufjs 7.6.5, js-yaml 4.3.1, sharp@0.32.6->0.35.3). npm install backend WAJIB --legacy-peer-deps.
 - Approve dokumen ASINKRON: POST approve -> status "processing" (antrean latar belakang ingestQueue.js, 1 worker FIFO) -> "approved"/"error". Frontend polling 5 dtk saat ada "processing". Jangan harap langsung "approved".
 - Embedding ingest memakai BATCH (EMBED_BATCH=16 di ingest.js, createEmbeddingsBatch di embedderService.js — menangani semua bentuk output transform.js). Rerank width = 10 (retrieverService.js).
@@ -38,9 +44,9 @@ Ringkasan ini dimuat otomatis oleh opencode setiap sesi baru. Baca sebelum menge
 - Biru resmi #004DAF (aksen utama, tombol aksi); hover #003d94 (tambah di COLORS.blueDark)
 - Biru muda dark-mode #7fb1e8 (accentText/accent)
 - Hijau resmi #16a75c — HANYA untuk status (Terhubung, badge Tersimpan, feedback up, badge approved CMS)
-- Navy #13182B (referensi) — praktis: header gradient #001845->#004DAF; bg dark #0b1120
+- Navy #13182B (referensi) — praktis: header gradient #001845->#004DAF; bg dark #070b14
 - Emas #e9a319 / #f6c453 — identitas: garis header inset rgba(233,163,25,0.55), divider hero, toggle tema (knob #78350f), chip Panel Admin (teks #0b1e3a), avatar bubble user, borderRight bubble user 4px solid #e9a319, garis atas kartu login (inset shadow), CMS admin (tab/gold)
-- Background light: linear-gradient(180deg,#e9edf4,#f6f8fb); dark: #0b1120
+- Background light: linear-gradient(180deg,#dce4f0,#e9eef6); dark: #070b14
 - Kartu: #ffffff / #2a3d63; cardSoft #f8fafc / #304266; border #d4dce8 / #26324d; borderSoft #e2e8f0 / #2b3a58; inputBg #f1f5f9 / #0f1a2f
 - Teks: #1e293b / #e5edf7; textSoft #475569 / #c3cede; textMute #64748b / #8b98ad
 - Bubble bot #e2e7ee / #223254; bubble user #9fc7ef / #0e5c9e; chatBg dot pattern biru
@@ -62,16 +68,18 @@ Ringkasan ini dimuat otomatis oleh opencode setiap sesi baru. Baca sebelum menge
 
 ### ELEMEN LAIN (final)
 - Header chat: gradient + inset garis emas; logo putih; toggle tema emas; chip Panel Admin emas; status badge hijau. Tombol riwayat = icon-only 40px (IconMenu) kiri-atas area chat (zIndex 12, top 116px desktop / 90px mobile). Scrollbar seragam .thin-scroll. Label "Enter untuk kirim" TIDAK ada.
-- Hero: logo berwarna mixBlend multiply (light) / putih (dark) + drop-shadow rgba(0,77,175,0.18); judul Inter->PJS 26px (mobile 21px) weight 800; tanggal 12.5px 600 textSoft; divider emas 56x3; typewriter; divider tipis #c7d2fe; aurora kuat (opacity 0.3-0.55, blob biru/sky/emas, pointerEvents none di login); shadow kartu 0 18px 50px rgba(15,40,80,0.14) (dark: 0 20px 60px rgba(0,0,0,0.5))
+- Hero: logo berwarna mixBlend multiply (light) / putih (dark) + drop-shadow rgba(0,77,175,0.18); judul Inter->PJS 26px (mobile 21px) weight 800; tanggal 12.5px 600 textSoft; divider emas 56x3; subtitle STATIS "Asisten informasi perdagangan — jawaban bersumber dari dokumen resmi Kementerian Perdagangan." (typewriter DIHAPUS); divider tipis #c7d2fe; TANPA aurora blob (dihapus, kesan non-AI); shadow kartu 0 18px 50px rgba(15,40,80,0.14) (dark: 0 20px 60px rgba(0,0,0,0.5))
 - PILL SARAN PERTANYAAN (TAMBAHAN): 1 pill di ATAS kotak input hero (bukan 3 chip statis di bawah!), berisi 1 pertanyaan contoh yang berotasi tiap 2.6 dtk (key=suggestionIdx + animasi rise), ikon IconSearchModule, click langsung sendMessage(q), disabled saat loading, tersembunyi saat modelOpen. Pertanyaan = dari isi dokumen (tidak boleh mengarang): "Bagaimana tahapan mendirikan restoran di Jepang?" (Jepang_Data_Restoran), "Siapa pemasok terbesar kain Ankara ke Nigeria?" (Nigeria_Martel, jawab: Tiongkok), "Apa saja persyaratan impor decoration lights ke Nigeria?" (ND208)
-- Login: bg/palet SAMA dgn chat; kartu radius 20 + garis emas = inset shadow 0 3px 0 rgba(233,163,25,0.55) (JANGAN pakai div overlay — tidak sinkron dgn kurva); toggle tema bulat kanan-atas (set localStorage cms_theme); logo drop-shadow; input font FONT_BODY (form field TIDAK inherit font browser)
-- CMS: sidebar gradient #001845->#002d6e, topbar mobile gradient; tab/statistik emas; approved hijau; animasi sama (rise/pop-in/shake/spin/auroraDrift/pulseDot di App.css)
+- Login: bg/palet SAMA dgn chat; kartu radius 20 + garis emas = inset shadow 0 3px 0 rgba(233,163,25,0.55) (JANGAN pakai div overlay — tidak sinkron dgn kurva); kartu login: light #e8ebf3 / dark #22304e (override lokal di LoginPage, bukan token); toggle tema bulat kanan-atas (set localStorage cms_theme); logo drop-shadow; input font FONT_BODY (form field TIDAK inherit font browser)
+- CMS: sidebar gradient #001845->#004DAF, topbar mobile gradient; root CMS fontFamily = FONT_BODY (isi Source Sans 3, heading PJS via kelas); tab/statistik emas; approved hijau; animasi sama (rise/pop-in/shake/spin/auroraDrift/pulseDot di App.css)
 - Footer kartu chat (desktop): disclaimer "Jawaban bersumber dari dokumen..." + nama app — SUDAH ADA, jangan tambah footer kredit duplikat.
+- TIDAK ADA EMOTICON/GLYPH di UI (commit fe9060d): semua karakter simbol (⏰ ⌬ ✓ ▼ ● ↗ ✦ dll) diganti icon SVG inline (lucide): jam login = clock, badge model = cpu, Aktif = check, dropdown = chevron-down, mengetik = dot CSS (span bulat), Buka tab = external-link, bintang hero = path bintang 4-sudut. Verifikasi: scan code units 1f000+, 2600-27bf, 2190-21ff, 2300-23ff, 25a0-25ff, 2b00-2bff.
 
 ### KEPUTUSAN USER YANG SUDAH DIKONFIRMASI (JANGAN ulang/diubah tanpa diminta)
-- TOLAK restyle "resmi kemendag" solid (header flat #004DAF, hijau ganti emas, teks identitas, aurora tipis, shadow flat). TETAP: gradient + emas + aurora kuat + shadow besar.
+- TOLAK restyle "resmi kemendag" solid (header flat #004DAF, hijau ganti emas, teks identitas, aurora tipis, shadow flat). TETAP: gradient + emas + shadow besar. Aurora DIHAPUS sama sekali (kesan non-AI) — lihat keputusan terbaru di bawah.
 - Emas dipilih (bukan teal/hijau) utk toggle, chip, bubble user, borderRight bubble user.
-- Kontras bg light #e9edf4 (opsi 1); opsi 2 (bg kebiruan) & 3 (blob) DITOLAK.
+- Kontras bg light = gradient #dce4f0->#e9eef6; dark = #070b14 (bg gelap gelapkan, kartu agak gelap) — nilai final, jangan balik ke #e9edf4/#0b1120.
+- Aurora & typewriter DIHAPUS (19-08-2026): user minta UI tidak terlihat buatan AI; subtitle hero jadi teks statis. Indikator "mengetik" (dot + teks) & streaming chat DIPERTAHANKAN (standar UX, bukan kesan AI).
 - Font: user minta BUKAN Inter; keputusan: PJS + SS3 (dokumentasikan di sini).
 - Tombol: biru solid radius 12 (opsi 1 yang disarankan, disetujui).
 - Pill saran: bentuknya pill berputar di ATAS input (bukan chip di bawah) — revisi user.

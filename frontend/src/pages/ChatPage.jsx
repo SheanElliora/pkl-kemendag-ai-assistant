@@ -1100,12 +1100,9 @@ export default function ChatPage() {
                 <p className="rise" style={{ margin: "7px 0 0", fontSize: "12.5px", color: t.textSoft, fontWeight: 600, animationDelay: "0.1s" }}>
                   {todayLabel()}
                 </p>
-                <p className="rise" style={{ margin: "10px auto 0", fontSize: "15px", color: t.textSoft, lineHeight: "1.5", width: "100%", animationDelay: "0.12s" }}>
-                  Asisten informasi perdagangan — jawaban bersumber dari dokumen resmi Kementerian Perdagangan.
-                </p>
               </div>
 
-              <div className="rise" style={{ width: "190px", height: "1px", margin: "18px auto 0", background: "linear-gradient(90deg, transparent, #c7d2fe, transparent)", animationDelay: "0.24s" }} />
+                <div className="rise" style={{ width: "190px", height: "1px", margin: "18px auto 0", background: "linear-gradient(90deg, transparent, #c7d2fe, transparent)", animationDelay: "0.24s" }} />
 
               {online === true && (
                 <button
@@ -2110,18 +2107,17 @@ export default function ChatPage() {
               textAlign: "center",
               fontSize: "11px",
               color: t.textMute,
+              opacity: 0.85,
               background: t.bar,
               borderTop: "1px solid " + t.borderSoft,
               padding: "8px 16px",
               flexShrink: 0
             }}
           >
-            Jawaban bersumber dari dokumen yang tersedia; silakan verifikasi dengan dokumen asli.
-            <span style={{ margin: "0 8px", opacity: 0.6 }}>·</span>
-            <b style={{ fontWeight: 600, color: t.textMute }}>AI Document Intelligence – Kemendag</b>
+            AI Document Intelligence · Kementerian Perdagangan RI
           </div>
         )}
-      </div>
+        </div>
 
       {/* TOMBOL RIWAYAT — kini berada di header (kiri, sebelum logo) */}
 
@@ -2412,8 +2408,8 @@ const miniActionStyle = (dark) => ({
   fontFamily: 'inherit'
 });
 
-// Pemilih model AI; arah dropdown selalu ke bawah, tinggi dibatasi ruang yang tersedia
-// supaya halaman tidak ikut scroll. Daftar model selalu scroll di dalamnya.
+// Pemilih model AI; dropdown dibuka ke atas (dari tombol) supaya daftar model
+// bisa tampil lebih besar, memanfaatkan ruang di atas area chat. List scroll di dalamnya.
 function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOpenChange, dark }) {
   const [open, setOpen] = useState(false);
   const [maxH, setMaxH] = useState(320);
@@ -2441,11 +2437,11 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
     if (btn && scrollEl) {
       const btnRect = btn.getBoundingClientRect();
       const areaRect = scrollEl.getBoundingClientRect();
-      const padBottom = parseFloat(getComputedStyle(scrollEl).paddingBottom) || 0;
-      // Ruang yang benar-benar terlihat (batas inner box area chat dikurangi padding bawah).
-      const usableBottom = areaRect.bottom - padBottom;
-      const spaceBelow = usableBottom - btnRect.bottom - 10;
-      setMaxH(Math.max(140, Math.min(420, spaceBelow)));
+      const padTop = parseFloat(getComputedStyle(scrollEl).paddingTop) || 0;
+      // Ruang yang benar-benar terlihat di atas tombol (batas inner box area chat + padding atas).
+      const usableTop = areaRect.top + padTop;
+      const spaceAbove = btnRect.top - usableTop - 10;
+      setMaxH(Math.max(140, Math.min(480, spaceAbove)));
     } else {
       setMaxH(320);
     }
@@ -2551,7 +2547,7 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
           className="pop-in"
           style={{
             position: "absolute",
-            top: "calc(100% + 8px)",
+            bottom: "calc(100% + 8px)",
             left: align === "left" ? 0 : "auto",
             right: align === "right" ? 0 : "auto",
             minWidth: "280px",

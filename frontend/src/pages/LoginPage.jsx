@@ -197,7 +197,11 @@ fontFamily: FONT_BODY
               textAlign: "left"
             }}
           >
-            ⏰ Sesi Anda telah berakhir. Silakan login kembali untuk melanjutkan.
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 6, verticalAlign: "middle" }}>
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            Sesi Anda telah berakhir. Silakan login kembali untuk melanjutkan.
           </div>
         )}
 

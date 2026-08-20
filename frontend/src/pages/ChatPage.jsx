@@ -1517,7 +1517,12 @@ export default function ChatPage() {
                                       verticalAlign: "middle"
                                     }}
                                   >
-                                    ⌬ {short}
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: "middle", marginRight: 4 }}>
+                                      <rect x="4" y="4" width="16" height="16" rx="2" />
+                                      <rect x="9" y="9" width="6" height="6" />
+                                      <path d="M15 2v2M9 2v2M15 20v2M9 20v2M2 15h2M2 9h2M20 15h2M20 9h2" />
+                                    </svg>
+                                    {short}
                                   </span>
                                 );
                               })()}
@@ -1544,7 +1549,8 @@ export default function ChatPage() {
                           )}
                           {m.streaming && (
                             <span style={{ fontSize: "11px", color: t.accentText, marginLeft: "8px", fontWeight: 600 }} className="blink">
-                              ● mengetik
+                              <span style={{ display: "inline-block", width: 7, height: 7, borderRadius: "50%", background: t.accentText, marginRight: 6, verticalAlign: "middle" }} />
+                              mengetik
                             </span>
                           )}
                           {m.time && (
@@ -1958,7 +1964,12 @@ export default function ChatPage() {
                       fontWeight: 600
                     }}
                   >
-                    Buka tab baru ↗
+                    Buka tab baru
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 4, verticalAlign: "middle" }}>
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                      <polyline points="15 3 21 3 21 9" />
+                      <line x1="10" y1="14" x2="21" y2="3" />
+                    </svg>
                   </a>
                   <button
                     onClick={() => setPreviewDoc(null)}
@@ -2500,7 +2511,11 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
             color: badge.color
           }}
         >
-          ⌬
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="4" y="4" width="16" height="16" rx="2" />
+            <rect x="9" y="9" width="6" height="6" />
+            <path d="M15 2v2M9 2v2M15 20v2M9 20v2M2 15h2M2 9h2M20 15h2M20 9h2" />
+          </svg>
         </span>
         <span
           style={{
@@ -2512,16 +2527,23 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
         >
           {short}
         </span>
-        <span
+        <svg
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
           style={{
-            fontSize: "10px",
             color: mt.textMute,
             transform: open ? "rotate(180deg)" : "none",
             transition: "transform 0.2s ease"
           }}
         >
-          ▼
-        </span>
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
       </button>
 
       {open && (
@@ -2604,7 +2626,11 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
                       fontWeight: 700
                     }}
                   >
-                    ⌬
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="4" y="4" width="16" height="16" rx="2" />
+                      <rect x="9" y="9" width="6" height="6" />
+                      <path d="M15 2v2M9 2v2M15 20v2M9 20v2M2 15h2M2 9h2M20 15h2M20 9h2" />
+                    </svg>
                   </span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: "13px", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -2616,7 +2642,8 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
                   </div>
                   {m.id === model && (
                     <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", color: dark ? "#7fb1e8" : "#004DAF", fontSize: "12px", fontWeight: 700, flexShrink: 0 }}>
-                      ✓ Aktif
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                      Aktif
                     </span>
                   )}
                 </button>
@@ -2858,9 +2885,9 @@ function HeroArt({ size = 170 }) {
       <circle cx="161" cy="66" r="20" fill="#ffffff" stroke="#004DAF" strokeWidth="4.5" />
       <line x1="177" y1="81" x2="190" y2="94" stroke="#004DAF" strokeWidth="5" strokeLinecap="round" />
       {/* Bintang */}
-      <text x="88" y="138" fontSize="22" fill="#3b82f6" fontFamily="inherit">✦</text>
-      <text x="180" y="42" fontSize="16" fill="#60a5fa" fontFamily="inherit">✦</text>
-      <text x="30" y="70" fontSize="12" fill="#93c5fd" fontFamily="inherit">✦</text>
+      <path d="M0 -11 L3.1 -3.1 L11 0 L3.1 3.1 L0 11 L-3.1 3.1 L-11 0 L-3.1 -3.1 Z" transform="translate(88 138) scale(1.1)" fill="#3b82f6" />
+      <path d="M0 -11 L3.1 -3.1 L11 0 L3.1 3.1 L0 11 L-3.1 3.1 L-11 0 L-3.1 -3.1 Z" transform="translate(180 42) scale(0.8)" fill="#60a5fa" />
+      <path d="M0 -11 L3.1 -3.1 L11 0 L3.1 3.1 L0 11 L-3.1 3.1 L-11 0 L-3.1 -3.1 Z" transform="translate(30 70) scale(0.6)" fill="#93c5fd" />
     </svg>
   );
 }

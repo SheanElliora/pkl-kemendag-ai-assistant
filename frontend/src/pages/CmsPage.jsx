@@ -524,7 +524,7 @@ export default function CmsPage() {
         height: "100vh",
         background: t.pageBg,
         color: t.text,
-        fontFamily: FONT_HEADING,
+        fontFamily: FONT_BODY,
         transition: "background 0.3s ease",
         display: "flex",
         overflow: "hidden"
@@ -603,7 +603,7 @@ export default function CmsPage() {
           style={{
             width: isOpen ? 250 : 76,
             flexShrink: 0,
-            background: "linear-gradient(180deg,#001845,#002d6e)",
+            background: "linear-gradient(180deg,#001845,#004DAF)",
             color: "#fff",
             padding: isOpen ? "20px 16px" : "12px 4px",
             position: "sticky",
@@ -1875,7 +1875,7 @@ function RoleSelect({ role, onSelect, t, dark }) {
           <SIcon name={cur.icon} size={13} />
         </span>
         <span style={{ fontWeight: 700, color: cur.color }}>{cur.label}</span>
-        <span style={{ fontSize: 10, color: t.textMute, transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s ease", marginLeft: 4 }}>▼</span>
+        <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ color: t.textMute, transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s ease", marginLeft: 4 }}><polyline points="6 9 12 15 18 9" /></svg>
       </button>
 
       {open && (
@@ -1932,7 +1932,10 @@ function RoleSelect({ role, onSelect, t, dark }) {
                   <div style={{ fontSize: 11, color: mt.textMute, marginTop: 1 }}>{o.desc}</div>
                 </div>
                 {o.id === role && (
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "#e9a319", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>✓ Aktif</span>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "#e9a319", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                    Aktif
+                  </span>
                 )}
               </button>
             ))}

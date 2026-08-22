@@ -952,6 +952,7 @@ export default function ChatPage() {
                   {cmsEntryButton(dark, isMobile ? "icon-only" : cmsBtnVariant, "CMS (" + user.username + ")", () => window.open("/#/cms", "_blank"), "Buka panel CMS")}
                   <button
                     onClick={logout}
+                    title="Keluar dari akun admin"
                     style={navButtonStyle(dark)}
                   >
                     Keluar
@@ -1083,7 +1084,7 @@ export default function ChatPage() {
                     transition: "background 0.15s ease, color 0.15s ease"
                   }}
 onMouseEnter={(e) => { e.currentTarget.style.background = dark ? "rgba(233,163,25,0.25)" : "rgba(233,163,25,0.14)"; e.currentTarget.style.color = dark ? "#f6c453" : "#001845"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = t.inputBg; e.currentTarget.style.color = t.accentText; }}
+onMouseLeave={(e) => { e.currentTarget.style.background = t.inputBg; e.currentTarget.style.color = t.accentText; }}
                 >
                   <span style={{ display: "inline-flex", flexShrink: 0 }}>{IconSearchModule(13)}</span>
                   <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{exampleQuestions[suggestionIdx]}</span>
@@ -2059,7 +2060,7 @@ style={{
                         key={c.id}
                         onClick={() => selectConversation(c.id)}
                         onMouseEnter={(e) => {
-                          if (activeConvId !== c.id) e.currentTarget.style.background = dark ? "#3a4b6b" : "#f8fafc";
+                          if (activeConvId !== c.id) e.currentTarget.style.background = dark ? "#3a4b6b" : "#eef4fb";
                         }}
                         onMouseLeave={(e) => {
                           e.currentTarget.style.background = activeConvId === c.id ? (dark ? "#2a3d63" : "#eef6fd") : (dark ? "#223254" : "#ffffff");
@@ -2073,12 +2074,12 @@ style={{
                           padding: "10px 12px",
                           marginTop: "6px",
                           borderRadius: "10px",
-                          border: activeConvId === c.id ? (dark ? "1px solid #7fb1e8" : "1px solid #004DAF") : "1px solid " + (dark ? "#3a4b6b" : "#d4dce8"),
+                          border: activeConvId === c.id ? (dark ? "1px solid #7fb1e8" : "1px solid #004DAF") : "1px solid " + (dark ? "#3a4b6b" : "#bcc9db"),
                           background: activeConvId === c.id ? (dark ? "#2a3d63" : "#eef6fd") : (dark ? "#223254" : "#ffffff"),
                           cursor: "pointer",
                           fontFamily: 'inherit',
                           color: t.text,
-                          boxShadow: activeConvId === c.id ? "0 2px 10px rgba(0,77,175,0.18)" : "0 2px 6px rgba(0,0,0,0.08)"
+                          boxShadow: activeConvId === c.id ? "0 2px 10px rgba(0,77,175,0.18)" : "0 3px 8px rgba(15,40,80,0.14)"
                         }}
                       >
                         <span style={{ display: "inline-flex", flexShrink: 0, color: t.textMute }}>{IconChat(16)}</span>
@@ -2316,13 +2317,13 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
   const mt = {
     card: dark ? "#0f1a2f" : "#eef3f9",
     border: dark ? "#f6c453" : "#e9a319",
-    borderSoft: dark ? "#304266" : "#e4eaf2",
+    borderSoft: dark ? "#304266" : "#d3deeb",
     text: dark ? "#e5edf7" : "#1e293b",
     textMute: dark ? "#8b98ad" : "#5b6b82",
     textSoft: dark ? "#c3cede" : "#334155",
     itemBg: dark ? "#2a3d63" : "#ffffff",
-    itemHover: dark ? "#304266" : "#f1f5f9",
-    itemIdle: dark ? "#1b2944" : "#f8fafc",
+    itemHover: dark ? "#304266" : "#edf4fc",
+    itemIdle: dark ? "#1b2944" : "#ffffff",
     softBg: dark ? "#26324d" : "#eef2f7"
   };
 
@@ -2343,7 +2344,7 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
           borderRadius: "999px",
           border: open ? "1px solid " + (dark ? "#7fb1e8" : "#004DAF") : "1px solid " + (dark ? "#26324d" : "#c9d4e3"),
           fontSize: "14px",
-          background: open ? mt.itemBg : (dark ? "#0f1a2f" : "#ffffff"),
+          background: open ? mt.itemBg : (dark ? "#0f1a2f" : "#eef3f9"),
           color: mt.text,
           outline: "none",
           cursor: "pointer",
@@ -2419,7 +2420,7 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
             background: mt.card,
             borderRadius: "14px",
             boxShadow: "0 12px 32px rgba(0,0,0,0.18)",
-            border: "1px solid " + (dark ? "#3a4b6b" : "#e4eaf2"),
+            border: "1px solid " + (dark ? "#3a4b6b" : "#cbd6e5"),
             zIndex: 20,
             display: "flex",
             flexDirection: "column",
@@ -2463,7 +2464,7 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
                     borderRadius: "10px",
                     border: m.id === model
                       ? (dark ? "1px solid #4f7fd4" : "1px solid #004DAF")
-                      : "1px solid " + (dark ? "#2a3752" : "#e2e8f0"),
+                      : "1px solid " + (dark ? "#2a3752" : "#d5e0ec"),
                     background: m.id === model ? mt.itemBg : mt.itemIdle,
                     boxShadow: m.id === model ? "0 2px 10px rgba(0,77,175,0.18)" : "0 1px 3px rgba(0,0,0,0.05)",
                     cursor: "pointer",

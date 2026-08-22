@@ -79,8 +79,8 @@ export default function LoginPage() {
     return {
       width: "100%",
       boxSizing: "border-box",
-      padding: "10px 18px",
-      marginBottom: 12,
+      height: 42,
+      padding: "0 18px",
       borderRadius: "999px",
       border: "1px solid " + (focused ? t.accent : t.cardBorder),
       background: t.inputBg,
@@ -181,8 +181,8 @@ fontFamily: FONT_BODY
         )}
 
         <form onSubmit={submit} className="rise" style={{ animationDelay: "0.14s" }}>
-          <div style={{ position: "relative" }}>
-            <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", color: t.textMute, display: "flex", pointerEvents: "none" }}>
+          <div style={{ position: "relative", display: "flex", marginBottom: 12 }}>
+            <span style={{ position: "absolute", left: 16, top: 0, bottom: 0, display: "flex", alignItems: "center", color: t.textMute, pointerEvents: "none" }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="8" r="4" />
                 <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
@@ -202,8 +202,8 @@ fontFamily: FONT_BODY
             />
           </div>
 
-          <div style={{ position: "relative" }}>
-            <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", color: t.textMute, display: "flex", pointerEvents: "none" }}>
+          <div style={{ position: "relative", display: "flex", marginBottom: 12 }}>
+            <span style={{ position: "absolute", left: 16, top: 0, bottom: 0, display: "flex", alignItems: "center", color: t.textMute, pointerEvents: "none" }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2" />
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
@@ -228,9 +228,11 @@ fontFamily: FONT_BODY
                 style={{
                   position: "absolute",
                   right: 40,
-                  top: 12,
+                  top: 0,
+                  bottom: 0,
                   color: t.textMute,
-                  display: "flex"
+                  display: "flex",
+                  alignItems: "center"
                 }}
               >
                 <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
@@ -246,14 +248,16 @@ fontFamily: FONT_BODY
               style={{
                 position: "absolute",
                 right: 14,
-                top: 11,
+                top: 0,
+                bottom: 0,
                 background: "none",
                 border: "none",
                 cursor: "pointer",
                 padding: 0,
                 lineHeight: 1,
                 color: t.textMute,
-                display: "flex"
+                display: "flex",
+                alignItems: "center"
               }}
             >
               {showPass ? (
@@ -293,7 +297,7 @@ fontFamily: FONT_BODY
               justifyContent: "center",
               gap: "10px",
               opacity: loading ? 0.85 : 1,
-              transition: "transform 0.15s ease, box-shadow 0.15s ease",
+              transition: "transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease",
               boxShadow: "0 6px 16px rgba(0,77,175,0.35)"
             }}
           >

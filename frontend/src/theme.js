@@ -33,7 +33,7 @@ export const COLORS = {
   borderSoftLight: "#e4eaf2",
   borderSoftDark: "#2b3a58",
 
-  inputBgLight: "#dde7f3",
+  inputBgLight: "#eef3f9",
   inputBgDark: "#0f1a2f",
 
   textLight: "#1e293b",

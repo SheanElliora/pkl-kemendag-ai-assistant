@@ -79,7 +79,7 @@ export default function LoginPage() {
     return {
       width: "100%",
       boxSizing: "border-box",
-      padding: "13px 18px",
+      padding: "10px 18px",
       marginBottom: 12,
       borderRadius: "999px",
       border: "1px solid " + (focused ? t.accent : t.cardBorder),
@@ -89,7 +89,7 @@ export default function LoginPage() {
       fontFamily: "inherit",
       outline: "none",
       transition: "border-color 0.15s ease, box-shadow 0.15s ease",
-      boxShadow: focused ? "0 0 0 3px rgba(0,77,175,0.15)" : "none",
+      boxShadow: focused ? "0 0 0 3px rgba(233,163,25,0.15)" : "none",
       ...extra
     };
   }
@@ -107,58 +107,18 @@ export default function LoginPage() {
 fontFamily: FONT_BODY
       }}
     >
-      <button
-        onClick={() => {
-          const next = !dark;
-          setDark(next);
-          localStorage.setItem("cms_theme", next ? "dark" : "light");
-        }}
-        title={dark ? "Mode terang" : "Mode gelap"}
-        aria-label="Ganti tema"
-        style={{
-          position: "absolute",
-          top: 18,
-          right: 18,
-          width: 40,
-          height: 40,
-          borderRadius: "50%",
-          border: "1px solid " + t.cardBorder,
-          background: t.card,
-          color: t.accent,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          cursor: "pointer",
-          boxShadow: dark ? "0 8px 20px rgba(0,0,0,0.4)" : "0 8px 20px rgba(15,40,80,0.1)",
-          transition: "transform 0.15s ease"
-        }}
-        onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.06)"; }}
-        onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
-      >
-        {dark ? (
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="4" />
-            <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
-          </svg>
-        ) : (
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-          </svg>
-        )}
-      </button>
-
       <div
         className="pop-in"
         style={{
           width: 420,
           maxWidth: "92%",
           position: "relative",
-          background: dark ? "#22304e" : "#e8ebf3",
+          background: dark ? "#2a3d63" : "#f6f8fd",
           border: "1px solid " + t.cardBorder,
           borderRadius: 20,
           boxShadow: (dark
-            ? "0 20px 60px rgba(0,0,0,0.5)"
-            : "0 18px 50px rgba(15,40,80,0.14)") + ", inset 0 3px 0 rgba(233,163,25,0.55)",
+            ? "0 8px 24px rgba(0,0,0,0.35)"
+            : "0 8px 24px rgba(15,40,80,0.12)") + ", inset 0 3px 0 rgba(233,163,25,0.55)",
           padding: 40,
           textAlign: "center"
         }}
@@ -169,18 +129,17 @@ fontFamily: FONT_BODY
             alt="Logo Kemendag"
             className="logo-hover"
             style={{
-              width: 88,
-              height: 88,
+              width: 104,
+              height: 104,
               objectFit: "cover",
               cursor: "pointer",
               filter: "drop-shadow(0 6px 14px rgba(0,77,175,0.18))"
             }}
           />
         </div>
-        <h2 className="rise" style={{ margin: "18px 0 4px", fontSize: 22, fontWeight: 800, letterSpacing: "-0.5px", fontFamily: FONT_HEADING, color: t.accent, animationDelay: "0.06s" }}>
+        <h2 className="rise" style={{ margin: "18px 0 4px", fontSize: 22, fontWeight: 700, letterSpacing: "-0.5px", fontFamily: FONT_HEADING, color: t.accentText, animationDelay: "0.06s" }}>
           Panel Admin
         </h2>
-        <div className="rise" style={{ width: "48px", height: "3px", margin: "10px auto 0", borderRadius: "3px", background: "linear-gradient(90deg,#e9a319,#f6c453)", animationDelay: "0.08s" }} />
         <p className="rise" style={{ margin: "14px 0 24px", fontSize: 14, color: t.textMute, animationDelay: "0.1s" }}>
           Kelola dokumen & pengguna — AI Document Intelligence Kemendag
         </p>
@@ -201,7 +160,7 @@ fontFamily: FONT_BODY
               <circle cx="12" cy="12" r="10" />
               <polyline points="12 6 12 12 16 14" />
             </svg>
-            Sesi Anda telah berakhir. Silakan login kembali untuk melanjutkan.
+            Sesi berakhir. Silakan login kembali.
           </div>
         )}
 
@@ -223,7 +182,7 @@ fontFamily: FONT_BODY
 
         <form onSubmit={submit} className="rise" style={{ animationDelay: "0.14s" }}>
           <div style={{ position: "relative" }}>
-            <span style={{ position: "absolute", left: 16, top: 13, color: t.textMute, display: "flex", pointerEvents: "none" }}>
+            <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", color: t.textMute, display: "flex", pointerEvents: "none" }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="8" r="4" />
                 <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
@@ -239,12 +198,12 @@ fontFamily: FONT_BODY
               autoFocus
               disabled={loading}
               required
-              style={fieldStyle("username", { paddingLeft: 42 })}
+              style={fieldStyle("username", { paddingLeft: 46 })}
             />
           </div>
 
           <div style={{ position: "relative" }}>
-            <span style={{ position: "absolute", left: 16, top: 13, color: t.textMute, display: "flex", pointerEvents: "none" }}>
+            <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", color: t.textMute, display: "flex", pointerEvents: "none" }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2" />
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
@@ -261,7 +220,7 @@ fontFamily: FONT_BODY
               autoComplete="current-password"
               disabled={loading}
               required
-              style={fieldStyle("password", { paddingLeft: 42, paddingRight: 48 })}
+              style={fieldStyle("password", { paddingLeft: 46, paddingRight: 48 })}
             />
             {capsLock && (
               <span

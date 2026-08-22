@@ -547,9 +547,6 @@ export default function CmsPage() {
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <img src="/logo-kemendag-putih.png" alt="Kemendag" style={{ height: 28, borderRadius: 5 }} />
             <div style={{ flex: 1 }} />
-            <button onClick={() => setDark((v) => !v)} title={dark ? "Mode terang" : "Mode gelap"} style={topIconBtn}>
-              <SIcon name={dark ? "sun" : "moon"} size={16} />
-            </button>
             <button onClick={() => navigate("/")} title="Kembali ke Chat" style={topIconBtn}>
               <SIcon name="message" size={16} />
             </button>
@@ -786,10 +783,6 @@ export default function CmsPage() {
           <div style={{ flex: 1 }} />
 
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <SideBtn isOpen={isOpen} onClick={() => setDark((v) => !v)} title={dark ? "Mode terang" : "Mode gelap"}>
-              <span style={{ display: "inline-flex" }}><SIcon name={dark ? "sun" : "moon"} size={16} /></span>
-              {isOpen && (dark ? "Mode terang" : "Mode gelap")}
-            </SideBtn>
             <SideBtn isOpen={isOpen} onClick={() => navigate("/")} title="Kembali ke Chat">
               <span style={{ display: "inline-flex" }}><SIcon name="message" size={16} /></span>
               {isOpen && "Kembali ke Chat"}

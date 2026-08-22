@@ -41,23 +41,23 @@ Ringkasan ini dimuat otomatis oleh opencode setiap sesi baru. Baca sebelum menge
 **Satu-satunya sumber warna & font = `frontend/src/theme.js`** (`createTheme(dark)` + `COLORS` + `FONT_HEADING` + `FONT_BODY`). Ketiga halaman (ChatPage, LoginPage, CmsPage) memakai `const t = createTheme(dark)`. Kalau mau ubah warna, ubah theme.js saja. Tambahan token: `dark` (dipakai CmsPage sbg t.dark), `accentText`/`accent`/`cardBorder` alias.
 
 ### PALET WARNA (final)
-- Biru resmi #004DAF (aksen utama, tombol aksi); hover #003d94 (tambah di COLORS.blueDark)
-- Biru muda dark-mode #7fb1e8 (accentText/accent)
+- Biru resmi #004DAF (aksen utama, tombol aksi, border fokus input); hover #003d94 (COLORS.blueDark)
+- Biru muda dark-mode #7fb1e8 (accentText/accent, border fokus input dark, border item sidebar aktif)
 - Hijau resmi #16a75c — HANYA untuk status (Terhubung, badge Tersimpan, feedback up, badge approved CMS)
-- Navy #13182B (referensi) — praktis: header gradient #001845->#004DAF; bg dark #070b14
-- Emas #e9a319 / #f6c453 — identitas: garis header inset rgba(233,163,25,0.55), divider hero, toggle tema (knob #78350f), chip Panel Admin (teks #0b1e3a), avatar bubble user, borderRight bubble user 4px solid #e9a319, garis atas kartu login (inset shadow), CMS admin (tab/gold)
-- Background light: linear-gradient(180deg,#dce4f0,#e9eef6); dark: #070b14
-- Kartu: #ffffff / #2a3d63; cardSoft #f8fafc / #304266; border #d4dce8 / #26324d; borderSoft #e2e8f0 / #2b3a58; inputBg #f1f5f9 / #0f1a2f
-- Teks: #1e293b / #e5edf7; textSoft #475569 / #c3cede; textMute #64748b / #8b98ad
-- Bubble bot #e2e7ee / #223254; bubble user #9fc7ef / #0e5c9e; chatBg dot pattern biru
-- Sidebar #f8fafc / #0f182c; bar #ffffff / #1b2944; bgSoft #eef2f7 / #3a4b6b
-  - REVISI (commit 175ee44): sidebar light jadi #eef2f7 (kartu putih #fff kontras), kartu riwayat = putih + border #d4dce8 + shadow 0 2px 6px (dark: #304266 + border #3a4b6b), hover #f8fafc (light) / #36507e (dark), aktif #eef6fd + border #004DAF + glow; item dropdown model/role = #f8fafc idle (dark #1b2740) + hover #f1f5f9 (dark #24345a), aktif #eef6fd; panel dropdown border #d4dce8 (light)
+- Navy #13182B (referensi) — praktis: header/teks; bg dark #0a101e
+- Emas #e9a319 / #f6c453 — identitas + INTERAKSI FOKUS: garis header inset rgba(233,163,25,0.55), divider hero, toggle tema (knob #78350f), chip Panel Admin (teks #0b1e3a), avatar bubble user, borderRight bubble user 4px solid #e9a319, garis atas kartu login (inset shadow), tombol KIRIM & tombol aksi emas, ring fokus input & kotak cari `0 0 0 3px rgba(233,163,25,0.15)` (border fokus tetap biru #004DAF/#7fb1e8 seperti login), hover pill saran pertanyaan emas
+- Background light: linear-gradient(180deg,#d9e2f0,#edf2f8); dark: #0a101e
+- Kartu: #f6f8fd / #2a3d63; cardSoft #f8fafc / #304266; border #c9d4e3 / #26324d; borderSoft #e4eaf2 / #2b3a58; inputBg #eef3f9 / #0f1a2f
+- Teks: #1e293b / #e5edf7; textSoft #475569 / #c3cede; textMute #5b6b82 / #8b98ad
+- Bubble bot #e6ebf2 / #223254; bubble user #a5c9f2 / #0e5c9e; chatBg = t.card (#f6f8fd / #2a3d63)
+- Sidebar #eef2f7 / #0f182c; bar #ffffff / #1b2944; bgSoft #eaf0f7 / #3a4b6b
+  - REVISI (sesi 20-08-2026): kartu riwayat = putih + border #c9d4e3 + shadow 0 2px 6px (dark: #223254 + border #3a4b6b), hover #f8fafc (light) / #3a4b6b (dark), aktif #eef6fd + border #004DAF + glow (dark #2a3d63 + border #7fb1e8); HEADER SIDEBAR ikut header utama (bukan gradient navy); item dropdown model/role = #f8fafc idle (dark #1b2740) + hover #f1f5f9 (dark #24345a), aktif #eef6fd; kotak cari = .textbox-pill emas
 
-### TEMPLATE FONT (final — BUKAN Inter lagi)
-- Heading/judul (hero h2, judul sidebar, h2 login "Panel Admin", h3 CMS, statistik): **Plus Jakarta Sans** weight 800 (700 utk h3) — `FONT_HEADING`
+### TEMPLATE FONT (final — BUKAN Inter/PJS lagi)
+- Heading/judul (hero h2, judul sidebar, h2 login "Panel Admin", h3 CMS, statistik): **Sora** weight 700 (600 utk yg lebih kecil) — `FONT_HEADING`
 - Isi/deskripsi/input/tombol: **Source Sans 3** weight 400/500/600 — `FONT_BODY`
-- Dimuat via Google Fonts di index.html (Plus Jakarta Sans 600;700;800 + Source Sans 3 400;500;600) + `body { font-family: "Source Sans 3"... }` di App.css
-- PELAJARAN: Inter & Sora dulu cuma deklarasi tanpa link font -> ter-render font default. Selalu verifikasi `document.fonts.check()`.
+- Dimuat via Google Fonts di index.html (Sora 600;700;800 + Source Sans 3 400;500;600) + `body { font-family: "Source Sans 3"... }` di App.css
+- PELAJARAN: urutannya Sora->Inter->PJS+SS3->sans-serif generik->Sora heading + SS3 body. User memutuskan Sora HANYA utk judul besar (≥15px); dipakai di ukuran kecil terlihat janggal. Judul "Panel Admin" login ikut t.accentText (putih dark / biru light) biar konsisten dgn hero chat. Ketebalan heading 700 (bukan 800 — terlalu tebal).
 
 ### TOMBOL (seragam, commit c79e6e4)
 - Tombol aksi utama (teks): **biru solid #004DAF, radius 12px**, teks putih, hover #003d94, shadow rgba(0,77,175,0.35). Berlaku: Login, kirim chat, Unduh, Upload CMS, primaryBtn, smallBtn CMS, modal Batal/confirm
@@ -84,7 +84,7 @@ Ringkasan ini dimuat otomatis oleh opencode setiap sesi baru. Baca sebelum menge
 - Tombol: biru solid radius 12 (opsi 1 yang disarankan, disetujui).
 - Pill saran: bentuknya pill berputar di ATAS input (bukan chip di bawah) — revisi user.
 - Hero 26px + tanggal tegas: disetujui. Footer kredit: sudah ada.
-- Model opencode = deepseek-v4-flash-free: TIDAK BISA membaca gambar (screenshot). Kalau user minta evaluasi visual, minta user lihat sendiri atau pakai verifikasi DOM/computed style.
+- Model opencode = big-pickle (deepseek-v4-flash-free SUDAH DIHAPUS dari daftar model Zen per 22-08-2026; default di-set permanen di ~/.config/opencode/opencode.jsonc): TIDAK BISA membaca gambar (screenshot). Kalau user minta evaluasi visual, minta user lihat sendiri atau pakai verifikasi DOM/computed style.
 
 ## Cara menjalankan (3 terminal)
 

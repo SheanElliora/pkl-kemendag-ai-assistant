@@ -2,11 +2,11 @@
 // THEME TUNGGAL (design system) untuk Chat, Login, dan CMS.
 // Semua halaman memakai token dari sini agar selaras.
 // Font: judul = Plus Jakarta Sans, isi = Source Sans 3.
-// Palet resmi Kemendag: biru #004DAF, hijau #16a75c, navy #13182B;
-// emas #e9a319 sebagai aksen identitas.
+// Palet resmi Kemendag (kemendag.go.id): biru #004DAF, hijau #16a75c,
+// navy #13182B, abu-abu #58595B, latar putih.
 // =============================================================
 
-export const FONT_HEADING = '"Plus Jakarta Sans", "Source Sans 3", sans-serif';
+export const FONT_HEADING = '"Sora", "Plus Jakarta Sans", sans-serif';
 export const FONT_BODY = '"Source Sans 3", "Plus Jakarta Sans", sans-serif';
 
 export const COLORS = {
@@ -20,39 +20,39 @@ export const COLORS = {
   goldLight: "#f6c453",
   goldSoft: "rgba(233,163,25,0.55)",
 
-  pageBgLight: "linear-gradient(180deg,#dce4f0,#e9eef6)",
-  pageBgDark: "#070b14",
+  pageBgLight: "linear-gradient(180deg,#bfd0e8,#dbe6f3)",
+  pageBgDark: "#0a101e",
 
-  cardLight: "#ffffff",
+  cardLight: "#f6f8fd",
   cardDark: "#2a3d63",
   cardSoftLight: "#f8fafc",
   cardSoftDark: "#304266",
 
-  borderLight: "#d4dce8",
+  borderLight: "#c9d4e3",
   borderDark: "#26324d",
-  borderSoftLight: "#e2e8f0",
+  borderSoftLight: "#e4eaf2",
   borderSoftDark: "#2b3a58",
 
-  inputBgLight: "#f1f5f9",
+  inputBgLight: "#dde7f3",
   inputBgDark: "#0f1a2f",
 
   textLight: "#1e293b",
   textDark: "#e5edf7",
   textSoftLight: "#475569",
   textSoftDark: "#c3cede",
-  textMuteLight: "#64748b",
-  textMuteDark: "#8b98ad",
+  textMuteLight: "#5b6b82",
+  textMuteDark: "#9db0cc",
 
-  bubbleBotLight: "#e2e7ee",
-  bubbleBotDark: "#223254",
-  bubbleUserLight: "#9fc7ef",
-  bubbleUserDark: "#0e5c9e",
+  bubbleBotLight: "#f2f6fc",
+  bubbleBotDark: "#3e5788",
+  bubbleUserLight: "#1a67d2",
+  bubbleUserDark: "#2c63ae",
 
   barLight: "#ffffff",
   barDark: "#1b2944",
-  bgSoftLight: "#eef2f7",
+  bgSoftLight: "#eaf0f7",
   bgSoftDark: "#3a4b6b",
-  sidebarLight: "#eef2f7",
+  sidebarLight: "#dee9f4",
   sidebarDark: "#0f182c"
 };
 
@@ -73,13 +73,11 @@ export function createTheme(dark) {
     inputBg: dark ? COLORS.inputBgDark : COLORS.inputBgLight,
     bubbleBot: dark ? COLORS.bubbleBotDark : COLORS.bubbleBotLight,
     bubbleUser: dark ? COLORS.bubbleUserDark : COLORS.bubbleUserLight,
-    accentText: dark ? COLORS.blueLight : COLORS.blue,
+    accentText: dark ? "#ffffff" : COLORS.blue,
     accentSoft: COLORS.blue,
-    accent: dark ? COLORS.blueLight : COLORS.blue,
+    accent: dark ? "#7fb1e8" : COLORS.blue,
     cardBorder: dark ? COLORS.borderDark : COLORS.borderLight,
     gold: COLORS.gold,
-    chatBg: dark
-      ? "radial-gradient(rgba(0,77,175,0.12) 1px, transparent 1.4px) 0 0 / 22px 22px, #0d1526"
-      : "radial-gradient(rgba(0,77,175,0.06) 1px, transparent 1.4px) 0 0 / 22px 22px, #eef2f756"
+    chatBg: dark ? "#223254" : "#dfe9f5"
   };
 }

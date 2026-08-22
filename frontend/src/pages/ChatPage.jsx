@@ -16,8 +16,6 @@ export default function ChatPage() {
   const [previewDoc, setPreviewDoc] = useState(null);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
   const [newMsgIndex, setNewMsgIndex] = useState(null);
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
-  const [exportOpen, setExportOpen] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [modelOpen, setModelOpen] = useState(false);
   const [cmsBtnVariant, setCmsBtnVariant] = useState(() => localStorage.getItem("cms_btn_variant_v2") || "chip");
@@ -117,13 +115,6 @@ export default function ChatPage() {
       <rect x="6" y="6" width="12" height="12" rx="2" />
     </svg>
   );
-  const IconDownload = (s) => (
-    <svg width={s} height={s} viewBox="0 0 24 24" {...iconStroke}>
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-      <polyline points="7 10 12 15 17 10" />
-      <line x1="12" y1="15" x2="12" y2="3" />
-    </svg>
-  );
   const IconX = (s) => (
     <svg width={s} height={s} viewBox="0 0 24 24" {...iconStroke}>
       <path d="M18 6 6 18" />
@@ -134,20 +125,6 @@ export default function ChatPage() {
     <svg width={s} height={s} viewBox="0 0 24 24" {...iconStroke}>
       <path d="M12 5v14" />
       <path d="m19 12-7 7-7-7" />
-    </svg>
-  );
-  const IconFileText = (s) => (
-    <svg width={s} height={s} viewBox="0 0 24 24" {...iconStroke}>
-      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
-      <path d="M14 2v4a2 2 0 0 0 2 2h4" />
-      <path d="M10 9H8M16 13H8M16 17H8" />
-    </svg>
-  );
-  const IconDoc = (s) => (
-    <svg width={s} height={s} viewBox="0 0 24 24" {...iconStroke}>
-      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
-      <path d="M14 2v4a2 2 0 0 0 2 2h4" />
-      <path d="M8 13h8M8 17h5" />
     </svg>
   );
   const IconSearch = (s) => (
@@ -210,9 +187,12 @@ export default function ChatPage() {
 
   function cmsEntryButton(dark, variant, label, onClick, title) {
     const base = { cursor: "pointer", fontWeight: 600, fontSize: "14px", whiteSpace: "nowrap", fontFamily: "inherit", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "7px", flexShrink: 0 };
+    const glass = dark
+      ? { background: "rgba(255,255,255,0.12)", color: "#e5edf7", border: "1px solid rgba(255,255,255,0.4)" }
+      : { background: "rgba(0,24,69,0.05)", color: "#001845", border: "1px solid rgba(0,24,69,0.3)" };
     if (variant === "solid-gold") {
       return (
-        <button onClick={onClick} title={title} style={{ ...base, background: "linear-gradient(135deg,#f6c453,#e9a319)", color: "#0b1e3a", border: "none", padding: "10px 16px", borderRadius: "10px", boxShadow: "0 4px 14px rgba(233,163,25,0.45)" }}>
+        <button onClick={onClick} title={title} style={{ ...base, background: "#b07d18", color: "#ffffff", border: "none", padding: "10px 16px", borderRadius: "10px" }}>
           {cmsGearIcon(15)}
           {label}
         </button>
@@ -220,21 +200,21 @@ export default function ChatPage() {
     }
     if (variant === "icon-only") {
       return (
-        <button onClick={onClick} title={title} aria-label={label} style={{ ...base, background: "linear-gradient(135deg, rgba(255,255,255,0.22), rgba(255,255,255,0.08))", color: "white", border: "1px solid rgba(255,255,255,0.45)", width: "42px", height: "42px", padding: "0", borderRadius: "10px" }}>
+        <button onClick={onClick} title={title} aria-label={label} style={{ ...base, ...glass, width: "42px", height: "42px", padding: "0", borderRadius: "10px", color: dark ? "#fff" : "#001845" }}>
           {cmsGearIcon(18)}
         </button>
       );
     }
     if (variant === "chip") {
       return (
-        <button onClick={onClick} title={title} style={{ ...base, background: "linear-gradient(135deg, rgba(255,255,255,0.22), rgba(255,255,255,0.08))", color: "white", border: "1px solid rgba(255,255,255,0.45)", padding: "4px 10px 4px 6px", borderRadius: "16px", fontSize: "12px", gap: "6px" }}>
-          <span style={{ width: "20px", height: "20px", borderRadius: "50%", background: "linear-gradient(135deg,#f6c453,#e9a319)", color: "#0b1e3a", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{cmsPersonIcon(11)}</span>
+        <button onClick={onClick} title={title} style={{ ...base, ...glass, padding: "4px 10px 4px 6px", borderRadius: "16px", fontSize: "12px", gap: "6px" }}>
+          <span style={{ width: "20px", height: "20px", borderRadius: "50%", background: "#b07d18", color: "#ffffff", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{cmsPersonIcon(11)}</span>
           {label}
         </button>
       );
     }
     return (
-      <button onClick={onClick} title={title} style={{ ...base, background: "linear-gradient(135deg, rgba(255,255,255,0.22), rgba(255,255,255,0.08))", color: "white", border: "1px solid rgba(255,255,255,0.45)", padding: "10px 14px", borderRadius: "10px" }}>
+      <button onClick={onClick} title={title} style={{ ...base, ...glass, padding: "10px 14px", borderRadius: "10px" }}>
         {cmsGearIcon(15)}
         {label}
       </button>
@@ -794,19 +774,6 @@ export default function ChatPage() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }
 
-  // Unduh percakapan aktif dari server (HTML untuk print-ke-PDF, DOC untuk Word).
-  function downloadChat(format) {
-    const conv = conversations.find((c) => c.id === activeIdRef.current);
-    if (!conv?.sessionId) return;
-    const a = document.createElement("a");
-    a.href = "/api/chat/history/" + conv.sessionId + "/export?format=" + format;
-    a.download = "";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setExportOpen(false);
-  }
-
   function logout() {
     clearSession();
     navigate(0);
@@ -824,7 +791,7 @@ export default function ChatPage() {
       style={{
         height: "100vh",
         background: t.pageBg,
-        padding: isMobile ? "12px" : "28px",
+        padding: isMobile ? "12px" : "20px",
         fontFamily: FONT_BODY,
         boxSizing: "border-box",
         overflow: "hidden",
@@ -832,27 +799,29 @@ export default function ChatPage() {
     >
       <div
         style={{
-          maxWidth: "1000px",
+          maxWidth: "1200px",
           margin: "auto",
           position: "relative",
           background: t.card,
           border: "1px solid " + t.border,
           borderRadius: isMobile ? "14px" : "20px",
-          boxShadow: "0 18px 50px rgba(15,40,80,0.14)",
+          boxShadow: dark
+            ? "0 8px 24px rgba(0,0,0,0.35)"
+            : "0 8px 24px rgba(15,40,80,0.12)",
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
-          height: isMobile ? "calc(100vh - 24px)" : "calc(100vh - 56px)"
+          height: isMobile ? "calc(100vh - 24px)" : "calc(100vh - 40px)"
         }}
       >
-        {/* HEADER */}
+        {/* HEADER — putih + teks navy, selaras dengan kartu */}
         <div
-          className="app-header"
           style={{
-            background: "linear-gradient(135deg, #001845, #004DAF)",
-            color: "white",
+            background: dark ? "#1b2944" : "#ffffff",
+            color: dark ? "#e5edf7" : "#001845",
             boxShadow: "inset 0 -3px 0 0 rgba(233,163,25,0.55)",
-            padding: isMobile ? "16px 16px" : "22px 32px",
+            borderBottom: "1px solid " + (dark ? "#26324d" : "#d4dce8"),
+            padding: isMobile ? "14px 16px" : "16px 32px",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -862,18 +831,46 @@ export default function ChatPage() {
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "14px", minWidth: 0 }}>
-            <img
-              src="/logo-kemendag-putih.png"
-              alt="Logo Kementerian Perdagangan Republik Indonesia"
+            {/* TOMBOL RIWAYAT — pill outline navy/putih */}
+            <button
+              onClick={() => setSidebarOpen(true)}
+              title="Buka riwayat percakapan"
+              aria-label="Buka riwayat percakapan"
               style={{
-                height: isMobile ? "46px" : "56px",
-                width: "auto",
-                maxWidth: isMobile ? "170px" : "200px",
-                objectFit: "contain",
-                flexShrink: 0,
-                display: "block"
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+                height: "40px",
+                padding: isMobile ? "0" : "0 14px",
+                width: isMobile ? "40px" : "auto",
+                borderRadius: "999px",
+                background: dark ? "rgba(255,255,255,0.1)" : "rgba(0,24,69,0.06)",
+                border: "1px solid " + (dark ? "rgba(255,255,255,0.4)" : "rgba(0,24,69,0.3)"),
+                color: dark ? "#e5edf7" : "#001845",
+                cursor: "pointer",
+                boxShadow: dark ? "0 3px 12px rgba(0,0,0,0.18)" : "0 2px 8px rgba(0,24,69,0.08)",
+                backdropFilter: "blur(6px)",
+                WebkitBackdropFilter: "blur(6px)",
+                transition: "background 0.15s ease, transform 0.15s ease, border-color 0.15s ease",
+                flexShrink: 0
               }}
-            />
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(233,163,25,0.28)";
+                e.currentTarget.style.borderColor = "rgba(233,163,25,0.8)";
+                e.currentTarget.style.transform = "scale(1.03)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = dark ? "rgba(255,255,255,0.1)" : "rgba(0,24,69,0.06)";
+                e.currentTarget.style.borderColor = dark ? "rgba(255,255,255,0.4)" : "rgba(0,24,69,0.3)";
+                e.currentTarget.style.transform = "scale(1)";
+              }}
+            >
+              {IconMenu(18)}
+              {!isMobile && (
+                <span style={{ fontSize: "13px", fontWeight: 600, fontFamily: FONT_BODY, whiteSpace: "nowrap" }}>Riwayat</span>
+              )}
+            </button>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "8px", minWidth: 0 }}>
@@ -912,8 +909,8 @@ export default function ChatPage() {
                   width: "42px",
                   height: "22px",
                   borderRadius: "12px",
-                  border: "1px solid rgba(255,255,255,0.55)",
-                  background: "linear-gradient(135deg,#f6c453,#e9a319)",
+                  border: "1px solid #8a5f10",
+                  background: "#b07d18",
                   cursor: "pointer",
                   flexShrink: 0,
                   padding: "0",
@@ -921,26 +918,6 @@ export default function ChatPage() {
                   overflow: "hidden"
                 }}
               >
-                <span
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    borderRadius: "12px",
-                    background: "linear-gradient(135deg,#f6c453,#e9a319)",
-                    opacity: dark ? 0 : 1,
-                    transition: "opacity 0.4s ease"
-                  }}
-                />
-                <span
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    borderRadius: "12px",
-                    background: "linear-gradient(135deg,#f6c453,#e9a319)",
-                    opacity: dark ? 1 : 0,
-                    transition: "opacity 0.4s ease"
-                  }}
-                />
                 <span
                   style={{
                     position: "absolute",
@@ -986,33 +963,6 @@ export default function ChatPage() {
             </div>
           </div>
         </div>
-
-        {/* TOMBOL RIWAYAT — ikon garis 3, kiri-atas area chat (di dalam card) */}
-        <button
-          onClick={() => setSidebarOpen(true)}
-          title="Buka riwayat percakapan"
-          aria-label="Buka riwayat percakapan"
-          className="fade-in"
-          style={{
-            position: "absolute",
-            top: isMobile ? "90px" : "116px",
-            left: "16px",
-            zIndex: 12,
-            width: "40px",
-            height: "40px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            borderRadius: "12px",
-            background: dark ? "rgba(21,31,54,0.85)" : "rgba(255,255,255,0.9)",
-            border: "1px solid " + (dark ? "#2b3a5c" : "#dbe1ec"),
-            color: t.accentText,
-            cursor: "pointer",
-            boxShadow: "0 3px 12px rgba(15,40,80,0.14)"
-          }}
-        >
-          {IconMenu(18)}
-        </button>
 
         {/* BANNER SERVER TIDAK MERESPONS */}
         {online === false && (
@@ -1075,7 +1025,8 @@ export default function ChatPage() {
               className="fade-in hero-panel"
               style={{
                 width: "100%",
-                margin: "auto"
+                margin: "auto",
+                transform: isMobile ? "translateY(-14px)" : "translateY(-32px)"
               }}
             >
               <div style={{ textAlign: "center" }}>
@@ -1085,19 +1036,18 @@ export default function ChatPage() {
                     alt="Logo Kemendag"
                     className="logo-hover"
                     style={{
-                      width: isMobile ? "60px" : "84px",
-                      height: isMobile ? "60px" : "84px",
+                      width: isMobile ? "84px" : "120px",
+                      height: isMobile ? "84px" : "120px",
                       objectFit: "cover",
-                      mixBlendMode: "multiply",
-                      filter: "drop-shadow(0 6px 14px rgba(0,77,175,0.18))"
+                      mixBlendMode: dark ? "normal" : "multiply",
+                      filter: dark ? "drop-shadow(0 6px 16px rgba(233,163,25,0.18))" : "drop-shadow(0 6px 14px rgba(0,77,175,0.18))"
                     }}
                   />
                 </div>
-                <h2 className="rise" style={{ margin: "0", fontSize: isMobile ? "21px" : "26px", fontWeight: 800, letterSpacing: "-0.5px", color: t.accentText, fontFamily: FONT_HEADING, animationDelay: "0.06s" }}>
+                <h2 className="rise" style={{ margin: "0", fontSize: isMobile ? "21px" : "26px", fontWeight: 700, letterSpacing: "-0.5px", color: t.accentText, fontFamily: FONT_HEADING, animationDelay: "0.06s" }}>
                   AI Document Intelligence – Kemendag
                 </h2>
-                <div className="rise" style={{ width: "56px", height: "3px", margin: "8px auto 0", borderRadius: "3px", background: "linear-gradient(90deg,#e9a319,#f6c453)", animationDelay: "0.08s" }} />
-                <p className="rise" style={{ margin: "7px 0 0", fontSize: "12.5px", color: t.textSoft, fontWeight: 600, animationDelay: "0.1s" }}>
+                <p className="rise" style={{ margin: "7px 0 0", fontSize: "12.5px", color: dark ? "#ffffff" : t.textSoft, fontWeight: 600, animationDelay: "0.1s" }}>
                   {todayLabel()}
                 </p>
               </div>
@@ -1132,8 +1082,8 @@ export default function ChatPage() {
                     visibility: modelOpen ? "hidden" : "visible",
                     transition: "background 0.15s ease, color 0.15s ease"
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = t.accentSoft; e.currentTarget.style.color = "#fff"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = t.inputBg; e.currentTarget.style.color = t.accentText; }}
+onMouseEnter={(e) => { e.currentTarget.style.background = dark ? "rgba(233,163,25,0.25)" : "rgba(233,163,25,0.14)"; e.currentTarget.style.color = dark ? "#f6c453" : "#001845"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = t.inputBg; e.currentTarget.style.color = t.accentText; }}
                 >
                   <span style={{ display: "inline-flex", flexShrink: 0 }}>{IconSearchModule(13)}</span>
                   <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{exampleQuestions[suggestionIdx]}</span>
@@ -1165,12 +1115,8 @@ export default function ChatPage() {
                       height: "44px",
                       boxSizing: "border-box",
                       background: t.inputBg,
-                      border: dark ? "1.5px solid #3f6db8" : "1.5px solid #004DAF",
                       borderRadius: "999px",
-                      padding: "0 6px 0 16px",
-                      boxShadow: dark
-                        ? "0 0 0 4px rgba(79,127,212,0.16), 0 6px 24px rgba(0,77,175,0.30)"
-                        : "0 0 0 4px rgba(0,77,175,0.12), 0 6px 24px rgba(0,77,175,0.25)"
+                      padding: "0 6px 0 16px"
                     }}
                   >
                   <input
@@ -1199,7 +1145,7 @@ export default function ChatPage() {
                     title="Kirim pertanyaan (Enter)"
                     aria-label="Kirim pertanyaan"
                     style={{
-                      background: !input.trim() || loading ? (dark ? "#26324d" : "#cbd5e1") : "#004DAF",
+                      background: !input.trim() || loading ? (dark ? "#26324d" : "#cbd5e1") : "#b07d18",
                       color: "white",
                       border: "none",
                       borderRadius: "999px",
@@ -1214,11 +1160,10 @@ export default function ChatPage() {
                       cursor: !input.trim() || loading ? "not-allowed" : "pointer",
                       fontSize: "16px",
                       fontFamily: 'inherit',
-                      boxShadow: !input.trim() || loading ? "none" : "0 4px 12px rgba(0,77,175,0.35)",
-                      transition: "transform 0.15s ease, box-shadow 0.15s ease"
+                      transition: "transform 0.15s ease"
                     }}
-                    onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.transform = "scale(1.06)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
+                    onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.transform = "scale(1.06)"; e.currentTarget.style.background = "#96690f"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.background = !input.trim() || loading ? (dark ? "#26324d" : "#cbd5e1") : "#b07d18"; }}
                   >
                     <span style={{ display: "inline-flex", transform: "translate(-1.15px, 1.15px)" }}>{IconSend(15)}</span>
                   </button>
@@ -1234,158 +1179,6 @@ export default function ChatPage() {
             </div>
           )}
 
-          {currentMessages.length > 0 && !loading && (
-            <div style={{ display: "flex", justifyContent: "center", margin: "0 0 12px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", position: "relative" }}>
-              {(() => {
-                const activeConv = conversations.find((c) => c.id === activeConvId);
-                if (!activeConv) return null;
-                const synced = !!activeConv.sessionId;
-                return (
-                  <span
-                    title={synced ? "Percakapan tersimpan di server" : "Percakapan hanya tersimpan di perangkat ini"}
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "5px",
-                      fontSize: "11px",
-                      fontWeight: 700,
-                      color: synced ? "#16a75c" : "#d97706",
-                      border: "1px solid " + (synced ? "#16a75c" : "#d97706"),
-                      borderRadius: "999px",
-                      padding: "5px 11px",
-                      background: synced ? (dark ? "#12331f" : "#ecfdf5") : (dark ? "#33270f" : "#fffbeb"),
-                      flexShrink: 0
-                    }}
-                  >
-                    {synced ? IconCloud(12) : IconHardDrive(12)} {synced ? "Tersimpan" : "Lokal"}
-                  </span>
-                );
-              })()}
-              {showResetConfirm ? (
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", background: t.inputBg, border: "1px solid " + t.borderSoft, borderRadius: "999px", padding: "6px 12px", boxShadow: "0 4px 12px rgba(0,0,0,0.06)" }}>
-                  <span style={{ fontSize: "13px", color: t.textSoft }}>Mulai ulang percakapan?</span>
-                  <button onClick={() => { setShowResetConfirm(false); newConversation(); }} style={{ background: "#ef4444", color: "#fff", border: "none", borderRadius: "999px", padding: "5px 12px", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: 'inherit' }}>Ya</button>
-                  <button onClick={() => setShowResetConfirm(false)} style={{ background: t.bgSoft, color: t.textSoft, border: "none", borderRadius: "999px", padding: "5px 12px", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: 'inherit' }}>Batal</button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setShowResetConfirm(true)}
-                  title="Kosongkan percakapan saat ini"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    background: "transparent",
-                    color: t.textMute,
-                    border: "1px dashed " + t.border,
-                    borderRadius: "12px",
-                    padding: "6px 14px",
-                    fontSize: "12.5px",
-                    fontFamily: 'inherit',
-                    cursor: "pointer",
-                    transition: "color 0.15s ease, border-color 0.15s ease"
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "#004DAF"; e.currentTarget.style.borderColor = "#c7d2fe"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = t.textMute; e.currentTarget.style.borderColor = t.border; }}
-                >
-                  <span style={{ display: "inline-flex", alignItems: "center" }}>{IconRefresh(13)}</span> Mulai ulang percakapan
-                </button>
-              )}
-              {(() => {
-                const activeConv = conversations.find((c) => c.id === activeConvId);
-                if (!activeConv?.sessionId) return null;
-                return (
-                  <>
-                    <button
-                      onClick={() => setExportOpen((v) => !v)}
-                      title="Unduh percakapan ini"
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        background: "#004DAF",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "12px",
-                        padding: "6px 14px",
-                        fontSize: "12.5px",
-                        fontFamily: 'inherit',
-                        cursor: "pointer",
-                        boxShadow: "0 3px 10px rgba(0,77,175,0.3)"
-                      }}
-                    >
-                      <span style={{ display: "inline-flex", alignItems: "center" }}>{IconDownload(14)}</span> Unduh
-                    </button>
-                    {exportOpen && (
-                      <div
-                        className="pop-in"
-                        style={{
-                          position: "absolute",
-                          top: "calc(100% + 6px)",
-                          left: "50%",
-                          transform: "translateX(-50%)",
-                          background: t.card,
-                          border: "1px solid " + t.border,
-                          borderRadius: "12px",
-                          boxShadow: "0 10px 26px rgba(0,0,0,0.16)",
-                          padding: "6px",
-                          zIndex: 25,
-                          minWidth: "190px"
-                        }}
-                      >
-                        <button
-                          onClick={() => downloadChat("html")}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                            width: "100%",
-                            textAlign: "left",
-                            padding: "9px 12px",
-                            borderRadius: "8px",
-                            border: "none",
-                            background: "transparent",
-                            color: t.text,
-                            fontSize: "13px",
-                            cursor: "pointer",
-                            fontFamily: 'inherit'
-                          }}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = t.bgSoft; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-                        >
-                          <span style={{ display: "inline-flex", alignItems: "center" }}>{IconFileText(15)}</span> HTML — cetak ke PDF
-                        </button>
-                        <button
-                          onClick={() => downloadChat("doc")}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                            width: "100%",
-                            textAlign: "left",
-                            padding: "9px 12px",
-                            borderRadius: "8px",
-                            border: "none",
-                            background: "transparent",
-                            color: t.text,
-                            fontSize: "13px",
-                            cursor: "pointer",
-                            fontFamily: 'inherit'
-                          }}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = t.bgSoft; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-                        >
-                          <span style={{ display: "inline-flex", alignItems: "center" }}>{IconDoc(15)}</span> DOC — buka di Word
-                        </button>
-                      </div>
-                    )}
-                  </>
-                );
-              })()}
-              </div>
-            </div>
-          )}
 
           {currentMessages.map((m, index) => {
 
@@ -1399,7 +1192,7 @@ export default function ChatPage() {
               <div key={index}>
                 {index === newMsgIndex && (
                   <div style={{ display: "flex", justifyContent: "center", margin: "14px 0 4px", padding: "0 18px" }}>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: "10px", width: "100%", maxWidth: "280px", color: t.textMute, fontSize: "11px", fontWeight: 700, fontFamily: FONT_BODY }}>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "10px", width: "100%", maxWidth: "280px", color: dark ? "#ffffff" : t.textMute, fontSize: "11px", fontWeight: 700, fontFamily: FONT_BODY }}>
                       <span style={{ flex: 1, height: "1px", background: t.border }} />
                       Pesan baru
                       <span style={{ flex: 1, height: "1px", background: t.border }} />
@@ -1417,7 +1210,7 @@ export default function ChatPage() {
                     <span
                       style={{
                         background: t.borderSoft,
-                        color: t.textMute,
+                        color: dark ? "#ffffff" : t.textMute,
                         fontSize: "11px",
                         fontWeight: 600,
                         padding: "4px 12px",
@@ -1479,13 +1272,13 @@ export default function ChatPage() {
                         padding: "11px 16px",
                         borderRadius: m.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
                         boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                        border: m.role === "bot" ? "1px solid rgba(0,0,0,0.04)" : "none",
+                        border: m.role === "bot" ? (dark ? "1px solid rgba(255,255,255,0.13)" : "1px solid #bccadb") : "none",
                         borderLeft: m.role === "bot" ? "4px solid #004DAF" : "none",
-                        borderRight: m.role === "user" ? "4px solid #e9a319" : "none"
+                        borderRight: m.role === "user" ? "4px solid #b07d18" : "none"
                       }}
                     >
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px" }}>
-                        <b style={{ fontSize: "14px", color: m.role === "user" ? (dark ? "#ffffff" : "#004DAF") : t.text }}>
+                        <b style={{ fontSize: "14px", color: m.role === "user" ? "#ffffff" : (dark ? t.text : undefined) }}>
                           {m.role === "user" ? (
                             "Anda"
                           ) : (
@@ -1493,7 +1286,7 @@ export default function ChatPage() {
                               AI
                               {(() => {
                                 const msgModel = m.model || model;
-                                const badge = providerBadge(msgModel);
+                                const badge = providerBadge(msgModel, dark);
                                 const short = msgModel.split("/").pop();
                                 const label = models.find((x) => x.id === msgModel)?.label ?? msgModel;
                                 return (
@@ -1531,8 +1324,9 @@ export default function ChatPage() {
                                 display: "inline-flex",
                                 alignItems: "center",
                                 gap: "4px",
-                                background: t.bubbleUser,
-                                color: t.accentText,
+                                background: dark ? "#304266" : "#ffffff",
+                                color: t.text,
+                                border: "1px solid " + (dark ? "rgba(255,255,255,0.12)" : t.border),
                                 borderRadius: "20px",
                                 padding: "2px 9px",
                                 marginLeft: "8px",
@@ -1551,7 +1345,7 @@ export default function ChatPage() {
                             </span>
                           )}
                           {m.time && (
-                            <span style={{ fontWeight: 400, fontSize: "11px", color: t.textMute, marginLeft: "8px" }}>
+                            <span style={{ fontWeight: 400, fontSize: "11px", color: m.role === "user" ? "rgba(255,255,255,0.85)" : (dark ? "#ffffff" : t.textMute), marginLeft: "8px" }}>
                               {new Date(m.time).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
                             </span>
                           )}
@@ -1561,7 +1355,7 @@ export default function ChatPage() {
                             onClick={() => deleteMessage(index)}
                             title="Hapus pesan"
                             aria-label="Hapus pesan"
-                            style={miniActionStyle(dark)}
+                            style={{ ...miniActionStyle(t), color: (dark || m.role === "user") ? "#ffffff" : t.textMute }}
                           >
                             {IconTrash(14)}
                           </button>
@@ -1571,7 +1365,7 @@ export default function ChatPage() {
                                 onClick={() => copyText(m.text, index)}
                                 title={copied === index ? "Tersalin!" : "Salin jawaban"}
                                 aria-label="Salin jawaban"
-                                style={miniActionStyle(dark)}
+                                style={miniActionStyle(t)}
                               >
                                 {copied === index ? IconCheck(14) : IconCopy(14)}
                               </button>
@@ -1579,7 +1373,7 @@ export default function ChatPage() {
                                 onClick={() => reask(index)}
                                 title="Ulangi pertanyaan (model berbeda)"
                                 aria-label="Ulangi pertanyaan"
-                                style={miniActionStyle(dark)}
+                                style={miniActionStyle(t)}
                               >
                                 {IconRefresh(14)}
                               </button>
@@ -1587,7 +1381,7 @@ export default function ChatPage() {
                           )}
                         </div>
                       </div>
-                      <div className="markdown-body" style={{ marginTop: "8px", lineHeight: "1.55", fontSize: "14px" }}>
+                      <div className="markdown-body" style={{ marginTop: "8px", lineHeight: "1.55", fontSize: "14px", color: m.role === "user" ? "#ffffff" : undefined }}>
                         {m.role === "user"
                           ? m.text
                           : (
@@ -1623,10 +1417,10 @@ export default function ChatPage() {
                             title="Jawaban membantu"
                             aria-label="Jawaban membantu"
                             style={{
-                              ...miniActionStyle(dark),
-                              background: feedback[msgKey(m, index)]?.rating === "up" ? "#dcfce7" : "transparent",
+                              ...miniActionStyle(t),
+                              background: feedback[msgKey(m, index)]?.rating === "up" ? (dark ? "#16351f" : "#dcfce7") : "transparent",
                               borderColor: feedback[msgKey(m, index)]?.rating === "up" ? "#16a75c" : t.borderSoft,
-                              color: feedback[msgKey(m, index)]?.rating === "up" ? "#16a75c" : t.textMute
+                              color: feedback[msgKey(m, index)]?.rating === "up" ? (dark ? "#4ade80" : "#16a75c") : (dark ? "#ffffff" : t.textMute)
                             }}
                           >
                             {IconThumbsUp(15)}
@@ -1636,10 +1430,10 @@ export default function ChatPage() {
                             title="Jawaban kurang membantu"
                             aria-label="Jawaban kurang membantu"
                             style={{
-                              ...miniActionStyle(dark),
-                              background: feedback[msgKey(m, index)]?.rating === "down" ? "#fee2e2" : "transparent",
+                              ...miniActionStyle(t),
+                              background: feedback[msgKey(m, index)]?.rating === "down" ? (dark ? "#3a1220" : "#fee2e2") : "transparent",
                               borderColor: feedback[msgKey(m, index)]?.rating === "down" ? "#ff1c3e" : t.borderSoft,
-                              color: feedback[msgKey(m, index)]?.rating === "down" ? "#ff1c3e" : t.textMute
+                              color: feedback[msgKey(m, index)]?.rating === "down" ? (dark ? "#ff6b81" : "#ff1c3e") : (dark ? "#ffffff" : t.textMute)
                             }}
                           >
                             {IconThumbsDown(15)}
@@ -1668,7 +1462,7 @@ export default function ChatPage() {
                                 onClick={() => sendFeedbackComment(index, m)}
                                 title="Kirim komentar"
                                 aria-label="Kirim komentar"
-                                style={miniActionStyle(dark)}
+                                style={miniActionStyle(t)}
                               >
                                 {IconSend(13)}
                               </button>
@@ -1682,12 +1476,12 @@ export default function ChatPage() {
                           {m.sources && m.sources.length === 0 && (
                             <div style={{ marginTop: "15px", paddingTop: "12px", borderTop: "1px solid " + t.borderSoft, fontSize: "13px" }}>
                               <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "8px",
-                                  color: "#92400e"
-                                }}
+style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "8px",
+                                    color: dark ? "#f6c453" : "#92400e"
+                                  }}
                               >
                                 <span style={{ display: "inline-flex", flexShrink: 0 }}>{IconWarning(15)}</span>
                                 <span>
@@ -1706,8 +1500,8 @@ export default function ChatPage() {
                             fontSize: "13px"
                           }}
                         >
-                          <b style={{ color: "#c98500", fontSize: "13px", borderLeft: "3px solid #e9a319", paddingLeft: "8px", display: "flex", alignItems: "center", gap: "7px" }}>{IconBook(14)} Sumber Referensi</b>
-                          <div style={{ fontSize: "11px", color: t.textMute, marginTop: "4px" }}>
+                          <b style={{ color: dark ? "#f6c453" : "#a1660b", fontSize: "13px", borderLeft: "3px solid #e9a319", paddingLeft: "8px", display: "flex", alignItems: "center", gap: "7px" }}>{IconBook(14)} Sumber Referensi</b>
+                          <div style={{ fontSize: "11px", color: dark ? "#ffffff" : t.textMute, marginTop: "4px" }}>
                             Klik nomor halaman untuk membuka dokumen.
                           </div>
                           {(() => {
@@ -1765,8 +1559,8 @@ export default function ChatPage() {
                                   minWidth: 0,
                                   maxWidth: "100%",
                                   marginTop: "8px",
-                                  background: t.card,
-                                  border: "1px solid " + t.borderSoft,
+                                  background: dark ? "#304266" : "#ffffff",
+                                  border: "1px solid " + (dark ? "rgba(255,255,255,0.12)" : t.border),
                                   borderRadius: "10px",
                                   padding: "8px 12px",
                                   textAlign: "left",
@@ -1776,7 +1570,7 @@ export default function ChatPage() {
                                   overflow: "hidden"
                                 }}
                               >
-                                <span style={{ display: "inline-flex", flexShrink: 0, color: t.textMute }}>{IconFile(16)}</span>
+                                <span style={{ display: "inline-flex", flexShrink: 0, color: dark ? "#ffffff" : t.textMute }}>{IconFile(16)}</span>
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                   <div style={{ color: t.text, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                     {sourceTitle(m.sources, filename)}
@@ -1813,11 +1607,11 @@ export default function ChatPage() {
                         height: "38px",
                         borderRadius: "12px",
                         flexShrink: 0,
-                        background: "linear-gradient(135deg,#f6c453,#e9a319)",
+                        background: "#b07d18",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        color: "#0b1e3a",
+                        color: "#ffffff",
                         alignSelf: "flex-start"
                       }}
                     >
@@ -2013,19 +1807,16 @@ export default function ChatPage() {
             }}
           >
             <div
+              className="textbox-pill"
               style={{
                 display: "flex",
                 alignItems: "center",
                 gap: "8px",
                 flex: 1,
                 background: t.inputBg,
-                border: dark ? "1.5px solid #3f6db8" : "1.5px solid #004DAF",
                 borderRadius: "999px",
-                padding: isMobile ? "4px 4px 4px 12px" : "6px 6px 6px 16px",
-                boxSizing: "border-box",
-                boxShadow: dark
-                  ? "0 0 0 3px rgba(79,127,212,0.14), 0 4px 16px rgba(0,77,175,0.26)"
-                  : "0 0 0 3px rgba(0,77,175,0.10), 0 4px 16px rgba(0,77,175,0.20)"
+                padding: isMobile ? "5px 4px 5px 12px" : "5px 6px 5px 16px",
+                boxSizing: "border-box"
               }}
             >
               <textarea
@@ -2079,7 +1870,7 @@ export default function ChatPage() {
                 flexShrink: 0,
                 padding: 0,
                 boxSizing: "border-box",
-                background: loading ? "#dc2626" : "#004DAF",
+                background: loading ? "#dc2626" : "#b07d18",
                 color: "white",
                 border: "none",
                 cursor: "pointer",
@@ -2088,11 +1879,10 @@ export default function ChatPage() {
                 lineHeight: 1,
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
-                boxShadow: loading ? "none" : "0 4px 12px rgba(0,77,175,0.35)"
+                justifyContent: "center"
               }}
-              onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.background = "#003d94"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = loading ? "#dc2626" : "#004DAF"; }}
+              onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.background = "#96690f"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = loading ? "#dc2626" : "#b07d18"; }}
             >
               {loading ? IconStop(16) : <span style={{ display: "inline-flex", transform: "translate(-1.2px, 1.2px)" }}>{IconSend(16)}</span>}
             </button>
@@ -2107,7 +1897,6 @@ export default function ChatPage() {
               textAlign: "center",
               fontSize: "11px",
               color: t.textMute,
-              opacity: 0.85,
               background: t.bar,
               borderTop: "1px solid " + t.borderSoft,
               padding: "8px 16px",
@@ -2154,14 +1943,16 @@ export default function ChatPage() {
             <div
               style={{
                 padding: "16px 18px",
-                background: "linear-gradient(135deg,#001845,#004DAF)",
-                color: "white",
+                background: dark ? "#1b2944" : "#ffffff",
+                color: dark ? "#e5edf7" : "#001845",
+                borderBottom: "1px solid " + (dark ? "#26324d" : "#d4dce8"),
+                boxShadow: "inset 0 -3px 0 0 rgba(233,163,25,0.55)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between"
               }}
             >
-              <b style={{ fontSize: "15px", fontFamily: FONT_HEADING, fontWeight: 800, display: "flex", alignItems: "center", gap: "8px" }}>
+              <b style={{ fontSize: "15px", fontFamily: FONT_HEADING, fontWeight: 700, display: "flex", alignItems: "center", gap: "8px" }}>
                 <span style={{ display: "inline-flex" }}>{IconChat(15)}</span>
                 Riwayat Percakapan
               </b>
@@ -2170,7 +1961,7 @@ export default function ChatPage() {
                 aria-label="Tutup riwayat percakapan"
                 style={{
                   background: "transparent",
-                  color: "white",
+                  color: dark ? "#e5edf7" : "#001845",
                   border: "none",
                   borderRadius: "8px",
                   padding: "6px 10px",
@@ -2206,24 +1997,25 @@ export default function ChatPage() {
             </div>
 
             <div style={{ padding: "0 14px 8px" }}>
-              <input
-                value={historyQuery}
-                onChange={(e) => setHistoryQuery(e.target.value)}
-                placeholder="Cari percakapan…"
-                style={{
-                  width: "100%",
-                  boxSizing: "border-box",
-                  background: t.card,
-                  border: "1px solid " + t.border,
-                  borderRadius: "999px",
-                  padding: "9px 14px",
-                  fontSize: "13px",
-                  outline: "none",
-                  fontFamily: 'inherit',
-                  color: t.text,
-                  boxShadow: "0 1px 4px rgba(0,0,0,0.06)"
-                }}
-              />
+              <div className="textbox-pill" style={{ display: "flex", background: dark ? t.inputBg : "#ffffff", borderRadius: "999px" }}>
+                <input
+                  value={historyQuery}
+                  onChange={(e) => setHistoryQuery(e.target.value)}
+                  placeholder="Cari percakapan…"
+                  style={{
+                    width: "100%",
+                    boxSizing: "border-box",
+                    background: "transparent",
+                    border: "none",
+                    borderRadius: "999px",
+                    padding: "9px 14px",
+                    fontSize: "13px",
+                    outline: "none",
+                    fontFamily: 'inherit',
+                    color: t.text
+                  }}
+                />
+              </div>
             </div>
 
             <div className="thin-scroll" style={{ flex: 1, overflowY: "auto", padding: "4px 12px 14px" }}>
@@ -2267,10 +2059,10 @@ export default function ChatPage() {
                         key={c.id}
                         onClick={() => selectConversation(c.id)}
                         onMouseEnter={(e) => {
-                          if (activeConvId !== c.id) e.currentTarget.style.background = dark ? "#36507e" : "#f8fafc";
+                          if (activeConvId !== c.id) e.currentTarget.style.background = dark ? "#3a4b6b" : "#f8fafc";
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.background = activeConvId === c.id ? (dark ? "#1c3a63" : "#eef6fd") : (dark ? "#304266" : "#ffffff");
+                          e.currentTarget.style.background = activeConvId === c.id ? (dark ? "#2a3d63" : "#eef6fd") : (dark ? "#223254" : "#ffffff");
                         }}
                         style={{
                           display: "flex",
@@ -2281,8 +2073,8 @@ export default function ChatPage() {
                           padding: "10px 12px",
                           marginTop: "6px",
                           borderRadius: "10px",
-                          border: activeConvId === c.id ? (dark ? "1px solid #4f7fd4" : "1px solid #004DAF") : "1px solid " + (dark ? "#3a4b6b" : "#d4dce8"),
-                          background: activeConvId === c.id ? (dark ? "#1c3a63" : "#eef6fd") : (dark ? "#304266" : "#ffffff"),
+                          border: activeConvId === c.id ? (dark ? "1px solid #7fb1e8" : "1px solid #004DAF") : "1px solid " + (dark ? "#3a4b6b" : "#d4dce8"),
+                          background: activeConvId === c.id ? (dark ? "#2a3d63" : "#eef6fd") : (dark ? "#223254" : "#ffffff"),
                           cursor: "pointer",
                           fontFamily: 'inherit',
                           color: t.text,
@@ -2323,48 +2115,25 @@ export default function ChatPage() {
                             </span>
                           </span>
                         </span>
-                        {confirmDeleteId === c.id ? (
-                          <span
-                            onClick={(e) => e.stopPropagation()}
-                            style={{ display: "inline-flex", alignItems: "center", gap: "4px", flexShrink: 0 }}
-                          >
-                            <span style={{ fontSize: "10px", color: t.textMute, fontWeight: 700 }}>Hapus?</span>
-                            <button
-                              onClick={(e) => deleteConversation(c.id, e)}
-                              title="Ya, hapus percakapan"
-                              style={{ background: "#ef4444", color: "#fff", border: "none", borderRadius: "6px", padding: "3px 9px", fontSize: "11px", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
-                            >
-                              Ya
-                            </button>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(null); }}
-                              title="Batal"
-                              style={{ background: t.bgSoft, color: t.textSoft, border: "none", borderRadius: "6px", padding: "3px 9px", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
-                            >
-                              Batal
-                            </button>
-                          </span>
-                        ) : (
-                          <span
-                            role="button"
-                            title="Hapus percakapan"
-                            aria-label="Hapus percakapan"
-                            onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(c.id); }}
-                            style={{
-                              flexShrink: 0,
-                              color: t.textMute,
-                              fontSize: "14px",
-                              padding: "2px 6px",
-                              cursor: "pointer",
-                              borderRadius: "6px",
-                              display: "inline-flex"
-                            }}
-                            onMouseEnter={(e) => { e.currentTarget.style.color = "#ff1c3e"; e.currentTarget.style.background = dark ? "#3a1220" : "#fee2e2"; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.color = t.textMute; e.currentTarget.style.background = "transparent"; }}
-                          >
-                            {IconTrash(15)}
-                          </span>
-                        )}
+                        <span
+                          role="button"
+                          title="Hapus percakapan"
+                          aria-label="Hapus percakapan"
+                          onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(c.id); }}
+                          style={{
+                            flexShrink: 0,
+                            color: t.textMute,
+                            fontSize: "14px",
+                            padding: "6px 8px",
+                            cursor: "pointer",
+                            borderRadius: "8px",
+                            display: "inline-flex"
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.color = "#ff1c3e"; e.currentTarget.style.background = dark ? "#3a1220" : "#fee2e2"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.color = t.textMute; e.currentTarget.style.background = "transparent"; }}
+                        >
+                          {IconTrash(15)}
+                        </span>
                       </button>
                     ))}
                   </div>
@@ -2372,6 +2141,101 @@ export default function ChatPage() {
               })()}
             </div>
           </aside>
+
+          {/* MODAL KONFIRMASI HAPUS RIWAYAT */}
+          {confirmDeleteId && (
+            <div
+              className="fade-in"
+              style={{
+                position: "fixed",
+                inset: 0,
+                background: "rgba(15,23,42,0.5)",
+                zIndex: 60,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "20px",
+                fontFamily: FONT_BODY
+              }}
+              onClick={() => setConfirmDeleteId(null)}
+            >
+              <div
+                className="pop-in"
+                style={{
+                  width: "min(420px, 100%)",
+                  background: dark ? "#2a3d63" : "#f6f8fd",
+                  border: "1px solid " + t.border,
+                  borderRadius: 18,
+                  boxShadow: "0 20px 50px rgba(0,0,0,0.3)",
+                  padding: "26px 28px",
+                  textAlign: "center",
+                  boxSizing: "border-box"
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div
+                  style={{
+                    width: 52,
+                    height: 52,
+                    margin: "0 auto 16px",
+                    borderRadius: "50%",
+                    background: dark ? "#3a1220" : "#fee2e2",
+                    color: "#ef4444",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                  }}
+                >
+                  {IconTrash(24)}
+                </div>
+                <h3 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 700, fontFamily: FONT_HEADING, color: t.text }}>
+                  Hapus riwayat percakapan?
+                </h3>
+                <p style={{ margin: "0 0 22px", fontSize: 13.5, color: t.textMute, lineHeight: 1.5 }}>
+                  Percakapan ini akan dihapus permanen dan tidak dapat dikembalikan.
+                </p>
+                <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
+                  <button
+                    onClick={() => setConfirmDeleteId(null)}
+                    style={{
+                      background: t.bgSoft,
+                      color: t.text,
+                      border: "1px solid " + t.border,
+                      borderRadius: "12px",
+                      padding: "10px 22px",
+                      fontSize: "14px",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      fontFamily: "inherit"
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = dark ? "#45608c" : "#e0e7f0"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = t.bgSoft; }}
+                  >
+                    Batal
+                  </button>
+                  <button
+                    onClick={(e) => deleteConversation(confirmDeleteId, e)}
+                    style={{
+                      background: "#ef4444",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: "12px",
+                      padding: "10px 24px",
+                      fontSize: "14px",
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                      boxShadow: "0 6px 16px rgba(239,68,68,0.35)"
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = "#dc2626"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "#ef4444"; }}
+                  >
+                    Hapus
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>
@@ -2379,9 +2243,9 @@ export default function ChatPage() {
 }
 
 const navButtonStyle = (dark) => ({
-  background: dark ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.12)",
-  color: "white",
-  border: "1px solid " + (dark ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.45)"),
+  background: dark ? "rgba(255,255,255,0.12)" : "rgba(0,24,69,0.05)",
+  color: dark ? "#e5edf7" : "#001845",
+  border: "1px solid " + (dark ? "rgba(255,255,255,0.4)" : "rgba(0,24,69,0.3)"),
   padding: "10px 14px",
   borderRadius: "10px",
   cursor: "pointer",
@@ -2391,10 +2255,10 @@ const navButtonStyle = (dark) => ({
   fontFamily: 'inherit'
 });
 
-const miniActionStyle = (dark) => ({
+const miniActionStyle = (t) => ({
   background: "transparent",
   border: "none",
-  color: dark ? "#8b98ad" : "#64748b",
+  color: t.dark ? "#ffffff" : t.textMute,
   borderRadius: "8px",
   width: "28px",
   height: "28px",
@@ -2408,8 +2272,8 @@ const miniActionStyle = (dark) => ({
   fontFamily: 'inherit'
 });
 
-// Pemilih model AI; dropdown dibuka ke atas (dari tombol) supaya daftar model
-// bisa tampil lebih besar, memanfaatkan ruang di atas area chat. List scroll di dalamnya.
+// Pemilih model AI; arah dropdown ke bawah, tinggi dibatasi ruang yang tersedia
+// supaya halaman tidak ikut scroll. Daftar model selalu scroll di dalamnya.
 function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOpenChange, dark }) {
   const [open, setOpen] = useState(false);
   const [maxH, setMaxH] = useState(320);
@@ -2437,29 +2301,29 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
     if (btn && scrollEl) {
       const btnRect = btn.getBoundingClientRect();
       const areaRect = scrollEl.getBoundingClientRect();
-      const padTop = parseFloat(getComputedStyle(scrollEl).paddingTop) || 0;
-      // Ruang yang benar-benar terlihat di atas tombol (batas inner box area chat + padding atas).
-      const usableTop = areaRect.top + padTop;
-      const spaceAbove = btnRect.top - usableTop - 10;
-      setMaxH(Math.max(140, Math.min(480, spaceAbove)));
+      const padBottom = parseFloat(getComputedStyle(scrollEl).paddingBottom) || 0;
+      // Ruang yang benar-benar terlihat (batas inner box area chat dikurangi padding bawah).
+      const usableBottom = areaRect.bottom - padBottom;
+      const spaceBelow = usableBottom - btnRect.bottom - 10;
+      setMaxH(Math.max(140, Math.min(420, spaceBelow)));
     } else {
       setMaxH(320);
     }
   }
 
-  const badge = providerBadge(model);
+  const badge = providerBadge(model, dark);
   const short = model.split("/").pop();
   const mt = {
-    card: dark ? "#151f36" : "#ffffff",
-    border: dark ? "#2a3752" : "#d4dce8",
-    borderSoft: dark ? "#1f2a44" : "#e2e8f0",
+    card: dark ? "#0f1a2f" : "#eef3f9",
+    border: dark ? "#f6c453" : "#e9a319",
+    borderSoft: dark ? "#304266" : "#e4eaf2",
     text: dark ? "#e5edf7" : "#1e293b",
-    textMute: dark ? "#8b98ad" : "#64748b",
+    textMute: dark ? "#8b98ad" : "#5b6b82",
     textSoft: dark ? "#c3cede" : "#334155",
-    itemBg: dark ? "#1b2740" : "#eef6fd",
-    itemHover: dark ? "#24345a" : "#f1f5f9",
-    itemIdle: dark ? "#1b2740" : "#f8fafc",
-    softBg: dark ? "#1e2a45" : "#eef2f7"
+    itemBg: dark ? "#2a3d63" : "#ffffff",
+    itemHover: dark ? "#304266" : "#f1f5f9",
+    itemIdle: dark ? "#1b2944" : "#f8fafc",
+    softBg: dark ? "#26324d" : "#eef2f7"
   };
 
   return (
@@ -2475,17 +2339,17 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
           display: "flex",
           alignItems: "center",
           gap: "7px",
-          padding: "6px 12px",
+          padding: "10px 18px",
           borderRadius: "999px",
-          border: open ? "2px solid #004DAF" : "2px solid " + (dark ? "#2b3a5c" : "#c7d2fe"),
-          fontSize: "13px",
-          background: open ? mt.itemBg : mt.card,
+          border: open ? "1px solid " + (dark ? "#7fb1e8" : "#004DAF") : "1px solid " + (dark ? "#26324d" : "#c9d4e3"),
+          fontSize: "14px",
+          background: open ? mt.itemBg : (dark ? "#0f1a2f" : "#ffffff"),
           color: mt.text,
           outline: "none",
           cursor: "pointer",
           fontFamily: 'inherit',
-          transition: "transform 0.15s ease, border-color 0.15s ease, background 0.15s ease",
-          boxShadow: open ? "0 4px 14px rgba(0,114,188,0.2)" : "0 8px 24px rgba(0,28,69,0.10)",
+          transition: "transform 0.15s ease, border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease",
+          boxShadow: open ? "0 0 0 3px rgba(233,163,25,0.15)" : "0 1px 4px rgba(0,0,0,0.08)",
           width: isMobile ? "135px" : "180px",
           minWidth: 0,
           height: "44px",
@@ -2547,7 +2411,7 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
           className="pop-in"
           style={{
             position: "absolute",
-            bottom: "calc(100% + 8px)",
+            top: "calc(100% + 8px)",
             left: align === "left" ? 0 : "auto",
             right: align === "right" ? 0 : "auto",
             minWidth: "280px",
@@ -2555,7 +2419,7 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
             background: mt.card,
             borderRadius: "14px",
             boxShadow: "0 12px 32px rgba(0,0,0,0.18)",
-            border: "1px solid " + mt.border,
+            border: "1px solid " + (dark ? "#3a4b6b" : "#e4eaf2"),
             zIndex: 20,
             display: "flex",
             flexDirection: "column",
@@ -2581,7 +2445,7 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
           </div>
           <div className="thin-scroll" style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "4px 6px 8px" }}>
             {models.map((m) => {
-              const b = providerBadge(m.id);
+              const b = providerBadge(m.id, dark);
               return (
                 <button
                   key={m.id}
@@ -2653,7 +2517,14 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
 }
 
 // Warna aksen kecil untuk ikon model berdasarkan provider.
-function providerBadge(modelId) {
+function providerBadge(modelId, dark) {
+  if (dark) {
+    if (modelId.startsWith("google/")) return { background: "#10294a", color: "#7fb1e8" };
+    if (modelId.startsWith("openai/")) return { background: "#0d3328", color: "#4ade80" };
+    if (modelId.startsWith("meta-llama/")) return { background: "#3a2d14", color: "#f6c453" };
+    if (modelId.startsWith("anthropic/")) return { background: "#3a1526", color: "#f0a8c8" };
+    return { background: "#26324d", color: "#c3cede" };
+  }
   if (modelId.startsWith("google/")) return { background: "#e0f2fe", color: "#0369a1" };
   if (modelId.startsWith("openai/")) return { background: "#d1fae5", color: "#047857" };
   if (modelId.startsWith("meta-llama/")) return { background: "#fef3c7", color: "#b45309" };
@@ -2795,7 +2666,7 @@ function ProcessingIndicator({ dark }) {
   const step = useCycle(PROCESS_STEPS, 1500);
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-      <div style={{ fontSize: "14px", color: dark ? "#c3cede" : "#334155", whiteSpace: "nowrap", fontWeight: 600 }}>
+      <div style={{ fontSize: "14px", color: dark ? "#c3cede" : "#475569", whiteSpace: "nowrap", fontWeight: 600 }}>
         {step}
       </div>
       <div className="typing-dots" style={{ marginTop: 0 }}>
@@ -2820,8 +2691,8 @@ const IconSearchModule = (s) => (
 // Kartu sumber "samar" (skeleton berkilau) saat AI mengetik
 function SourceSkeleton({ dark }) {
   return (
-    <div className="fade-in" style={{ marginTop: "14px", paddingTop: "12px", borderTop: "1px solid " + (dark ? "#1e2a45" : "#e2e8f0") }}>
-      <div style={{ fontSize: "13px", color: dark ? "#8b98ad" : "#64748b", fontWeight: 600, marginBottom: "8px", display: "flex", alignItems: "center", gap: "7px" }}>
+    <div className="fade-in" style={{ marginTop: "14px", paddingTop: "12px", borderTop: "1px solid " + (dark ? "#26324d" : "#e4eaf2") }}>
+      <div style={{ fontSize: "13px", color: dark ? "#8b98ad" : "#5b6b82", fontWeight: 600, marginBottom: "8px", display: "flex", alignItems: "center", gap: "7px" }}>
         {IconSearchModule(13)} Memeriksa dokumen sumber…
       </div>
       {[0, 1].map((i) => (
@@ -2832,8 +2703,8 @@ function SourceSkeleton({ dark }) {
             alignItems: "center",
             gap: "10px",
             marginBottom: "8px",
-            background: dark ? "#1c2a47" : "#ffffff",
-            border: "1px solid " + (dark ? "#2a3a58" : "#eef2f7"),
+            background: dark ? "#304266" : "#f6f8fd",
+            border: "1px solid " + (dark ? "#2b3a58" : "#e4eaf2"),
             borderRadius: "10px",
             padding: "8px 12px"
           }}

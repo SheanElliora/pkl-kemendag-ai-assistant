@@ -103,20 +103,18 @@ body {
   animation: fadeIn 0.3s ease-out both;
 }
 
-/* Muncul bertahap naik ke atas (hero landing) */
+/* Muncul halus tanpa efek naik berurutan (hero landing) — anti kesan AI */
 @keyframes riseIn {
   from {
     opacity: 0;
-    transform: translateY(12px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
 .rise {
-  animation: riseIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: riseIn 0.25s ease-out both;
 }
 
 /* Goyangan singkat saat login gagal */
@@ -220,34 +218,41 @@ tr.hover-row:hover td {
 }
 
 .logo-hover:hover {
-  transform: scale(1.08);
+  transform: none;
 }
 
-/* Kotak input pill: garis biru menyala + glow (selaras login) */
+/* Kotak input pill: sama persis dengan input login (border 1px + ring emas 3px) */
 .textbox-pill {
-  border: 1.5px solid #004DAF;
-  box-shadow: 0 0 0 4px rgba(0, 77, 175, 0.12), 0 6px 24px rgba(0, 77, 175, 0.25);
-  transition: box-shadow 0.15s ease;
+  border: 1px solid #c9d4e3;
+  background: #eef3f9;
+  box-shadow: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .textbox-pill:focus-within {
-  box-shadow: 0 0 0 4px rgba(0, 77, 175, 0.18), 0 6px 24px rgba(0, 77, 175, 0.30);
+  border-color: #004DAF;
+  box-shadow: 0 0 0 3px rgba(233, 163, 25, 0.15);
 }
 
 body.theme-dark .textbox-pill {
-  border-color: #3f6db8;
-  box-shadow: 0 0 0 4px rgba(79, 127, 212, 0.16), 0 6px 24px rgba(0, 77, 175, 0.30);
+  border-color: #26324d;
+  background: #0f1a2f;
 }
 
-/* Input CMS: fokus ring biru menyala (selaras login & chat) */
+body.theme-dark .textbox-pill:focus-within {
+  border-color: #7fb1e8;
+  box-shadow: 0 0 0 3px rgba(233, 163, 25, 0.15);
+}
+
+/* Input CMS: fokus ring emas menyala (selaras login & chat) */
 .cms-input:focus-visible {
-  border-color: #004DAF;
-  box-shadow: 0 0 0 3px rgba(0, 77, 175, 0.15);
+  border-color: #e9a319;
+  box-shadow: 0 0 0 3px rgba(233, 163, 25, 0.15);
 }
 
 body.theme-dark .cms-input:focus-visible {
-  border-color: #7fb1e8;
-  box-shadow: 0 0 0 3px rgba(127, 177, 232, 0.20);
+  border-color: #f6c453;
+  box-shadow: 0 0 0 3px rgba(246, 196, 83, 0.20);
 }
 
 body.theme-dark .hero-input::placeholder {
@@ -451,6 +456,15 @@ button:disabled {
   opacity: 0.6;
 }
 
+/* Seleksi teks: emas transparan — serasi di bubble biru & tidak bentrok dgn palet */
+::selection {
+  background: rgba(233, 163, 25, 0.32);
+}
+
+body.theme-dark ::selection {
+  background: rgba(233, 163, 25, 0.42);
+}
+
 /* =====================================
    Fokus keyboard (a11y)
    Ring yang jelas & konsisten saat
@@ -465,14 +479,17 @@ button:disabled {
 
 /* Kontras di header bergradasi biru tua: ring emas terang */
 .app-header :focus-visible {
-  outline-color: #fde047;
+  outline-color: #f6c453;
 }
 
-/* Kotak ketik: ring di dalam pill (outline inline "none" tidak menang atas ini) */
+/* Mode gelap: ring fokus ikut aksen biru muda sistem */
+body.theme-dark :focus-visible {
+  outline-color: #7fb1e8;
+}
+
+/* Kotak ketik: tanpa ring biru di dalam pill */
 .chat-input:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(0, 67, 156, 0.45);
-  border-radius: 8px;
 }
 
 /* Input hero & pencarian: highlight pill sudah via .textbox-pill:focus-within */
@@ -633,7 +650,7 @@ input:focus-visible {
    ===================================== */
 
 body.theme-dark .markdown-body {
-  color: #dbe4f0;
+  color: #e9eff8;
 }
 
 body.theme-dark .markdown-body h1,

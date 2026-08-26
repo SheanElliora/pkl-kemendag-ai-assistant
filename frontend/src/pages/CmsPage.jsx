@@ -198,7 +198,7 @@ export default function CmsPage() {
     ? [
         { id: "approval", label: "Kelola Dokumen", icon: "folder" },
         { id: "users", label: "Kelola Pengguna", icon: "users" },
-        { id: "logs", label: "Log Aktivitas", icon: "file" }
+        { id: "logs", label: "Riwayat Aktivitas", icon: "file" }
       ]
     : [
         { id: "upload", label: "Unggah Dokumen", icon: "upload" },
@@ -311,11 +311,11 @@ export default function CmsPage() {
   async function doUpload(e) {
     e.preventDefault();
     if (!file) {
-      setUploadMsg("Pilih file PDF terlebih dahulu.");
+      setUploadMsg("Pilih dokumen PDF terlebih dahulu.");
       return;
     }
     if (file.size > MAX_SIZE) {
-      setUploadMsg("Ukuran file melebihi batas 20 MB.");
+      setUploadMsg("Ukuran dokumen melebihi batas 20 MB.");
       return;
     }
 
@@ -326,8 +326,8 @@ export default function CmsPage() {
       const form = new FormData();
       form.append("file", file);
       const data = await api("/api/cms/upload", { method: "POST", body: form });
-      setUploadMsg(data.message || "Upload berhasil.");
-      showToast("success", data.message || "Upload berhasil.");
+      setUploadMsg(data.message || "Unggah berhasil.");
+      showToast("success", data.message || "Unggah berhasil.");
       setFile(null);
       refreshFiles();
     } catch (err) {
@@ -400,7 +400,7 @@ export default function CmsPage() {
   async function changeRole(id, role) {
     try {
       await api(`/api/cms/users/${id}`, { method: "PUT", body: { role } });
-      showToast("success", "Role pengguna diperbarui.");
+      showToast("success", "Peran pengguna diperbarui.");
       refreshUsers();
     } catch (err) {
       showToast("error", err.message);
@@ -427,7 +427,7 @@ export default function CmsPage() {
     setResetPass("");
     try {
       await api(`/api/cms/users/${id}`, { method: "PUT", body: { password: resetPass } });
-      showToast("success", "Password pengguna direset.");
+      showToast("success", "Kata sandi pengguna direset.");
       refreshUsers();
     } catch (err) {
       showToast("error", err.message);
@@ -514,7 +514,7 @@ export default function CmsPage() {
 
   
 
-  const roleLabel = user?.role === "admin" ? "Admin" : "Maintainer";
+  const roleLabel = user?.role === "admin" ? "Admin" : "Pengelola";
   const initial = (user?.username || "U").charAt(0).toUpperCase();
 
   return (
@@ -612,6 +612,7 @@ export default function CmsPage() {
             boxSizing: "border-box",
             overflow: "hidden",
             borderRadius: "0 18px 18px 0",
+            boxShadow: "4px 0 20px rgba(0,0,0,0.15)",
             transition: "width 0.25s ease"
           }}
         >
@@ -713,7 +714,7 @@ export default function CmsPage() {
               <button
                 key={n.id}
                 onClick={() => setTab(n.id)}
-                title={n.label}
+                title={isOpen ? n.label : undefined}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -733,7 +734,8 @@ export default function CmsPage() {
                   whiteSpace: "nowrap",
                   overflow: "hidden"
                 }}
-                className="side-nav-btn"
+                className="side-nav-item"
+                {...(!isOpen && n.label ? { "data-tip": n.label } : {})}
               >
                 <span style={{ flexShrink: 0, position: "relative", display: "inline-flex" }}>
                   <SIcon name={n.icon} size={16} />
@@ -782,6 +784,8 @@ export default function CmsPage() {
 
           <div style={{ flex: 1 }} />
 
+          <div style={{ height: 1, background: "rgba(255,255,255,0.15)", margin: "4px 0", flexShrink: 0 }} />
+
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <SideBtn isOpen={isOpen} onClick={() => navigate("/")} title="Kembali ke Chat">
               <span style={{ display: "inline-flex" }}><SIcon name="message" size={16} /></span>
@@ -824,7 +828,7 @@ export default function CmsPage() {
                   disabled={uploading}
                   style={{ ...primaryBtn, height: 44 }}
                 >
-                  {uploading ? "Mengunggah..." : "Upload"}
+                  {uploading ? "Mengunggah..." : "Unggah"}
                 </button>
               </form>
               {file && (
@@ -976,7 +980,7 @@ export default function CmsPage() {
                     <table style={tableStyle(t)} className="zebra">
                       <thead>
                         <tr>
-                          <SortTh label="File" k="name" t={t} sortKey={sort.key} sortDir={sort.dir} onSort={toggleSort} style={{ width: 400 }} />
+                          <SortTh label="Dokumen" k="name" t={t} sortKey={sort.key} sortDir={sort.dir} onSort={toggleSort} style={{ width: 400 }} />
                           <SortTh label="Waktu" k="time" t={t} sortKey={sort.key} sortDir={sort.dir} onSort={toggleSort} style={{ width: 160 }} />
                           <Th t={t} style={{ width: 260 }}>Aksi</Th>
                         </tr>
@@ -1138,7 +1142,7 @@ export default function CmsPage() {
                 {[
                   { id: "all", label: "Total Pengguna", value: users.length, icon: "users", color: "#7fb1e8" },
                   { id: "admin", label: "Admin", value: users.filter((x) => x.role === "admin").length, icon: "shield", color: "#e9a319" },
-                  { id: "maintainer", label: "Maintainer", value: users.filter((x) => x.role === "maintainer").length, icon: "user", color: "#10b981" }
+                  { id: "maintainer", label: "Pengelola", value: users.filter((x) => x.role === "maintainer").length, icon: "user", color: "#10b981" }
                 ].map((s) => (
                   <button
                     key={s.id}
@@ -1181,7 +1185,7 @@ export default function CmsPage() {
                       <SIcon name="user" size={14} />
                     </span>
                     <input
-                      placeholder="Username"
+                      placeholder="Nama Pengguna"
                       value={newUser.username}
                       onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
                       style={{ ...inputStyle(t), height: 40, minWidth: 190, padding: "7px 14px 7px 36px", fontSize: 13.5 }}
@@ -1193,7 +1197,7 @@ export default function CmsPage() {
                     </span>
                     <input
                       type="password"
-                      placeholder="Password (min. 6)"
+                      placeholder="Kata Sandi (min. 6)"
                       value={newUser.password}
                       onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
                       style={{ ...inputStyle(t), height: 40, minWidth: 190, padding: "7px 14px 7px 36px", fontSize: 13.5 }}
@@ -1268,7 +1272,7 @@ export default function CmsPage() {
                     <table style={tableStyle(t)} className="zebra">
                       <thead>
                         <tr>
-                          <Th t={t}>Username</Th><Th t={t}>Role</Th><Th t={t}>Dokumen</Th><Th t={t}>Aksi</Th>
+                          <Th t={t}>Nama Pengguna</Th><Th t={t}>Peran</Th><Th t={t}>Dokumen</Th><Th t={t}>Aksi</Th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1305,7 +1309,7 @@ export default function CmsPage() {
                                   opacity: u.id === user.id ? 0.65 : 1
                                 }}
                               >
-                                <option value="maintainer">Maintainer</option>
+                                <option value="maintainer">Pengelola</option>
                                 <option value="admin">Admin</option>
                               </select>
                             </Td>
@@ -1319,10 +1323,10 @@ export default function CmsPage() {
                                     <button
                                       onClick={() => { setResetTarget(u.id); setResetPass(""); }}
                                       style={smallBtn("#64748b")}
-                                      title={`Reset password ${u.username}`}
+                                      title={`Atur ulang kata sandi ${u.username}`}
                                     >
                                       <span style={{ display: "inline-flex", marginRight: 5, verticalAlign: "middle" }}><SIcon name="key" size={13} /></span>
-                                      Reset
+                                      Atur Ulang
                                     </button>
                                     <button
                                       onClick={() => setDeleteTarget(u.id)}
@@ -1348,18 +1352,18 @@ export default function CmsPage() {
 
           {/* ===== LOG AKTIVITAS (admin) ===== */}
           {tab === "logs" && (
-            <div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
-            <div style={{ ...cardStyle(t), display: "flex", flexDirection: "column", minHeight: 0 }}>
-              <h3 style={{ ...h3Style, display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+            <div style={{ ...cardStyle(t), display: "flex", flexDirection: "column", minHeight: 0, flex: 1, marginBottom: 0 }}>
+              <h3 style={{ ...h3Style, display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
                 <SIcon name="file" size={17} />
-                Log Aktivitas
+                Riwayat Aktivitas
               </h3>
               {loading.logs && logs.length === 0 ? (
-                <LoadingBlock t={t} text="Memuat log aktivitas…" />
+                <LoadingBlock t={t} text="Memuat riwayat aktivitas…" />
               ) : logs.length === 0 ? (
-                <EmptyState t={t} icon="file" text="Belum ada aktivitas login." />
+                <EmptyState t={t} icon="file" text="Belum ada aktivitas masuk." />
               ) : (
-                <div style={{ overflow: "auto", maxHeight: "calc(100vh - 290px)" }}>
+                <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
                   <table style={tableStyle(t)} className="zebra">
                     <thead>
                       <tr>
@@ -1420,7 +1424,7 @@ export default function CmsPage() {
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: 14 }}>
             {[
-              { label: "File", value: detailTarget.originalName },
+              { label: "Dokumen", value: detailTarget.originalName },
               { label: "Ukuran", value: formatSize(detailTarget.size) },
               { label: "Pengunggah", value: detailTarget.uploadedBy },
               { label: "Waktu Unggah", value: fmtDate(detailTarget.uploadedAt) },
@@ -1563,20 +1567,20 @@ export default function CmsPage() {
         </Modal>
       )}
 
-      {/* ===== MODAL: Reset Password User ===== */}
+      {/* ===== MODAL: Atur Ulang Kata Sandi ===== */}
       {resetTarget && (
         <Modal
           t={t}
-          title={`Reset password "${users.find((u) => u.id === resetTarget)?.username || ""}"`}
+          title={`Atur ulang kata sandi "${users.find((u) => u.id === resetTarget)?.username || ""}"`}
           onClose={() => setResetTarget(null)}
           onConfirm={confirmResetPassword}
-          confirmLabel="Simpan Password"
+          confirmLabel="Simpan Kata Sandi"
           confirmColor="#059669"
           confirmDisabled={resetPass.length < 6}
         >
           <input
             type="password"
-            placeholder="Password baru (min. 6)"
+            placeholder="Kata Sandi baru (min. 6)"
             value={resetPass}
             onChange={(e) => setResetPass(e.target.value)}
             autoFocus
@@ -1824,7 +1828,7 @@ function RoleSelect({ role, onSelect, t, dark }) {
   }, []);
 
   const options = [
-    { id: "maintainer", label: "Maintainer", desc: "Unggah & kelola dokumen", icon: "user", color: "#10b981" },
+    { id: "maintainer", label: "Pengelola", desc: "Unggah & kelola dokumen", icon: "user", color: "#10b981" },
     { id: "admin", label: "Admin", desc: "Akses penuh sistem", icon: "shield", color: "#e9a319" }
   ];
   const cur = options.find((o) => o.id === role) || options[0];
@@ -1888,7 +1892,7 @@ function RoleSelect({ role, onSelect, t, dark }) {
           }}
         >
           <div style={{ padding: "10px 12px", fontSize: 12, fontWeight: 700, color: mt.textMute, textTransform: "uppercase", letterSpacing: "0.5px", borderBottom: "1px solid " + mt.borderSoft, background: mt.card, borderRadius: "14px 14px 0 0" }}>
-            Pilih Role
+            Pilih Peran
           </div>
           <div style={{ padding: "4px 6px 0" }}>
             {options.map((o) => (
@@ -1943,7 +1947,9 @@ function SideBtn({ children, onClick, danger, isOpen, title }) {
   return (
     <button
       onClick={onClick}
-      title={title}
+      title={isOpen ? title : undefined}
+      className={`side-btn${danger ? " danger" : ""}`}
+      {...(!isOpen && title ? { "data-tip": title } : {})}
       style={{
         display: "flex",
         alignItems: "center",
@@ -2019,13 +2025,13 @@ function FileTable({ rows, empty, sub, title, onDelete, onDetail, onView, t, loa
               <tr>
                 {sortable ? (
                   <>
-                    <SortTh label="File" k="name" t={t} sortKey={sortKey} sortDir={sortDir} onSort={onSort} style={{ width: 300 }} />
+                    <SortTh label="Dokumen" k="name" t={t} sortKey={sortKey} sortDir={sortDir} onSort={onSort} style={{ width: 300 }} />
                     <SortTh label="Status" k="status" t={t} sortKey={sortKey} sortDir={sortDir} onSort={onSort} style={{ width: 140 }} />
                     <SortTh label="Waktu" k="time" t={t} sortKey={sortKey} sortDir={sortDir} onSort={onSort} style={{ width: 160 }} />
                   </>
                 ) : (
                   <>
-                    <Th t={t} style={{ width: 300 }}>File</Th><Th t={t} style={{ width: 140 }}>Status</Th><Th t={t} style={{ width: 160 }}>Waktu</Th>
+                    <Th t={t} style={{ width: 300 }}>Dokumen</Th><Th t={t} style={{ width: 140 }}>Status</Th><Th t={t} style={{ width: 160 }}>Waktu</Th>
                   </>
                 )}
                 <Th t={t}>Catatan</Th>

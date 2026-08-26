@@ -54,7 +54,7 @@ const MAX_CANDIDATES = 7;
 const DISTANCE_RATIO = 3.0;
 const DISTANCE_OFFSET = 0.3;
 const SEARCH_WIDTH = 60;
-const KEYWORD_BONUS = 0.05;
+const KEYWORD_BONUS = 0.1;
 const FILENAME_BONUS = 0.15;
 const MIN_CHUNK_LENGTH = 40;
 const RERANK_WIDTH = 10;
@@ -157,7 +157,6 @@ const TERM_EN = [
     ["kesehatan", "health"],
     ["inflasi", "inflation"],
     ["pengangguran", "unemployment"],
-    ["sertifikasi", "certification"],
     ["pajak", "tax"],
     ["tekstil", "textile"],
     ["katun", "cotton"],
@@ -187,7 +186,17 @@ const TERM_EN = [
     ["rag", "retrieval augmented generation rag"],
     ["mse", "mean squared error mse"],
     ["lstm", "long short term memory lstm"],
-    ["gdp", "gross domestic product gdp"]
+    ["gdp", "gross domestic product gdp"],
+    ["univariate", "time-series one dimension single variable"],
+    ["multivariate", "multivariable multi-dimensions multiple variables features"],
+    ["nilai unit", "unit value per unit price"],
+    ["distribusi", "distribution channel retail traditional showroom"],
+    ["segmen", "segment massal menengah premium institutional"],
+    ["margin", "margin profit markup"],
+    ["rantai nilai", "value chain"],
+    ["sertifikasi", "certification GS1 standards compliance"],
+    ["label", "label language japanese"],
+    ["kompetitif", "competitive position ranking market share"]
 ];
 
 // ============================================

@@ -1083,7 +1083,7 @@ export default function ChatPage() {
                     visibility: modelOpen ? "hidden" : "visible",
                     transition: "background 0.15s ease, color 0.15s ease"
                   }}
-onMouseEnter={(e) => { e.currentTarget.style.background = dark ? "rgba(233,163,25,0.25)" : "rgba(233,163,25,0.14)"; e.currentTarget.style.color = dark ? "#f6c453" : "#001845"; }}
+onMouseEnter={(e) => { e.currentTarget.style.background = dark ? "rgba(127,177,232,0.15)" : "rgba(233,163,25,0.14)"; e.currentTarget.style.color = dark ? "#e5edf7" : "#001845"; }}
 onMouseLeave={(e) => { e.currentTarget.style.background = t.inputBg; e.currentTarget.style.color = t.accentText; }}
                 >
                   <span style={{ display: "inline-flex", flexShrink: 0 }}>{IconSearchModule(13)}</span>

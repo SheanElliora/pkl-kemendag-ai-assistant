@@ -146,13 +146,54 @@ tr.hover-row:hover td {
 }
 
 /* Hover nav sidebar CMS */
-.side-nav-btn {
+/* Tombol samping sidebar */
+.side-btn {
+  transition: background 0.15s ease;
+}
+.side-btn:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+.side-btn.danger:hover {
+  background: rgba(220, 38, 38, 0.28) !important;
+}
+
+/* Tombol navigasi sidebar: hover halus */
+.side-nav-item {
   background: transparent;
   transition: background 0.15s ease;
 }
-
-.side-nav-btn:hover {
+.side-nav-item:hover {
   background: rgba(255, 255, 255, 0.12);
+}
+
+/* Tooltip cepat untuk sidebar collapsed */
+.side-nav-item[data-tip],
+.side-btn[data-tip] {
+  position: relative;
+}
+.side-nav-item[data-tip]::after,
+.side-btn[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: #0b1e3a;
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  z-index: 50;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+.side-nav-item[data-tip]:hover::after,
+.side-btn[data-tip]:hover::after {
+  opacity: 1;
 }
 
 /* Tombol hapus gaya ghost: ikon abu memerah saat hover */

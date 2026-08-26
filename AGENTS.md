@@ -2,7 +2,7 @@
 
 Ringkasan ini dimuat otomatis oleh opencode setiap sesi baru. Baca sebelum mengerjakan apa pun.
 
-## Status (terakhir diperbarui 20-08-2026)
+## Status (terakhir diperbarui 26-08-2026)
 
 - Proyek di C:\dev\pkl-kemendag-ai-assistant (SUDAH dipindah keluar OneDrive - jangan pindahkan lagi).
 - Sistem 100% sehat: ChromaDB :8000, Backend :3001, Frontend :5173. Login CMS: admin / AdminKemendag2026! (password lain ada di backend/.env - jangan commit .env).
@@ -35,6 +35,12 @@ Ringkasan ini dimuat otomatis oleh opencode setiap sesi baru. Baca sebelum menge
 - Runbook ultra-ringkas: RUNBOOK.md.
 - Backup: npm run backup -> backup/<waktu>/ (git-ignored, chroma/ + files.json + users.json + manifest). Folder backup di proyek sudah dibersihkan (26-08-2026); jalankan `npm run backup` bila perlu snapshot baru.
 - Rate-limit: login 10x/15mnt/IP, chat 20/mnt/IP -> 429.
+- **Indonesian language policy (26-08-2026):** Keep English: CMS, Server, AI, Panel Admin, AI Document Intelligence. Change to Indonesian: Upload→Unggah, Username→Nama Pengguna, Password→Kata Sandi, File→Dokumen, Role→Peran, Maintainer→Pengelola, Reset→Atur Ulang. Leave Admin/Status unchanged.
+- **CMS sidebar (26-08-2026):** stays dark gradient #001845→#004DAF regardless of dark/light mode. Divider `rgba(255,255,255,0.15)`, shadow `4px 0 20px rgba(0,0,0,0.15)`. Nav items use CSS tooltip via `data-tip` attribute. "Log Aktivitas" renamed to "Riwayat Aktivitas".
+- **RAG evaluation (26-08-2026):** 43 pertanyaan diuji via `scripts/testRagFull.mjs` (5-6 per 8 dokumen, easy/medium/hard). Hasil: 29 BENAR (67%), 3 SEBAGIAN, 3 RETRIEVAL GAGAL, 8 API ERROR (saldo habis). Efektif: 32/35 = 91.4% (tanpa error API). Masalah utama: (1) fakta single-occurrence ($2.490) tenggelam di dokumen besar, (2) istilah teknis tidak cocok ("univariate" vs "time-series"), (3) LLM merangkum generik instead of ekstrak angka spesifik, (4) max_tokens 512 terlalu rendah.
+- **RAG improvements IN-PROGRESS (26-08-2026):** max_tokens 512→1024 (DONE), KEYWORD_BONUS 0.05→0.1 (TODO), TERM_EN expansion tambah univariate/multivariate/nilai unit (TODO), prompt perkuat paksa ekstraksi angka (TODO). Re-run test setelah semua perubahan.
+- **API key:** OpenRouter key di-update di backend/.env (26-08-2026). JANGAN commit .env ke git.
+- **Test scripts:** `scripts/testRagFull.mjs` (43 soal, non-streaming, field `data.reply`), `scripts/testRagResults.json` (output), `scripts/testRagLog.txt` (console log).
 
 ## DESAIN UI (FINAL — pakai ini, JANGAN kembali ke desain lama)
 

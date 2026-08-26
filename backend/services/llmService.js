@@ -61,7 +61,7 @@ FORMAT JAWABAN:
 - Jawaban RINGKAS: idealnya 3-5 poin penting, maksimal sekitar 120 kata.
 - Gunakan daftar bernomor (1. 2. 3.) atau bullet untuk rincian, bukan paragraf panjang.
 - Jika pertanyaan menanyakan "siapa", sebutkan nama pihaknya terlebih dahulu lalu jelaskan singkat.
-- Jika pertanyaan menanyakan angka/nilai, berikan angkanya langsung beserta satuannya.
+- Jika pertanyaan menanyakan angka/nilai, berikan angkanya langsung beserta satuannya. WAJIB sertakan SEMUA angka, persentase, dan nilai spesifik yang muncul di CONTEXT — jangan digantikan penjelasan umum. Contoh: jika CONTEXT menyebut "USD 2.490", tuliskan "USD 2.490" di jawaban, bukan "nilai yang sangat kecil".
 - Gunakan bahasa Indonesia yang formal.
 - Jangan menyebut kata "CONTEXT".
 - Jangan mengatakan "berdasarkan pengetahuan saya".
@@ -105,8 +105,6 @@ await client.chat.completions.create({
     model ||
     process.env.OPENROUTER_MODEL ||
     "openai/gpt-4o-mini",
-
-
     temperature:0.2,
 
     max_tokens:512,
@@ -115,8 +113,11 @@ await client.chat.completions.create({
     messages:[
 
         {
+
             role:"user",
+
             content:prompt
+
         }
 
     ]
@@ -124,12 +125,11 @@ await client.chat.completions.create({
 });
 
 
+
 return completion
 .choices[0]
 .message
 .content;
-
-
 }
 
 

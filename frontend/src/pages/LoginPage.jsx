@@ -160,7 +160,7 @@ fontFamily: FONT_BODY
               <circle cx="12" cy="12" r="10" />
               <polyline points="12 6 12 12 16 14" />
             </svg>
-            Sesi berakhir. Silakan login kembali.
+            Sesi berakhir. Silakan masuk kembali.
           </div>
         )}
 
@@ -193,7 +193,7 @@ fontFamily: FONT_BODY
               onChange={(e) => { setUsername(e.target.value); setError(""); }}
               onFocus={() => setFocusField("username")}
               onBlur={() => setFocusField(null)}
-              placeholder="Username"
+              placeholder="Nama Pengguna"
               autoComplete="username"
               autoFocus
               disabled={loading}
@@ -216,7 +216,7 @@ fontFamily: FONT_BODY
               onFocus={() => setFocusField("password")}
               onBlur={() => setFocusField(null)}
               onKeyUp={(e) => setCapsLock(e.getModifierState ? e.getModifierState("CapsLock") : false)}
-              placeholder="Password"
+              placeholder="Kata Sandi"
               autoComplete="current-password"
               disabled={loading}
               required
@@ -244,7 +244,7 @@ fontFamily: FONT_BODY
             <button
               type="button"
               onClick={() => setShowPass((v) => !v)}
-              title={showPass ? "Sembunyikan password" : "Tampilkan password"}
+              title={showPass ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
               style={{
                 position: "absolute",
                 right: 14,
@@ -310,7 +310,7 @@ fontFamily: FONT_BODY
                 Memproses...
               </>
             ) : (
-              "Login"
+              "Masuk"
             )}
           </button>
         </form>

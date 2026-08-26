@@ -20,6 +20,7 @@ backend/uploads/
 backend/temp/
 backend/temp_ocr/
 backend/ocr_text/
+data/
 
 # Editor
 .vscode/
@@ -41,6 +42,11 @@ backup/
 frontend/test-results/
 frontend/playwright-report/
 frontend/e2e/.tmp/
+
+# Test output artifacts
+scripts/testRagLog.txt
+scripts/testRagErr.txt
+scripts/testRagResults.json
 
 # OneDrive conflict copies
 *-DESKTOP-*

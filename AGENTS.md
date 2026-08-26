@@ -38,9 +38,10 @@ Ringkasan ini dimuat otomatis oleh opencode setiap sesi baru. Baca sebelum menge
 - **Indonesian language policy (26-08-2026):** Keep English: CMS, Server, AI, Panel Admin, AI Document Intelligence. Change to Indonesian: Upload→Unggah, Username→Nama Pengguna, Password→Kata Sandi, File→Dokumen, Role→Peran, Maintainer→Pengelola, Reset→Atur Ulang. Leave Admin/Status unchanged.
 - **CMS sidebar (26-08-2026):** stays dark gradient #001845→#004DAF regardless of dark/light mode. Divider `rgba(255,255,255,0.15)`, shadow `4px 0 20px rgba(0,0,0,0.15)`. Nav items use CSS tooltip via `data-tip` attribute. "Log Aktivitas" renamed to "Riwayat Aktivitas".
 - **RAG evaluation (26-08-2026):** 43 pertanyaan diuji via `scripts/testRagFull.mjs` (5-6 per 8 dokumen, easy/medium/hard). Hasil: 29 BENAR (67%), 3 SEBAGIAN, 3 RETRIEVAL GAGAL, 8 API ERROR (saldo habis). Efektif: 32/35 = 91.4% (tanpa error API). Masalah utama: (1) fakta single-occurrence ($2.490) tenggelam di dokumen besar, (2) istilah teknis tidak cocok ("univariate" vs "time-series"), (3) LLM merangkum generik instead of ekstrak angka spesifik, (4) max_tokens 512 terlalu rendah.
-- **RAG improvements IN-PROGRESS (26-08-2026):** max_tokens 512→1024 (DONE), KEYWORD_BONUS 0.05→0.1 (TODO), TERM_EN expansion tambah univariate/multivariate/nilai unit (TODO), prompt perkuat paksa ekstraksi angka (TODO). Re-run test setelah semua perubahan.
-- **API key:** OpenRouter key di-update di backend/.env (26-08-2026). JANGAN commit .env ke git.
-- **Test scripts:** `scripts/testRagFull.mjs` (43 soal, non-streaming, field `data.reply`), `scripts/testRagResults.json` (output), `scripts/testRagLog.txt` (console log).
+- **RAG improvements DONE (26-08-2026):** KEYWORD_BONUS 0.05→0.1, 12 TERM_EN baru (univariate/multivariate/nilai unit/distribusi/segmen/margin/rantai nilai/sertifikasi/label/kompetitif), prompt perkuat paksa ekstraksi angka spesifik. Re-test 7 soal gagal: 2 BENAR, 2 SEBAGIAN, 3 SALAH (sebelumnya 0 BENAR).
+- **Model AI: `minimax/minimax-m3:free` (gratis, 0 biaya).** OpenRouter free model, limit 50 req/hari. Kalau ingin kualitas lebih baik, ganti ke `google/gemini-2.5-flash` (berbayar, perlu isi saldo OpenRouter).
+- **API key:** OpenRouter key terakhir di backend/.env. JANGAN commit .env ke git.
+- **Test scripts:** `scripts/testRagFull.mjs` (43 soal), `scripts/testRagRetry.mjs` (retry soal gagal), `scripts/testRetrievalOnly.mjs` (retrieval-only tanpa LLM, 0 token).
 
 ## DESAIN UI (FINAL — pakai ini, JANGAN kembali ke desain lama)
 

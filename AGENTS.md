@@ -33,7 +33,7 @@ Ringkasan ini dimuat otomatis oleh opencode setiap sesi baru. Baca sebelum menge
 - Tes UI browser (Playwright, frontend/): npx playwright test = 5 PASS (chat hero+streaming, CMS upload->approve->delete, feedback, export HTML/DOC — self-cleaning). Jalankan background: Start-Process cmd /c "npx playwright test --reporter=line --timeout=300000 > log 2>&1", poll ~130 dtk. Jebakan: GET /api/chat/history TANPA clientId/token hanya menampilkan owner "guest".
 - Cek kesehatan cepat: node scripts/healthCheck.mjs (5 PASS; --no-chat untuk skip LLM).
 - Runbook ultra-ringkas: RUNBOOK.md.
-- Backup: npm run backup -> backup/<waktu>/ (git-ignored, chroma/ + files.json + users.json + manifest); simpan 5 terbaru. Jalankan tiap dokumen baru di-approve.
+- Backup: npm run backup -> backup/<waktu>/ (git-ignored, chroma/ + files.json + users.json + manifest). Folder backup di proyek sudah dibersihkan (26-08-2026); jalankan `npm run backup` bila perlu snapshot baru.
 - Rate-limit: login 10x/15mnt/IP, chat 20/mnt/IP -> 429.
 
 ## DESAIN UI (FINAL — pakai ini, JANGAN kembali ke desain lama)
@@ -99,7 +99,7 @@ Detail lengkap di DEMO.md dan README.md (seksi Cadangan & Pemulihan).
 - backend/data/files.json berisi 11 record (8 dokumen approved + artefak tes) - JANGAN dihapus. Folder data: docs/, uploads/, ocr_text/, chunks/ ada di backend/ (chunk file = <nama>_chunks.json di backend/chunks/).
 - Cache model lokal backend\node_modules\@xenova\transformers\.cache = 434 MB (ikut terhapus bila node_modules dibersihkan).
 - ChromaDB memakai API v2: /api/v2/tenants/default_tenant/databases/default_database/collections/... (root /api/v1 -> 410; /count -> 400; retrieval tetap jalan).
-- Backup tersimpan di C:\Users\shean\AppData\Local\Temp\opencode\: KONTEKS_PEMULIHAN.md (lengkap + kredensial), backup_chroma_chunks, users_backup.json. Backup aktif sekarang di C:\dev\pkl-kemendag-ai-assistant\backup\ (lihat npm run backup).
+- Backup tersimpan di C:\Users\shean\AppData\Local\Temp\opencode\: KONTEKS_PEMULIHAN.md (lengkap + kredensial), backup_chroma_chunks, users_backup.json. Folder backup di proyek sudah dibersihkan (26-08-2026); jalankan `npm run backup` bila perlu snapshot baru.
 - Installer .exe/.msi di Downloads JANGAN dihapus (kebutuhan UAS kampus).
 - Pelajaran: jangan kirim JSON inline di PowerShell+curl (pakai --data "@file"); jangan flood /api/chat (backend macet); hapus folder OneDrive besar = hentikan OneDrive dulu; JANGAN edit files.json dgn PowerShell Set-Content -Encoding UTF8 (menulis BOM -> backend JSON.parse gagal -> baca [] -> data tertimpa; gunakan Node atau editor biasa).
 - Folder sisa OneDrive ...PKL-Kemendag\Machine Learning - Copy (0 MB) SUDAH dihapus (18-08-2026, hentikan OneDrive dulu).

@@ -6,8 +6,8 @@
 // navy #13182B, abu-abu #58595B, latar putih.
 // =============================================================
 
-export const FONT_HEADING = '"Sora", "Plus Jakarta Sans", sans-serif';
-export const FONT_BODY = '"Source Sans 3", "Plus Jakarta Sans", sans-serif';
+export const FONT_HEADING = '"Sora", sans-serif';
+export const FONT_BODY = '"Source Sans 3", sans-serif';
 
 export const COLORS = {
   blue: "#004DAF",
@@ -33,7 +33,7 @@ export const COLORS = {
   borderSoftLight: "#e4eaf2",
   borderSoftDark: "#2b3a58",
 
-  inputBgLight: "#eef3f9",
+  inputBgLight: "#ffffff",
   inputBgDark: "#0f1a2f",
 
   textLight: "#1e293b",

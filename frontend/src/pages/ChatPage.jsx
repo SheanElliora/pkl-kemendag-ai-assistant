@@ -1070,7 +1070,7 @@ export default function ChatPage() {
                     margin: "14px auto 0",
                     maxWidth: "100%",
                     background: t.inputBg,
-                    border: "1px solid " + t.borderSoft,
+                    border: "1px solid " + t.border,
                     borderRadius: "999px",
                     padding: "7px 16px",
                     fontSize: "12.5px",
@@ -2315,7 +2315,7 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
   const badge = providerBadge(model, dark);
   const short = model.split("/").pop();
   const mt = {
-    card: dark ? "#0f1a2f" : "#eef3f9",
+    card: dark ? "#0f1a2f" : "#dde7f3",
     border: dark ? "#f6c453" : "#e9a319",
     borderSoft: dark ? "#304266" : "#d3deeb",
     text: dark ? "#e5edf7" : "#1e293b",
@@ -2344,7 +2344,7 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
           borderRadius: "999px",
           border: open ? "1px solid " + (dark ? "#7fb1e8" : "#004DAF") : "1px solid " + (dark ? "#26324d" : "#c9d4e3"),
           fontSize: "14px",
-          background: open ? mt.itemBg : (dark ? "#0f1a2f" : "#eef3f9"),
+          background: open ? mt.itemBg : (dark ? "#0f1a2f" : "#ffffff"),
           color: mt.text,
           outline: "none",
           cursor: "pointer",

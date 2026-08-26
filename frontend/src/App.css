@@ -1,5 +1,5 @@
 body {
-  font-family: "Source Sans 3", "Plus Jakarta Sans", sans-serif;
+  font-family: "Source Sans 3", sans-serif;
 }
 
 @keyframes bounce {
@@ -28,11 +28,6 @@ body {
     opacity: 1;
   }
 
-}
-
-@keyframes blinkCaret {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
 }
 
 @keyframes msgIn {
@@ -224,7 +219,7 @@ tr.hover-row:hover td {
 /* Kotak input pill: sama persis dengan input login (border 1px + ring emas 3px) */
 .textbox-pill {
   border: 1px solid #c9d4e3;
-  background: #eef3f9;
+  background: #ffffff;
   box-shadow: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }

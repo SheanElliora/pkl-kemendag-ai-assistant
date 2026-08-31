@@ -3,10 +3,9 @@ import OpenAI from "openai";
 
 const client = new OpenAI({
 
-    apiKey: process.env.OPENROUTER_API_KEY,
+    apiKey: "ollama",
 
-    baseURL:
-    "https://openrouter.ai/api/v1",
+    baseURL: "http://localhost:11434/v1",
 
     timeout: 60000
 
@@ -107,7 +106,7 @@ await client.chat.completions.create({
     model:
     model ||
     process.env.OPENROUTER_MODEL ||
-    "minimax/minimax-m3:free",
+    "phi-3-mini-4k-instruct",
 
     temperature:0.2,
 

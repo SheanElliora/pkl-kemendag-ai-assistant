@@ -31,7 +31,7 @@ import {
 
 const MODEL_NAME = "Xenova/bge-reranker-base";
 
-const MAX_LENGTH = 512;
+const MAX_LENGTH = 1024;
 
 let tokenizer = null;
 let model = null;

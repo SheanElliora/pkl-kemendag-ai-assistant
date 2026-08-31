@@ -118,20 +118,27 @@ async function expandWithLLM(question) {
     const client = new OpenAI({
         apiKey: process.env.OPENROUTER_API_KEY,
         baseURL: "https://openrouter.ai/api/v1",
-        timeout: 8000
+        timeout: 15000
     });
 
     const prompt =
-`Extract the key terms from this Indonesian question and translate them into English keywords for document search.
+`Extract key terms from this Indonesian question and translate them into English keywords for document search.
 
 Question: "${question}"
 
 Rules:
 - Output ONLY English keywords/phrases relevant for matching the topic, separated by spaces.
-- Cover each important term. Prefer common English nouns (e.g. "price", "market", "regulation").
+- Cover each important term. Include technical terms specific to the question's domain (e.g. for "harga obat" include "price", "dosage", "medicine"; for "perdata" include "civil", "law", "settlement").
 - Also include the raw numbers, codes, or acronyms that appear in the question (e.g. "2024", "HS 901890", "VAT").
 - No explanations, no sentences, no punctuation except spaces.
-- At most ${MAX_TERMS} terms.`;
+- At most 10 terms.
+
+IMPORTANT: Always include these domain-agnostic keywords if present in the question:
+- "indonesia", "indonesian" (for local content)
+- "export", "import" (for trade documents)
+- "regulation", "regulation" (for legal docs)
+- "price", "value", "amount" (for financial docs)
+- "study", "research", "paper" (for academic docs)`;
 
     const completion =
     await client.chat.completions.create({

@@ -235,8 +235,8 @@ function hardSplit(sentence, chunkSize) {
 
 export function createChunks(
     pages,
-    chunkSize = 1500,
-    overlap = 300
+    chunkSize = 2000,
+    overlap = 500
 ){
 
     const chunks = [];
@@ -364,4 +364,6 @@ export function createChunks(
 
     return chunks;
 
-}
+return chunks;
+}  
+ 

@@ -50,16 +50,23 @@ const DEBUG = process.env.RETRIEVER_DEBUG === "1";
 //                   urutan akhir.
 // ============================================
 
-const MAX_CANDIDATES = 7;
+const MAX_CANDIDATES = 10;
 const DISTANCE_RATIO = 3.0;
 const DISTANCE_OFFSET = 0.3;
-const SEARCH_WIDTH = 60;
+const SEARCH_WIDTH = 80;
 const KEYWORD_BONUS = 0.1;
 const FILENAME_BONUS = 0.15;
-const MIN_CHUNK_LENGTH = 40;
-const RERANK_WIDTH = 10;
-const RERANK_WEIGHT = 0.5;
-const BM25_WIDTH = 60;
+const MIN_CHUNK_LENGTH = 200;
+const RERANK_WIDTH = 15;
+const RERANK_WEIGHT = 0.7;
+const BM25_WIDTH = 80;
+
+// Bonus chunk pembuktian angka utk pertanyaan fakta-nilai.
+// Chunk berisi "$ 2,490" / "USD" / "12,5%" / "1.234" / "5 juta"
+// layak diunggulkan bila user menanyakan BESARAN.
+const VALUE_FACT_BONUS = 0.1;
+const VALUE_FACT_PATTERN =
+/(\$\s?\d|\busd\b|\brp\s?\d|\beur\b|\d+[.,]\d+\s*%|\d+(?:[.,]\d+)?\s*(?:juta|miliar|triliun|ton|unit)|\d{1,3}(?:\.\d{3})+,\d{2}|\d{1,3}(?:,\d{3})+\.\d{2})/i;
 const BM25_BONUS = 0.3;
 
 // Kata umum yang bising untuk token 3 huruf.
@@ -196,7 +203,25 @@ const TERM_EN = [
     ["rantai nilai", "value chain"],
     ["sertifikasi", "certification GS1 standards compliance"],
     ["label", "label language japanese"],
-    ["kompetitif", "competitive position ranking market share"]
+    ["kompetitif", "competitive position ranking market share"],
+    ["series 1", "first experiment initial experiment awal percobaan"],
+    ["series 2", "second experiment follow-up follow up experiment lanjutan"],
+    ["regresi", "regression analysis"],
+    ["r square", "r-squared r2 coefficient determination koefisien determinasi"],
+    ["multikolinearitas", "multicollinearity vif variance inflation factor"],
+    ["kain ankara", "ankara wax print textile fabric cotton HS 5208 5212"],
+    ["ekspor indonesia", "indonesia export HS 5208 5212 textile"],
+    ["tren ekspor", "export trend decline penurunan"],
+    ["strategi distribusi", "distribution strategy channel showroom retail market"],
+    ["eksperimen", "experiment experimental design methodology"],
+    ["hot-swap", "hot swap index swapping index swapping"],
+    ["swapping", "swap swapping replacement"],
+    ["akurasi", "accuracy correct percentage rate"],
+    ["indeks", "index document storage index"],
+    ["hot", "hot swap"],
+    ["persentase", "percentage percent rate"],
+    ["kumpulan", "set collection group"],
+    ["penghitungan", "calculation computation measure"],
 ];
 
 // ============================================
@@ -756,6 +781,22 @@ candidates.push({
 
     if (candidates.length > 0) {
 
+        // Pertanyaan FAKTA ANGKA ("berapa nilai...", "how much")
+        // sering salah urut oleh cross-encoder: chunk berisi
+        // angka yang dicari ($2,490, kode HS, persentase) kerap
+        // berbentuk naratif ("tren penurunan...") sehingga
+        // dinilai rendah, sementara chunk umum bernilai ~1.0.
+        // Dengan RERANK_WEIGHT penuh (0.5), gap itu tak bisa
+        // dikalahkan bonus kata kunci mana pun. Untuk kelas
+        // pertanyaan ini bobot reranker diturunkan agar sinyal
+        // kata kunci eksak tetap menentukan. Pertanyaan lain
+        // tidak terpengaruh sama sekali.
+        const isValueQuestion =
+        /\b(berapa|nilai|jumlah|volume|persen|how\s+much|what\s+(?:is\s+the\s+)?(?:value|amount|percentage)|export\s+value)\b/i.test(question);
+
+        const activeRerankWeight =
+        isValueQuestion ? 0.15 : RERANK_WEIGHT;
+
         const topForRerank =
         candidates
         .slice(0, RERANK_WIDTH);
@@ -788,7 +829,7 @@ candidates.push({
 
                 return {
                     ...item,
-                    score: item.score - RERANK_WEIGHT * item.rerankScore
+                    score: item.score - activeRerankWeight * item.rerankScore
                 };
 
             }
@@ -797,6 +838,23 @@ candidates.push({
 
         })
         .sort((a,b)=>a.score - b.score);
+
+        if (DEBUG) {
+            console.log(
+                "\n===== SKOR SETELAH RERANK (weight=" +
+                activeRerankWeight + ", valueQ=" + isValueQuestion + ") ====="
+            );
+            candidates.slice(0, 15).forEach((item, i)=>{
+                console.log(
+                    `[${i}] ${item.meta?.filename || "?"} p${item.meta?.page}` +
+                    ` dist=${(item.distance??0).toFixed(4)}` +
+                    ` kwHits=${item.keywordHits??0}` +
+                    ` bm25=${(item.bm25Bonus||0).toFixed(3)}` +
+                    ` rerank=${item.rerankScore!==undefined ? item.rerankScore.toFixed(4) : "-"}` +
+                    ` final=${item.score.toFixed(4)}`
+                );
+            });
+        }
 
     }
 

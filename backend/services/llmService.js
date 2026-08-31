@@ -66,6 +66,10 @@ FORMAT JAWABAN:
 - Jangan menyebut kata "CONTEXT".
 - Jangan mengatakan "berdasarkan pengetahuan saya".
 - Jangan memberikan saran di luar isi dokumen.
+- Jika CONTEXT menyebut nama lokasi/kota/negara, sebutkan nama lokasi tersebut di jawaban.
+- Jika CONTEXT menyebut nama perusahaan/toko/spesifik, sebutkan nama tersebut.
+- Jika CONTEXT menyebut angka, persentase, nilai USD, atau data numerik lainnya, WAJIB tuliskan angka persis seperti yang ada di CONTEXT — jangan digantikan dengan "sedikit", "sangat kecil", "terbatas", atau deskripsi umum lainnya.
+- Jika pertanyaan meminta "perbedaan", "bandingkan", atau "mana lebih", WAJIB sebutkan data dari KEDUA belah pihak secara berdampingan, bukan hanya satu pihak.
 - Beri nomor kutipan [n] untuk setiap fakta. Letakkan [n] tepat akhir kalimat atau klaim yang bersumber dari file tersebut, sesuai urutan "FILE:" pada CONTEXT (file pertama = [1], file kedua = [2], dst.). Contoh: "Tarif bea masuk HS 901890 sebesar 0% [4]."
 - Gunakan nomor kutipan HANYA untuk klaim yang benar-benar berasal dari file itu.
 - Jika jawaban berupa kalimat "Informasi tersebut tidak ditemukan dalam dokumen yang tersedia.", jangan menyertakan kutipan apa pun.
@@ -97,17 +101,17 @@ export async function generateAnswer(
 const prompt = buildPrompt(question, context, history);
 
 
-
 const completion =
 await client.chat.completions.create({
 
     model:
     model ||
     process.env.OPENROUTER_MODEL ||
-    "openai/gpt-4o-mini",
+    "minimax/minimax-m3:free",
+
     temperature:0.2,
 
-    max_tokens:512,
+    max_tokens:1536,
 
 
     messages:[
@@ -124,7 +128,45 @@ await client.chat.completions.create({
 
 });
 
+if (!completion?.choices?.[0]?.message?.content) {
+    throw new Error("Model tidak mengembalikan jawaban (respons kosong atau format tidak valid). Silakan coba lagi.");
+}
 
+// Fallback ke model lain jika primary gagal
+if (!completion?.choices?.[0]?.message?.content) {
+    const fallbackCompletion =
+    await client.chat.completions.create({
+
+        model:
+        "openai/gpt-4o-mini",
+
+        temperature:0.2,
+
+        max_tokens:1536,
+
+        messages:[
+
+            {
+
+                role:"user",
+
+                content:prompt
+
+            }
+
+        ]
+
+    });
+
+    if (!fallbackCompletion?.choices?.[0]?.message?.content) {
+        throw new Error("Model AI gagal: keduanya mengembalikan jawaban kosong.");
+    }
+
+    return fallbackCompletion
+    .choices[0]
+    .message
+    .content;
+}
 
 return completion
 .choices[0]
@@ -157,7 +199,7 @@ await client.chat.completions.create({
 
     temperature:0.2,
 
-    max_tokens:512,
+    max_tokens:1536,
 
     stream:true,
 

@@ -1260,6 +1260,8 @@ onMouseLeave={(e) => { e.currentTarget.style.background = t.inputBg; e.currentTa
                         padding: "14px 18px",
                         borderRadius: "18px 18px 18px 4px",
                         boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
+                        border: dark ? "1px solid rgba(255,255,255,0.13)" : "1px solid #bccadb",
+                        borderLeft: "4px solid #004DAF",
                         minWidth: "230px"
                       }}
                     >

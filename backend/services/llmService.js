@@ -15,7 +15,6 @@ const OPENROUTER_CLIENT = new OpenAI({
 
 const FALLBACK_CHAIN = [
     "minimax/minimax-m3:free",
-    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
     "openai/gpt-4o-mini",
 ];
 
@@ -187,7 +186,7 @@ export function translateLLMError(error) {
     const msg = String(error?.message || error || "");
 
     const isCredits = status === 402 || /credits|billing|quota|payment|insufficient/i.test(msg);
-    const isRateLimit = status === 429 || /rate limit|too many requests/i.test(msg);
+    const isRateLimit = status === 429 || /rate limit|too many requests|resourceexhausted|worker.*limit reached/i.test(msg);
 
     if (isCredits) {
         return "Saldo/kredit API (OpenRouter) hampir atau sudah habis. " +

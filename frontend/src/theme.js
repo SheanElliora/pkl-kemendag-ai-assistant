@@ -20,17 +20,17 @@ export const COLORS = {
   goldLight: "#f6c453",
   goldSoft: "rgba(233,163,25,0.55)",
 
-  pageBgLight: "linear-gradient(180deg,#bfd0e8,#dbe6f3)",
+  pageBgLight: "linear-gradient(180deg,#eef2f7,#f8fafc)",
   pageBgDark: "#0a101e",
 
-  cardLight: "#f6f8fd",
-  cardDark: "#2a3d63",
+  cardLight: "#ffffff",
+  cardDark: "#263956",
   cardSoftLight: "#f8fafc",
   cardSoftDark: "#304266",
 
-  borderLight: "#c9d4e3",
-  borderDark: "#26324d",
-  borderSoftLight: "#e4eaf2",
+  borderLight: "#e2e8f0",
+  borderDark: "#1e2e4a",
+  borderSoftLight: "#eef2f7",
   borderSoftDark: "#2b3a58",
 
   inputBgLight: "#ffffff",
@@ -43,16 +43,16 @@ export const COLORS = {
   textMuteLight: "#5b6b82",
   textMuteDark: "#9db0cc",
 
-  bubbleBotLight: "#f2f6fc",
+  bubbleBotLight: "#eaf0ff",
   bubbleBotDark: "#3e5788",
-  bubbleUserLight: "#1a67d2",
+  bubbleUserLight: "#3b82f6",
   bubbleUserDark: "#2c63ae",
 
   barLight: "#ffffff",
   barDark: "#1b2944",
   bgSoftLight: "#eaf0f7",
   bgSoftDark: "#3a4b6b",
-  sidebarLight: "#dee9f4",
+  sidebarLight: "#f6f8fd",
   sidebarDark: "#0f182c"
 };
 
@@ -78,6 +78,6 @@ export function createTheme(dark) {
     accent: dark ? "#7fb1e8" : COLORS.blue,
     cardBorder: dark ? COLORS.borderDark : COLORS.borderLight,
     gold: COLORS.gold,
-    chatBg: dark ? "#223254" : "#dfe9f5"
+    chatBg: dark ? "#223254" : "#f8fafc"
   };
 }

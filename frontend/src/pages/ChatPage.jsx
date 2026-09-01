@@ -807,7 +807,7 @@ export default function ChatPage() {
           borderRadius: isMobile ? "14px" : "20px",
           boxShadow: dark
             ? "0 8px 24px rgba(0,0,0,0.35)"
-            : "0 8px 24px rgba(15,40,80,0.12)",
+            : "0 4px 12px rgba(15,40,80,0.08)",
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
@@ -1239,11 +1239,12 @@ onMouseLeave={(e) => { e.currentTarget.style.background = t.inputBg; e.currentTa
                         height: "38px",
                         borderRadius: "12px",
                         flexShrink: 0,
-                        background: "linear-gradient(135deg,#001845,#004DAF)",
+                        background: dark ? "#2a3d63" : "#dbeafe",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        color: "#ffffff",
+                        color: dark ? "#7fb1e8" : "#1e40af",
+                        border: dark ? "1px solid #1e2e4a" : "1px solid #bfdbfe",
                         alignSelf: "flex-start",
                         animation: m.streaming ? "pulseRing 1.5s infinite" : "none"
                       }}

@@ -19,7 +19,7 @@ const FALLBACK_CHAIN = [
 ];
 
 function getClient(model) {
-    const localModels = ["minimax/minimax-m3:free", "phi-3-mini-4k-instruct"];
+    const localModels = ["phi-3-mini-4k-instruct"];
     return localModels.includes(model) ? OLLAMA_CLIENT : OPENROUTER_CLIENT;
 }
 
@@ -122,7 +122,7 @@ async function callModel(client, model, prompt) {
     return await client.chat.completions.create({
         model,
         temperature: 0.2,
-        max_tokens: 1536,
+        max_tokens: 1024,
         messages: [{ role: "user", content: prompt }],
     });
 }
@@ -166,7 +166,7 @@ export async function generateAnswerStream(question, context, model, history) {
             const stream = await client.chat.completions.create({
                 model: m,
                 temperature: 0.2,
-                max_tokens: 1536,
+                max_tokens: 1024,
                 stream: true,
                 messages: [{ role: "user", content: prompt }],
             });

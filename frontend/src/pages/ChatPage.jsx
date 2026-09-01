@@ -1239,12 +1239,12 @@ onMouseLeave={(e) => { e.currentTarget.style.background = t.inputBg; e.currentTa
                         height: "38px",
                         borderRadius: "12px",
                         flexShrink: 0,
-                        background: dark ? "#2a3d63" : "#dbeafe",
+                        background: t.bubbleBot,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         color: dark ? "#7fb1e8" : "#1e40af",
-                        border: dark ? "1px solid #1e2e4a" : "1px solid #bfdbfe",
+                        border: dark ? "1px solid rgba(255,255,255,0.12)" : "1px solid #dbeafe",
                         alignSelf: "flex-start",
                         animation: m.streaming ? "pulseRing 1.5s infinite" : "none"
                       }}

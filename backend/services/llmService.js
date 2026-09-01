@@ -14,9 +14,8 @@ const OPENROUTER_CLIENT = new OpenAI({
 });
 
 const FALLBACK_CHAIN = [
-    "google/gemini-2.0-flash-exp:free",
     "minimax/minimax-m3:free",
-    "deepseek/deepseek-chat:free",
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
     "openai/gpt-4o-mini",
 ];
 
@@ -123,8 +122,7 @@ async function callModel(client, model, prompt) {
 
 export async function generateAnswer(question, context, model, history) {
     const prompt = buildPrompt(question, context, history);
-    const targetModel =
-        model || process.env.OPENROUTER_MODEL || "google/gemini-2.0-flash-exp:free";
+    const targetModel = model || process.env.OPENROUTER_MODEL || "minimax/minimax-m3:free";
     await recordQuery(question, targetModel);
     const chain = FALLBACK_CHAIN.includes(targetModel)
         ? FALLBACK_CHAIN
@@ -150,8 +148,7 @@ export async function generateAnswer(question, context, model, history) {
 
 export async function generateAnswerStream(question, context, model, history) {
     const prompt = buildPrompt(question, context, history);
-    const targetModel =
-        model || process.env.OPENROUTER_MODEL || "google/gemini-2.0-flash-exp:free";
+    const targetModel = model || process.env.OPENROUTER_MODEL || "minimax/minimax-m3:free";
     const chain = FALLBACK_CHAIN.includes(targetModel)
         ? FALLBACK_CHAIN
         : [targetModel, ...FALLBACK_CHAIN];

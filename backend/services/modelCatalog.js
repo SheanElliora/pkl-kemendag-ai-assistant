@@ -10,20 +10,12 @@
 
 export const MODEL_CATALOG = [
     {
-        id: "google/gemini-2.0-flash-exp:free",
-        label: "Gemini 2.0 Flash Exp (gratis, cepat, stabil) — REKOMENDASI"
-    },
-    {
         id: "minimax/minimax-m3:free",
-        label: "Minimax M3 (gratis, 50 req/hari)"
+        label: "Minimax M3 (gratis, 50 req/hari) — REKOMENDASI gratis"
     },
     {
-        id: "deepseek/deepseek-chat:free",
-        label: "DeepSeek Chat (gratis, efisien)"
-    },
-    {
-        id: "meta-llama/llama-3.3-70b-instruct:free",
-        label: "Llama 3.3 70B (gratis, open source)"
+        id: "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+        label: "Nemotron 3 Nano 30B (gratis, backup)"
     },
     {
         id: "google/gemini-2.5-flash",
@@ -32,5 +24,13 @@ export const MODEL_CATALOG = [
     {
         id: "openai/gpt-4o-mini",
         label: "OpenAI GPT-4o mini (berbayar, hemat)"
+    },
+    {
+        id: "openai/gpt-4o",
+        label: "OpenAI GPT-4o (berbayar, akurat)"
+    },
+    {
+        id: "anthropic/claude-3.5-sonnet",
+        label: "Anthropic Claude 3.5 Sonnet (berbayar)"
     }
 ];

@@ -25,11 +25,13 @@ import {
 // Ambang minimum karakter untuk dianggap
 // PDF berisi teks digital (selectable text).
 // Bila total teks yang diekstrak pdfjs
-// kurang dari ini, PDF dianggap hasil scan
-// dan diteruskan ke OCR.
+// kurang dari ini ATAU jumlah halaman
+// bermakna <3, PDF dianggap hasil scan
+// dan diteruskan ke OCR (mencegah tabel
+// angka tipis lolos sebagai digital).
 // =====================================
 
-const MIN_DIGITAL_CHARS = 500;
+const MIN_DIGITAL_CHARS = 1200;
 
 // =====================================
 // Deteksi perubahan sumber dokumen
@@ -321,11 +323,16 @@ async function processPDF(file){
         );
 
 
-        if(totalChars >= MIN_DIGITAL_CHARS){
+        const meaningfulPages = extractedPages.filter(
+            (p) => p.text.trim().length > 100
+        ).length;
 
-
+        if (
+            totalChars >= MIN_DIGITAL_CHARS &&
+            meaningfulPages >= 3
+        ) {
             console.log(
-                `Teks digital ditemukan (${totalChars} karakter), tanpa OCR`
+                `Teks digital ditemukan (${totalChars} karakter, ${meaningfulPages} halaman bermakna), tanpa OCR`
             );
 
 

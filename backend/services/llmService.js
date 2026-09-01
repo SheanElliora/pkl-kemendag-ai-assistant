@@ -14,7 +14,9 @@ const OPENROUTER_CLIENT = new OpenAI({
 });
 
 const FALLBACK_CHAIN = [
+    "google/gemini-2.0-flash-exp:free",
     "minimax/minimax-m3:free",
+    "deepseek/deepseek-chat:free",
     "openai/gpt-4o-mini",
 ];
 
@@ -121,11 +123,12 @@ async function callModel(client, model, prompt) {
 
 export async function generateAnswer(question, context, model, history) {
     const prompt = buildPrompt(question, context, history);
-    const targetModel = model || process.env.OPENROUTER_MODEL || "minimax/minimax-m3:free";
+    const targetModel =
+        model || process.env.OPENROUTER_MODEL || "google/gemini-2.0-flash-exp:free";
     await recordQuery(question, targetModel);
-    const chain = targetModel !== "minimax/minimax-m3:free"
-        ? [targetModel, ...FALLBACK_CHAIN]
-        : FALLBACK_CHAIN;
+    const chain = FALLBACK_CHAIN.includes(targetModel)
+        ? FALLBACK_CHAIN
+        : [targetModel, ...FALLBACK_CHAIN];
 
     for (const m of chain) {
         const client = getClient(m);
@@ -147,10 +150,11 @@ export async function generateAnswer(question, context, model, history) {
 
 export async function generateAnswerStream(question, context, model, history) {
     const prompt = buildPrompt(question, context, history);
-    const targetModel = model || process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini";
-    const chain = targetModel !== "minimax/minimax-m3:free"
-        ? [targetModel, ...FALLBACK_CHAIN]
-        : FALLBACK_CHAIN;
+    const targetModel =
+        model || process.env.OPENROUTER_MODEL || "google/gemini-2.0-flash-exp:free";
+    const chain = FALLBACK_CHAIN.includes(targetModel)
+        ? FALLBACK_CHAIN
+        : [targetModel, ...FALLBACK_CHAIN];
 
     for (const m of chain) {
         const client = getClient(m);

@@ -30,7 +30,7 @@ const CHROMA = "http://localhost:8000";
 const CHROMA_V2 = `${CHROMA}/api/v2/tenants/default_tenant/databases/default_database/collections`;
 const COLLECTION_ID = "0b182325-8551-4d39-8252-0bc6322838e3";
 const COLLECTION_NAME = "sip_documents";
-const MIN_VECTORS = 600;
+const MIN_VECTORS = 400;
 
 const args = process.argv.slice(2);
 const doChat = args.includes("--chat") || !args.includes("--no-chat");

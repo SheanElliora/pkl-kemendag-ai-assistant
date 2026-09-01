@@ -116,21 +116,13 @@ function loadCorpus() {
             let chunks = [];
 
             try {
-
-                chunks =
-                JSON.parse(
-                    fs.readFileSync(
-                        path.join(CHUNK_FOLDER, file),
-                        "utf8"
-                    )
+                const parsed = JSON.parse(
+                    fs.readFileSync(path.join(CHUNK_FOLDER, file), "utf8")
                 );
-
-            }
-
-            catch {
-
+                // Backward compat: v1 array vs v2 {version, chunks}
+                chunks = Array.isArray(parsed) ? parsed : parsed.chunks || [];
+            } catch {
                 continue;
-
             }
 
             if (!Array.isArray(chunks)) continue;

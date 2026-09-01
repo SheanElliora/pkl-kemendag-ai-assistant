@@ -97,7 +97,8 @@ async function main() {
 
     // 5) File chunk JSON ada (format: <nama-tanpa-pdf>_chunks.json)
     const chunkPath = path.join(CHUNKS_FOLDER, NEW_NAME.replace(/\.pdf$/i, "") + "_chunks.json");
-    const chunks = fs.existsSync(chunkPath) ? JSON.parse(fs.readFileSync(chunkPath, "utf8")) : [];
+    const raw = fs.existsSync(chunkPath) ? JSON.parse(fs.readFileSync(chunkPath, "utf8")) : [];
+    const chunks = Array.isArray(raw) ? raw : raw.chunks || [];
     record("File chunk JSON dibuat", chunks.length > 0, `${chunks.length} chunk`);
 
     // 6) Vektor di Chroma (metadata filename)

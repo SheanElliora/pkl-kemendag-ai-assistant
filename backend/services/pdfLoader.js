@@ -2,7 +2,11 @@ import fs from "fs";
 import path from "path";
 
 import { pdfToTextOCR } from "./ocrService.js";
-import { createChunks } from "./chunkService.js";
+import {
+    createChunks,
+    detectDocType,
+    getChunkConfig
+} from "./chunkService.js";
 import { cleanText } from "./textCleaner.js";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
 import { loadPDFWithPages } from "./pdfPageLoader.js";
@@ -440,15 +444,20 @@ async function processPDF(file){
             "Membuat chunk baru"
         );
 
-        chunks =
-        createChunks(
-            pages
+        const docType = detectDocType(pages, file);
+        const { chunkSize, overlap } = getChunkConfig(docType);
+
+        console.log(
+            `Tipe dokumen terdeteksi: ${docType} -> chunkSize=${chunkSize}, overlap=${overlap}`
         );
 
-        saveChunks(
-            file,
-            chunks
-        );
+        chunks = createChunks(pages, chunkSize, overlap);
+
+        saveChunks(file, chunks, {
+            docType,
+            chunkSize,
+            overlap
+        });
 
         rebuilt = true;
     }

@@ -176,6 +176,78 @@ export function extractPrintedPage(text, pageIndex) {
 
 }
 
+// =====================================
+// Deteksi tipe dokumen untuk chunking adaptif
+// Dipakai agar dokumen baru langsung dapat
+// chunkSize/overlap yang optimal tanpa config
+// manual. Heuristik berbasis nama file + sampel
+// teks 3 halaman pertama.
+// =====================================
+
+export function detectDocType(pages, filename = "") {
+    const name = (filename || "").toLowerCase();
+    const sample = pages
+        .slice(0, 3)
+        .map((p) => p.text || "")
+        .join(" ")
+        .toLowerCase()
+        .slice(0, 4000);
+
+    // Peraturan: Permendag, UU, PP, Pasal/Ayat
+    if (
+        /permendag|permen|peraturan|undang-undang|\buu\b|pp\s*nomor|pasal\s+\d+/.test(
+            name
+        ) ||
+        /pasal\s+\d+|ayat\s*\(|peraturan menteri|bab\s+[ivx]+|lembaran negara/.test(
+            sample
+        )
+    ) {
+        return "peraturan";
+    }
+
+    // Akademik: jurnal, skripsi, thesis, metodologi
+    if (
+        /jurnal|journal|artikel|skripsi|thesis|penelitian|riset|e-journal/.test(
+            name
+        ) ||
+        /abstrak|abstract|metodologi|methodology|daftar pustaka|references|rumusan masalah|tujuan penelitian|tinjauan pustaka/.test(
+            sample
+        )
+    ) {
+        return "akademik";
+    }
+
+    // Praktis: laporan pasar, market intelligence, ekspor-impor
+    if (
+        /market intelligence|laporan.*pasar|nigeria|jepang|japan|ekspor|impor|kain|tekstil|restoran|game|decoration|ankara|medis/.test(
+            name
+        ) ||
+        /market intelligence|peluang.*pasar|strategi.*distribusi|informasi pasar|hs\s*code|beia\s*cukai/.test(
+            sample
+        )
+    ) {
+        return "praktis";
+    }
+
+    return "general";
+}
+
+export function getChunkConfig(docType) {
+    switch (docType) {
+        case "peraturan":
+            // Pasal panjang, butuh chunk lebih kecil + overlap sedang agar ayat tidak terpotong
+            return { chunkSize: 1600, overlap: 400 };
+        case "akademik":
+            // Narasi panjang + tabel, butuh overlap besar agar metodologi utuh (chunkSize dibatasi 512 token reranker)
+            return { chunkSize: 2000, overlap: 600 };
+        case "praktis":
+            // Laporan pasar dengan tabel/angka, default sudah optimal
+            return { chunkSize: 2000, overlap: 500 };
+        default:
+            return { chunkSize: 2000, overlap: 500 };
+    }
+}
+
 // Pecah teks halaman menjadi daftar "segmen":
 // paragraf (baris kosong) dan kalimat.
 function splitIntoSentences(text) {

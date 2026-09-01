@@ -1,5 +1,36 @@
+import crypto from "crypto";
 import { searchDocuments } from "./retrieverService.js";
 import { generateAnswer, generateAnswerStream } from "./llmService.js";
+
+// Cache jawaban 10 menit untuk pertanyaan identik (hemat embedding+rerank+LLM, <100ms hit)
+const answerCache = new Map();
+const CACHE_TTL = 10 * 60 * 1000;
+const CACHE_MAX = 100;
+
+function cacheKey(question, model) {
+    return crypto
+        .createHash("md5")
+        .update((question || "").toLowerCase().trim() + "|" + (model || ""))
+        .digest("hex");
+}
+
+function getCached(key) {
+    const hit = answerCache.get(key);
+    if (!hit) return null;
+    if (Date.now() - hit.ts > CACHE_TTL) {
+        answerCache.delete(key);
+        return null;
+    }
+    return hit.value;
+}
+
+function setCached(key, value) {
+    if (answerCache.size >= CACHE_MAX) {
+        const first = answerCache.keys().next().value;
+        answerCache.delete(first);
+    }
+    answerCache.set(key, { value, ts: Date.now() });
+}
 
 
 function getDisplayName(meta){
@@ -73,12 +104,13 @@ function isNotFoundAnswer(answer) {
 }
 
 
-export async function askRAG(
-    question,
-    model,
-    history
-){
-
+export async function askRAG(question, model, history) {
+    const key = cacheKey(question, model);
+    const cached = getCached(key);
+    if (cached && (!history || history.length === 0)) {
+        console.log("Cache hit ->", question.slice(0, 60));
+        return cached;
+    }
 
     console.log("\n======================");
     console.log("PERTANYAAN USER:");
@@ -235,21 +267,21 @@ ${doc}
 //  askRAG dan streamRAG. Lihat bagian bawah file.)
 // ==============================================
 
-if(isNotFoundAnswer(answer)){
+if (isNotFoundAnswer(answer)) {
+        finalSources = [];
+    }
 
-    finalSources = [];
+    const resultToReturn = {
+        answer,
+        sources: finalSources
+    };
 
-}
+    // simpan cache hanya untuk tanpa history (pertanyaan tunggal)
+    if (!history || history.length === 0) {
+        setCached(key, resultToReturn);
+    }
 
-
-
-return {
-
-    answer,
-
-    sources: finalSources
-
-};
+    return resultToReturn;
 
 
 }

@@ -97,6 +97,14 @@ FORMAT JAWABAN:
 - Gunakan nomor kutipan HANYA untuk klaim yang benar-benar berasal dari file itu.
 - Jika jawaban berupa kalimat "Informasi tersebut tidak ditemukan dalam dokumen yang tersedia.", jangan menyertakan kutipan apa pun.
 
+CONTOH WAJIB (ikuti gaya ini):
+- Q: Berapa ekspor kain Ankara Indonesia ke Nigeria?
+  BENAR: "Ekspor kain Ankara Indonesia ke Nigeria sebesar USD 2.490 [1]."
+  SALAH: "Nilainya sangat kecil." (tanpa angka & tanpa [n] → SALAH)
+- Q: Bandingkan MSE ARIMA vs LSTM Series 2?
+  BENAR: "ARIMA turun 74,1% [2], LSTM naik 45,5% [2]." (sebut kedua angka + sitasi berdampingan)
+  SALAH: "ARIMA lebih baik." (tanpa angka → SALAH)
+
 ${historyBlock}
 CONTEXT:
 

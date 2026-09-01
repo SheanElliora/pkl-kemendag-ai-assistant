@@ -363,7 +363,6 @@ export function createChunks(
     }
 
     return chunks;
+}
 
-return chunks;
-}  
- 
+// End of chunkService.js

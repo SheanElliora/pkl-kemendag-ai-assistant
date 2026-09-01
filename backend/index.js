@@ -13,6 +13,7 @@ import { CORS_ORIGINS, DOCS_FOLDER } from "./config.js";
 import { ensureDefaultAdmin } from "./services/userService.js";
 import { ensureFolders } from "./services/fileService.js";
 import { recoverProcessingJobs } from "./services/ingestQueue.js";
+import { getSystemStats } from "./services/analyticsService.js";
 import { MODEL_CATALOG } from "./services/modelCatalog.js";
 import { createEmbedding } from "./services/embedderService.js";
 import { rerankDocuments } from "./services/rerankerService.js";
@@ -203,7 +204,8 @@ app.get("/api/stats", async (req, res) => {
                 total: files.length,
                 approved: approved.length
             },
-            vectors: await countVectors()
+            vectors: await countVectors(),
+            analytics: getSystemStats()
         });
 
     }

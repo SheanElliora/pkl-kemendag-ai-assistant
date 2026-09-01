@@ -49,6 +49,18 @@ path.resolve(
 // Max istilah Inggris yang diminta (jaga token kecil)
 const MAX_TERMS = 20;
 
+function extractEntities(question) {
+    const entities = [];
+    entities.push(...(question.match(/HS\s*\d+/gi) || []));
+    entities.push(...(question.match(/(?:USD|Rp|IDR)\s*[\d.]+\s*(?:juta|miliar|triliun|jutaan|miliaran)?/gi) || []));
+    entities.push(...(question.match(/\d{4}/g) || []));
+    entities.push(...(question.match(/\b\d+\.?\d*\s*(?:%|persen|percent)\b/gi) || []));
+    entities.push(...(question.match(/\b(?:negara|country|negeri)\b/gi) || []));
+    entities.push(...(question.match(/\b(?:kota|city|town|daerah)\b/gi) || []));
+    entities.push(...(question.match(/\b(?:impor|export|ekspor|impori|eksportir)\b/gi) || []));
+    return [...new Set(entities)].map(e => e.toLowerCase());
+}
+
 // =====================================
 // Cache
 // =====================================
@@ -121,6 +133,11 @@ async function expandWithLLM(question) {
         timeout: 15000
     });
 
+    const entities = extractEntities(question);
+    const entitySection = entities.length > 0
+        ? `\nIMPORTANT: The question contains these specific entities that MUST appear in the keywords: ${entities.join(", ")}`
+        : "";
+
     const prompt =
 `Extract key terms from this Indonesian question and translate them into English keywords for document search.
 
@@ -131,7 +148,7 @@ Rules:
 - Cover each important term. Include technical terms specific to the question's domain (e.g. for "harga obat" include "price", "dosage", "medicine"; for "perdata" include "civil", "law", "settlement").
 - Also include the raw numbers, codes, or acronyms that appear in the question (e.g. "2024", "HS 901890", "VAT").
 - No explanations, no sentences, no punctuation except spaces.
-- At most 10 terms.
+- At most 10 terms.${entitySection}
 
 IMPORTANT: Always include these domain-agnostic keywords if present in the question:
 - "indonesia", "indonesian" (for local content)
@@ -156,11 +173,22 @@ IMPORTANT: Always include these domain-agnostic keywords if present in the quest
     ?.message
     ?.content || "";
 
-    // Ambil kata-kata saja, buang tanda baca.
-    return text
+    const llmTerms = text
     .split(/[^A-Za-z0-9]+/)
     .map(w => w.toLowerCase())
     .filter(w => w.length > 1)
+    .slice(0, MAX_TERMS)
+    .join(" ");
+
+    const entityTerms = entities.join(" ");
+
+    return [
+        ...(localTerms || "").split(" ").filter(Boolean),
+        ...llmTerms.split(" ").filter(Boolean),
+        ...entityTerms.split(" ").filter(Boolean)
+    ]
+    .map(w => w.toLowerCase())
+    .filter((w, i, arr) => w && arr.indexOf(w) === i)
     .slice(0, MAX_TERMS)
     .join(" ");
 

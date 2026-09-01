@@ -1,23 +1,46 @@
 import OpenAI from "openai";
+import { recordQuery, recordFallback } from "./analyticsService.js";
 
-
-const client = new OpenAI({
-
+const OLLAMA_CLIENT = new OpenAI({
     apiKey: "ollama",
-
     baseURL: "http://localhost:11434/v1",
-
-    timeout: 60000
-
+    timeout: 60000,
 });
 
+const OPENROUTER_CLIENT = new OpenAI({
+    apiKey: process.env.OPENROUTER_API_KEY || "",
+    baseURL: "https://openrouter.ai/api/v1",
+    timeout: 60000,
+});
 
+const FALLBACK_CHAIN = [
+    "minimax/minimax-m3:free",
+    "openai/gpt-4o-mini",
+];
+
+function getClient(model) {
+    const localModels = ["minimax/minimax-m3:free", "phi-3-mini-4k-instruct"];
+    return localModels.includes(model) ? OLLAMA_CLIENT : OPENROUTER_CLIENT;
+}
+
+function extractEntities(question) {
+    const entities = [];
+    entities.push(...(question.match(/HS\s*\d+/gi) || []));
+    entities.push(...(question.match(/(?:USD|Rp|IDR)\s*[\d.]+\s*(?:juta|miliar|triliun)?/gi) || []));
+    entities.push(...(question.match(/\d{4}/g) || []));
+    entities.push(...(question.match(/\b\d+\.?\d*\s*(?:%|persen|percent)\b/gi) || []));
+    entities.push(...(question.match(/\b(?:negara|country|negeri)\b/gi) || []));
+    entities.push(...(question.match(/\b(?:kota|city|town)\b/gi) || []));
+    return [...new Set(entities)].map(e => e.toLowerCase());
+}
 
 function buildPrompt(question, context, history) {
+    const entities = extractEntities(question);
+    const entityHint = entities.length > 0 ? `\n- Istilah kunci yang harus ada di jawaban: ${entities.join(", ")}` : "";
 
-const historyBlock =
-(history && history.length > 0)
-    ? `
+    const historyBlock =
+    (history && history.length > 0)
+        ? `
 
 RIWAYAT PERCAKAPAN (tanya-jawab sebelumnya):
 
@@ -26,9 +49,9 @@ ${history.map((h) => `- ${h.role === "user" ? "PENGGUNA" : "ASISTEN"}: ${h.conte
 Gunakan riwayat di atas hanya sebagai konteks lanjutan (mis. pertanyaan rujukan seperti "sebutkan yang kedua tadi", "di atas", "terakhir"). Jangan pernah menyebutkan riwayat ini sebagai sumber; kutipan [n] tetap merujuk FILE: pada CONTEXT.
 
 `
-    : "";
+        : "";
 
-return `
+    return `
 
 Anda adalah AI Assistant Sistem Informasi Perdagangan Kemendag.
 
@@ -44,7 +67,7 @@ ATURAN WAJIB:
 
 4. Abaikan bagian yang hanya berisi daftar isi, daftar gambar, daftar tabel, nomor halaman, atau hasil OCR yang tidak bermakna.
 
-5. Jangan terlalu cepat menyimpulkan bahwa informasi tidak ada. Periksa kata kunci yang serupa terlebih dahulu, termasuk istilah umum atau sejenis (mis. "impor" ↔ "perdagangan luar negeri", "alat medis" ↔ "instrumen/peralatan kesehatan").
+5. Jangan terlalu cepat menyimpulkan bahwa informasi tidak ada. Periksa kata kunci yang serupa terlebih dahulu, termasuk istilah umum atau sejenis (mis. "impor" ↔ "perdagangan luar negeri", "alat medis" ↔ "instrumen/peralatan kesehatan").${entityHint}
 
 6. Jika benar-benar tidak ada satupun bagian CONTEXT yang berkaitan dengan pertanyaan, jawab tepat dengan kalimat:
 
@@ -85,176 +108,89 @@ ${question}
 Jawaban:
 
 `;
-
 }
 
-
-export async function generateAnswer(
-    question,
-    context,
-    model,
-    history
-){
-
-
-const prompt = buildPrompt(question, context, history);
-
-
-const completion =
-await client.chat.completions.create({
-
-    model:
-    model ||
-    process.env.OPENROUTER_MODEL ||
-    "phi-3-mini-4k-instruct",
-
-    temperature:0.2,
-
-    max_tokens:1536,
-
-
-    messages:[
-
-        {
-
-            role:"user",
-
-            content:prompt
-
-        }
-
-    ]
-
-});
-
-if (!completion?.choices?.[0]?.message?.content) {
-    throw new Error("Model tidak mengembalikan jawaban (respons kosong atau format tidak valid). Silakan coba lagi.");
-}
-
-// Fallback ke model lain jika primary gagal
-if (!completion?.choices?.[0]?.message?.content) {
-    const fallbackCompletion =
-    await client.chat.completions.create({
-
-        model:
-        "openai/gpt-4o-mini",
-
-        temperature:0.2,
-
-        max_tokens:1536,
-
-        messages:[
-
-            {
-
-                role:"user",
-
-                content:prompt
-
-            }
-
-        ]
-
+async function callModel(client, model, prompt) {
+    return await client.chat.completions.create({
+        model,
+        temperature: 0.2,
+        max_tokens: 1536,
+        messages: [{ role: "user", content: prompt }],
     });
+}
 
-    if (!fallbackCompletion?.choices?.[0]?.message?.content) {
-        throw new Error("Model AI gagal: keduanya mengembalikan jawaban kosong.");
+export async function generateAnswer(question, context, model, history) {
+    const prompt = buildPrompt(question, context, history);
+    const targetModel = model || process.env.OPENROUTER_MODEL || "minimax/minimax-m3:free";
+    await recordQuery(question, targetModel);
+    const chain = targetModel !== "minimax/minimax-m3:free"
+        ? [targetModel, ...FALLBACK_CHAIN]
+        : FALLBACK_CHAIN;
+
+    for (const m of chain) {
+        const client = getClient(m);
+        try {
+            const completion = await callModel(client, m, prompt);
+            const content = completion?.choices?.[0]?.message?.content;
+            if (content) {
+                return content;
+            }
+        } catch (err) {
+            console.log(`Model ${m} gagal, mencoba fallback:`, err.message);
+            await recordFallback(m);
+            continue;
+        }
     }
 
-    return fallbackCompletion
-    .choices[0]
-    .message
-    .content;
+    throw new Error("Semua model AI gagal memberikan jawaban.");
 }
 
-return completion
-.choices[0]
-.message
-.content;
-}
+export async function generateAnswerStream(question, context, model, history) {
+    const prompt = buildPrompt(question, context, history);
+    const targetModel = model || process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini";
+    const chain = targetModel !== "minimax/minimax-m3:free"
+        ? [targetModel, ...FALLBACK_CHAIN]
+        : FALLBACK_CHAIN;
 
-
-// =====================================================
-// Streaming: hasil jawaban dikirim bertahap (SSE chunk)
-// Dipakai route /api/chat untuk efek "mengetik".
-// =====================================================
-
-export async function generateAnswerStream(
-    question,
-    context,
-    model,
-    history
-){
-
-const prompt = buildPrompt(question, context, history);
-
-const stream =
-await client.chat.completions.create({
-
-    model:
-    model ||
-    process.env.OPENROUTER_MODEL ||
-    "openai/gpt-4o-mini",
-
-    temperature:0.2,
-
-    max_tokens:1536,
-
-    stream:true,
-
-    messages:[
-
-        {
-            role:"user",
-            content:prompt
+    for (const m of chain) {
+        const client = getClient(m);
+        try {
+            const stream = await client.chat.completions.create({
+                model: m,
+                temperature: 0.2,
+                max_tokens: 1536,
+                stream: true,
+                messages: [{ role: "user", content: prompt }],
+            });
+            return stream;
+        } catch (err) {
+            console.log(`Stream model ${m} gagal, mencoba fallback:`, err.message);
+            await recordFallback(m);
+            continue;
         }
+    }
 
-    ]
-
-});
-
-return stream;
-
+    throw new Error("Semua model AI gagal untuk streaming.");
 }
-
-
-// =====================================================
-// Terjemahkan error API ke pesan yang ramah dipahami
-// pengguna akhir (ditampilkan langsung di chatbot).
-// =====================================================
 
 export function translateLLMError(error) {
+    const status = error?.status;
+    const msg = String(error?.message || error || "");
 
-    const status =
-    error?.status;
-
-    const msg =
-    String(error?.message || error || "");
-
-    const isCredits =
-    status === 402 ||
-    /credits|billing|quota|payment|insufficient/i.test(msg);
-
-    const isRateLimit =
-    status === 429 ||
-    /rate limit|too many requests/i.test(msg);
+    const isCredits = status === 402 || /credits|billing|quota|payment|insufficient/i.test(msg);
+    const isRateLimit = status === 429 || /rate limit|too many requests/i.test(msg);
 
     if (isCredits) {
-
         return "Saldo/kredit API (OpenRouter) hampir atau sudah habis. " +
         "Tidak dapat memproses permintaan. Silakan isi ulang kredit di " +
         "https://openrouter.ai/settings/credits lalu coba lagi.";
-
     }
 
     if (isRateLimit) {
-
         return "Terlalu banyak permintaan dalam waktu singkat. " +
         "Silakan tunggu beberapa saat lalu coba lagi.";
-
     }
 
     return "Terjadi kesalahan saat menghubungi model AI: " +
     msg.slice(0, 300);
-
 }

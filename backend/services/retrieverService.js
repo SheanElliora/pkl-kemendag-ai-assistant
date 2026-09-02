@@ -57,7 +57,7 @@ const SEARCH_WIDTH = 80;
 const KEYWORD_BONUS = 0.1;
 const FILENAME_BONUS = 0.15;
 const MIN_CHUNK_LENGTH = 200;
-const RERANK_WIDTH = 15;
+const RERANK_WIDTH = 10;
 const RERANK_WEIGHT = 0.7;
 const BM25_WIDTH = 80;
 

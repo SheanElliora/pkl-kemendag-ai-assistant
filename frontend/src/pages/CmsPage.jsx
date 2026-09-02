@@ -535,22 +535,23 @@ export default function CmsPage() {
         <div
           style={{
             width: "100%",
-            background: "linear-gradient(135deg,#001845,#004DAF)",
-            color: "#fff",
+            background: t.bar,
+            color: t.text,
+            borderBottom: "1px solid " + t.border,
             padding: "10px 14px",
             position: "sticky",
             top: 0,
             zIndex: 20,
-            boxShadow: "0 4px 16px rgba(0,0,0,0.25)"
+            boxShadow: "inset 0 -3px 0 0 rgba(233,163,25,0.55)"
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <img src="/logo-kemendag-putih.png" alt="Kemendag" style={{ height: 28, borderRadius: 5 }} />
+            <img src={dark ? "/logo-kemendag-putih.png" : "/logo-kemendag.png"} alt="Kemendag" style={{ height: 28, borderRadius: 5, background: dark ? "transparent" : "transparent" }} />
             <div style={{ flex: 1 }} />
-            <button onClick={() => navigate("/")} title="Kembali ke Chat" style={topIconBtn}>
+            <button onClick={() => navigate("/")} title="Kembali ke Chat" style={{ ...topIconBtn, background: dark ? "rgba(255,255,255,0.12)" : "rgba(0,24,69,0.06)", color: dark ? "#e5edf7" : "#001845", border: "1px solid " + (dark ? "rgba(255,255,255,0.3)" : "rgba(0,24,69,0.15)") }}>
               <SIcon name="message" size={16} />
             </button>
-            <button onClick={logout} title="Keluar" style={{ ...topIconBtn, color: "#fecaca" }}>
+            <button onClick={logout} title="Keluar" style={{ ...topIconBtn, background: dark ? "rgba(255,255,255,0.12)" : "rgba(0,24,69,0.06)", color: "#fecaca", border: "1px solid " + (dark ? "rgba(255,255,255,0.3)" : "rgba(0,24,69,0.15)") }}>
               <SIcon name="logout" size={16} />
             </button>
           </div>
@@ -563,9 +564,9 @@ export default function CmsPage() {
                   whiteSpace: "nowrap",
                   padding: "8px 14px",
                   borderRadius: 999,
-                  border: "none",
-                  background: tab === n.id ? "linear-gradient(135deg,#f6c453,#e9a319)" : undefined,
-                  color: tab === n.id ? "#0b1e3a" : "#fff",
+                  border: tab === n.id ? "1px solid #e9a319" : "1px solid " + (dark ? "rgba(255,255,255,0.12)" : t.border),
+                  background: tab === n.id ? "linear-gradient(135deg,#f6c453,#e9a319)" : dark ? "rgba(255,255,255,0.08)" : "#f1f5f9",
+                  color: tab === n.id ? "#0b1e3a" : dark ? "rgba(255,255,255,0.85)" : t.textSoft,
                   fontWeight: 600,
                   fontSize: 13,
                   cursor: "pointer",
@@ -579,7 +580,7 @@ export default function CmsPage() {
                     <span style={{
                       background: tab === n.id ? "#0b1e3a" : "#e9a319",
                       color: tab === n.id ? "#e9a319" : "#0b1e3a",
-                      fontSize: 11,
+                      fontSize: 12,
                       fontWeight: 700,
                       lineHeight: 1,
                       padding: "3px 7px",
@@ -767,7 +768,7 @@ export default function CmsPage() {
                       <span style={{
                         background: "linear-gradient(135deg,#f6c453,#e9a319)",
                         color: "#0b1e3a",
-                        fontSize: 11,
+                        fontSize: 12,
                         fontWeight: 700,
                         lineHeight: 1,
                         padding: "3px 7px",
@@ -889,7 +890,7 @@ export default function CmsPage() {
                     </div>
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontSize: 20, fontWeight: 700, fontFamily: FONT_HEADING, lineHeight: 1.1, color: t.text }}>{s.value}</div>
-                      <div style={{ fontSize: 11, color: t.textMute, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.label}</div>
+                      <div style={{ fontSize: 12, color: t.textMute, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.label}</div>
                     </div>
                   </button>
                 ))}
@@ -1168,7 +1169,7 @@ export default function CmsPage() {
                     </div>
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontSize: 20, fontWeight: 700, fontFamily: FONT_HEADING, lineHeight: 1.1, color: t.text }}>{s.value}</div>
-                      <div style={{ fontSize: 11, color: t.textMute, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.label}</div>
+                      <div style={{ fontSize: 12, color: t.textMute, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.label}</div>
                     </div>
                   </button>
                 ))}
@@ -1375,7 +1376,7 @@ export default function CmsPage() {
                         <tr key={l.id} className="hover-row">
                           <Td t={t}>
                             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                              <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#64748b22", border: "1px solid #64748b55", color: "#94a3b8", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 11.5, flexShrink: 0 }}>
+                              <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#64748b22", border: "1px solid #64748b55", color: "#94a3b8", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 12.5, flexShrink: 0 }}>
                                 {(l.username || "?").charAt(0).toUpperCase()}
                               </div>
                               <span>{l.username}</span>
@@ -1926,7 +1927,7 @@ function RoleSelect({ role, onSelect, t, dark }) {
                 </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 600 }}>{o.label}</div>
-                  <div style={{ fontSize: 11, color: mt.textMute, marginTop: 1 }}>{o.desc}</div>
+                  <div style={{ fontSize: 12, color: mt.textMute, marginTop: 1 }}>{o.desc}</div>
                 </div>
                 {o.id === role && (
                   <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "#e9a319", fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
@@ -2270,7 +2271,7 @@ function FileCell({ f, t, maxWidth = 300, style, meta }) {
             {f.originalName}
           </div>
           {meta && (
-            <div style={{ fontSize: 11, color: t.textMute, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <div style={{ fontSize: 12, color: t.textMute, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {meta}
             </div>
           )}

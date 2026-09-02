@@ -226,6 +226,7 @@ export default function ChatPage() {
   const abortRef = useRef(null);
   const inputRef = useRef(null);
   const heroInputRef = useRef(null);
+  const autoScrollRef = useRef(true);
 
   const [models, setModels] = useState([]);
   const [model, setModel] = useState(() =>
@@ -328,16 +329,54 @@ export default function ChatPage() {
     localStorage.setItem("cms_model", model);
   }, [model]);
 
-  // Auto-scroll halus ke pesan terbaru (hanya jika user berada di dekat bawah)
+  // Auto-scroll ke pesan terbaru — selalu paksa saat user bertanya beberapa kali,
+  // tetap hormati jika user sengaja scroll ke atas membaca riwayat lama.
   useEffect(() => {
     const el = chatAreaRef.current;
-    if (el) {
-      const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 160;
-      if (nearBottom && chatEndRef.current) {
-        chatEndRef.current.scrollIntoView({ behavior: "smooth" });
-      }
+    const end = chatEndRef.current;
+    if (!el || !end) return;
+    if (currentMessages.length === 0) return;
+    const last = currentMessages[currentMessages.length - 1];
+    const isUser = last?.role === "user";
+    const isStreaming = !!last?.streaming;
+    // Pesan user baru -> paksa auto-scroll (memenuhi "beberapa pertanyaan" selalu terlihat)
+    if (isUser) {
+      autoScrollRef.current = true;
+      // double rAF agar layout selesai dulu sebelum scroll
+      requestAnimationFrame(() => {
+        end.scrollIntoView({ behavior: "smooth", block: "end" });
+        // fallback untuk container scroll (beberapa browser perlu scrollTop)
+        el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+      });
+      return;
+    }
+    // Saat streaming / pesan bot baru -> ikuti jika auto-scroll masih aktif
+    if (autoScrollRef.current || isStreaming) {
+      // streaming: auto (lebih responsif), selesai: smooth
+      const beh = isStreaming ? "auto" : "smooth";
+      end.scrollIntoView({ behavior: beh, block: "end" });
+      return;
+    }
+    // Jika user sebelumnya mematikan auto-scroll tapi sudah kembali dekat bawah -> aktifkan lagi
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 160;
+    if (nearBottom) {
+      autoScrollRef.current = true;
+      end.scrollIntoView({ behavior: "smooth", block: "end" });
     }
   }, [currentMessages, loading]);
+
+  // Ketika ganti percakapan, paksa scroll ke bawah (riwayat panjang langsung terlihat pesan terbaru)
+  useEffect(() => {
+    if (!activeConvId) return;
+    autoScrollRef.current = true;
+    const el = chatAreaRef.current;
+    const end = chatEndRef.current;
+    if (!el || !end) return;
+    requestAnimationFrame(() => {
+      el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
+      end.scrollIntoView({ behavior: "auto", block: "end" });
+    });
+  }, [activeConvId]);
 
   // Shortcut fokus input: Ctrl+K atau "/" (di luar kotak ketik)
   useEffect(() => {
@@ -675,6 +714,13 @@ export default function ChatPage() {
       setNewMsgIndex(currentMessages.length);
     }
 
+    // Paksa auto-scroll langsung saat user mengirim (beberapa pertanyaan berurutan tetap terlihat)
+    autoScrollRef.current = true;
+    requestAnimationFrame(() => {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+      chatAreaRef.current?.scrollTo({ top: chatAreaRef.current.scrollHeight, behavior: "smooth" });
+    });
+
     await consumeStream(text, model, text, id);
   }
 
@@ -762,16 +808,20 @@ export default function ChatPage() {
     }
   }
 
-  // Deteksi posisi scroll chat area untuk tombol turun
+  // Deteksi posisi scroll chat area untuk tombol turun + flag auto-scroll
   function onChatScroll() {
     const el = chatAreaRef.current;
     if (!el) return;
     const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
     setShowScrollBtn(!nearBottom);
+    autoScrollRef.current = nearBottom;
   }
 
   function scrollToBottom() {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    autoScrollRef.current = true;
+    const el = chatAreaRef.current;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }
 
   function logout() {
@@ -1013,7 +1063,7 @@ export default function ChatPage() {
               flex: 1,
               overflowY: currentMessages.length === 0 && !loading ? "hidden" : "auto",
               overflowX: currentMessages.length === 0 && !loading ? "hidden" : "auto",
-              padding: isMobile ? "6px" : "10px",
+              padding: isMobile ? "6px 6px 88px 6px" : "10px 10px 110px 10px",
               background: t.chatBg,
               position: "relative",
               display: currentMessages.length === 0 && !loading ? "flex" : "block",
@@ -1048,7 +1098,7 @@ export default function ChatPage() {
                 <h2 className="rise" style={{ margin: "0", fontSize: isMobile ? "21px" : "26px", fontWeight: 700, letterSpacing: "-0.5px", color: t.accentText, fontFamily: FONT_HEADING, animationDelay: "0.06s" }}>
                   AI Document Intelligence – Kemendag
                 </h2>
-                <p className="rise" style={{ margin: "7px 0 0", fontSize: "12.5px", color: dark ? "#ffffff" : t.textSoft, fontWeight: 600, animationDelay: "0.1s" }}>
+                <p className="rise" style={{ margin: "7px 0 0", fontSize: "13px", color: dark ? "#ffffff" : t.textSoft, fontWeight: 600, animationDelay: "0.1s" }}>
                   {todayLabel()}
                 </p>
               </div>
@@ -1073,7 +1123,7 @@ export default function ChatPage() {
                     border: "1px solid " + t.border,
                     borderRadius: "999px",
                     padding: "7px 16px",
-                    fontSize: "12.5px",
+                    fontSize: "13px",
                     fontWeight: 600,
                     fontFamily: 'inherit',
                     color: t.accentText,
@@ -1193,7 +1243,7 @@ onMouseLeave={(e) => { e.currentTarget.style.background = t.inputBg; e.currentTa
               <div key={index}>
                 {index === newMsgIndex && (
                   <div style={{ display: "flex", justifyContent: "center", margin: "14px 0 4px", padding: "0 18px" }}>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: "10px", width: "100%", maxWidth: "280px", color: dark ? "#ffffff" : t.textMute, fontSize: "11px", fontWeight: 700, fontFamily: FONT_BODY }}>
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "10px", width: "100%", maxWidth: "280px", color: dark ? "#ffffff" : t.textMute, fontSize: "12px", fontWeight: 700, fontFamily: FONT_BODY }}>
                       <span style={{ flex: 1, height: "1px", background: t.border }} />
                       Pesan baru
                       <span style={{ flex: 1, height: "1px", background: t.border }} />
@@ -1212,7 +1262,7 @@ onMouseLeave={(e) => { e.currentTarget.style.background = t.inputBg; e.currentTa
                       style={{
                         background: t.borderSoft,
                         color: dark ? "#ffffff" : t.textMute,
-                        fontSize: "11px",
+                        fontSize: "12px",
                         fontWeight: 600,
                         padding: "4px 12px",
                         borderRadius: "20px"
@@ -1278,7 +1328,9 @@ onMouseLeave={(e) => { e.currentTarget.style.background = t.inputBg; e.currentTa
                         boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
                         border: m.role === "bot" ? (dark ? "1px solid rgba(255,255,255,0.13)" : "1px solid #bccadb") : "none",
                         borderLeft: m.role === "bot" ? "4px solid #004DAF" : "none",
-                        borderRight: m.role === "user" ? "4px solid #b07d18" : "none"
+                        borderRight: m.role === "user" ? "4px solid #b07d18" : "none",
+                        contentVisibility: "auto",
+                        containIntrinsicSize: "0 120px"
                       }}
                     >
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px" }}>
@@ -1306,7 +1358,7 @@ onMouseLeave={(e) => { e.currentTarget.style.background = t.inputBg; e.currentTa
                                       border: "1px solid rgba(0,0,0,0.08)",
                                       borderRadius: "20px",
                                       padding: "2px 9px",
-                                      fontSize: "11px",
+                                      fontSize: "12px",
                                       fontWeight: 700,
                                       verticalAlign: "middle"
                                     }}
@@ -1334,7 +1386,7 @@ onMouseLeave={(e) => { e.currentTarget.style.background = t.inputBg; e.currentTa
                                 borderRadius: "20px",
                                 padding: "2px 9px",
                                 marginLeft: "8px",
-                                fontSize: "11px",
+                                fontSize: "12px",
                                 fontWeight: 600,
                                 verticalAlign: "middle"
                               }}
@@ -1343,13 +1395,13 @@ onMouseLeave={(e) => { e.currentTarget.style.background = t.inputBg; e.currentTa
                             </span>
                           )}
                           {m.streaming && (
-                            <span style={{ fontSize: "11px", color: t.accentText, marginLeft: "8px", fontWeight: 600 }} className="blink">
+                            <span style={{ fontSize: "12px", color: t.accentText, marginLeft: "8px", fontWeight: 600 }} className="blink">
                               <span style={{ display: "inline-block", width: 7, height: 7, borderRadius: "50%", background: t.accentText, marginRight: 6, verticalAlign: "middle" }} />
                               mengetik
                             </span>
                           )}
                           {m.time && (
-                            <span style={{ fontWeight: 400, fontSize: "11px", color: m.role === "user" ? "rgba(255,255,255,0.85)" : (dark ? "#ffffff" : t.textMute), marginLeft: "8px" }}>
+                            <span style={{ fontWeight: 400, fontSize: "12px", color: m.role === "user" ? "rgba(255,255,255,0.85)" : (dark ? "#ffffff" : t.textMute), marginLeft: "8px" }}>
                               {new Date(m.time).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
                             </span>
                           )}
@@ -1385,7 +1437,7 @@ onMouseLeave={(e) => { e.currentTarget.style.background = t.inputBg; e.currentTa
                           )}
                         </div>
                       </div>
-                      <div className="markdown-body" style={{ marginTop: "8px", lineHeight: "1.55", fontSize: "14px", color: m.role === "user" ? "#ffffff" : undefined }}>
+                      <div className="markdown-body" style={{ marginTop: "8px", lineHeight: "1.6", fontSize: "15px", color: m.role === "user" ? "#ffffff" : undefined }}>
                         {m.role === "user"
                           ? m.text
                           : (
@@ -1505,7 +1557,7 @@ style={{
                           }}
                         >
                           <b style={{ color: dark ? "#f6c453" : "#a1660b", fontSize: "13px", borderLeft: "3px solid #e9a319", paddingLeft: "8px", display: "flex", alignItems: "center", gap: "7px" }}>{IconBook(14)} Sumber Referensi</b>
-                          <div style={{ fontSize: "11px", color: dark ? "#ffffff" : t.textMute, marginTop: "4px" }}>
+                          <div style={{ fontSize: "12px", color: dark ? "#ffffff" : t.textMute, marginTop: "4px" }}>
                             Klik nomor halaman untuk membuka dokumen.
                           </div>
                           {(() => {
@@ -1550,7 +1602,7 @@ style={{
                                   confidenceOf(distance, bestDistance) !== null &&
                                   confidenceOf(distance, bestDistance) >= 70
                               );
-                              const visiblePages = confident.length ? confident : allPages.slice(0, 1);
+                              const visiblePages = confident.length ? confident.slice(0, 1) : allPages.slice(0, 1);
                               return (
                               <div
                                 key={filename}
@@ -1675,21 +1727,26 @@ style={{
               className="pop-in"
               style={{
                 position: "sticky",
-                bottom: "12px",
-                margin: "0 auto",
-                display: "block",
-                background: "#004DAF",
-                color: "white",
-                border: "none",
-                borderRadius: "50%",
-                width: "40px",
-                height: "40px",
+                bottom: "4px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "transparent",
+                color: dark ? "#e5edf7" : "#475569",
+                border: "1px solid " + (dark ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.08)"),
+                backdropFilter: "blur(10px)",
+                WebkitBackdropFilter: "blur(10px)",
+                borderRadius: "999px",
+                width: "32px",
+                height: "32px",
                 cursor: "pointer",
-                fontSize: "18px",
-                boxShadow: "0 4px 14px rgba(0,114,188,0.35)"
+                boxShadow: dark ? "0 4px 16px rgba(0,0,0,0.22)" : "0 4px 16px rgba(15,40,80,0.12)",
+                zIndex: 6
               }}
             >
-              {IconArrowDown(18)}
+              {IconArrowDown(15)}
             </button>
           )}
         </div>
@@ -1715,6 +1772,7 @@ style={{
               className="pop-in"
               style={{
                 background: t.card,
+                border: "1px solid " + t.border,
                 borderRadius: "16px",
                 width: "100%",
                 maxWidth: "900px",
@@ -1722,7 +1780,7 @@ style={{
                 display: "flex",
                 flexDirection: "column",
                 overflow: "hidden",
-                boxShadow: "0 20px 50px rgba(0,0,0,0.3)"
+                boxShadow: dark ? "0 20px 50px rgba(0,0,0,0.45)" : "0 20px 50px rgba(15,40,80,0.18)"
               }}
             >
               <div
@@ -1731,39 +1789,48 @@ style={{
                   alignItems: "center",
                   justifyContent: "space-between",
                   gap: "12px",
-                  padding: "14px 20px",
-                  background: "linear-gradient(135deg,#001845,#004DAF)",
-                  color: "white",
+                  padding: "13px 16px 13px 18px",
+                  background: dark ? "#1b2944" : "#ffffff",
+                  color: dark ? "#e5edf7" : "#001845",
+                  borderBottom: "1px solid " + (dark ? "#1e2e4a" : "#e2e8f0"),
+                  boxShadow: "inset 0 -3px 0 0 rgba(233,163,25,0.55)",
                   flexShrink: 0
                 }}
               >
-                <div style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "14px", fontWeight: 600, display: "flex", alignItems: "center", gap: "7px" }}>
-                  <span style={{ display: "inline-flex", flexShrink: 0 }}>{IconFile(14)}</span>
+                <div style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "14px", fontWeight: 600, display: "flex", alignItems: "center", gap: "8px", color: dark ? "#e5edf7" : "#001845" }}>
+                  <span style={{ display: "inline-flex", flexShrink: 0, width: "28px", height: "28px", borderRadius: "8px", background: dark ? "rgba(127,177,232,0.14)" : "#eef4ff", color: dark ? "#7fb1e8" : "#004DAF", alignItems: "center", justifyContent: "center" }}>{IconFile(14)}</span>
                   <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {previewDoc.filename}
                     {previewDoc.pages && previewDoc.pages.length > 0 && (
-                      <span style={{ fontSize: "12px", opacity: 0.85 }}> · hlm. {previewDoc.pages.join(", ")}</span>
+                      <span style={{ fontSize: "12px", fontWeight: 500, color: dark ? "#9db0cc" : "#5b6b82", marginLeft: "8px" }}> · halaman {previewDoc.pages.join(", ")}</span>
                     )}
                   </span>
                 </div>
-                <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
+                <div style={{ display: "flex", gap: "8px", flexShrink: 0, alignItems: "center" }}>
                   <a
                     href={previewUrl}
                     target="_blank"
                     rel="noreferrer"
                     style={{
-                      background: "rgba(255,255,255,0.2)",
+                      background: "#004DAF",
                       color: "white",
-                      border: "1px solid rgba(255,255,255,0.5)",
-                      borderRadius: "8px",
-                      padding: "6px 12px",
-                      fontSize: "12px",
+                      border: "none",
+                      borderRadius: "10px",
+                      padding: "7px 14px",
+                      fontSize: "13px",
                       textDecoration: "none",
-                      fontWeight: 600
+                      fontWeight: 600,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      boxShadow: "0 2px 8px rgba(0,77,175,0.25)",
+                      transition: "background 0.15s ease, transform 0.15s ease"
                     }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = "#003d94"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "#004DAF"; e.currentTarget.style.transform = "translateY(0)"; }}
                   >
                     Buka tab baru
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 4, verticalAlign: "middle" }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                       <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
                       <polyline points="15 3 21 3 21 9" />
                       <line x1="10" y1="14" x2="21" y2="3" />
@@ -1772,19 +1839,22 @@ style={{
                   <button
                     onClick={() => setPreviewDoc(null)}
                     style={{
-                      background: "rgba(255,255,255,0.2)",
-                      color: "white",
-                      border: "1px solid rgba(255,255,255,0.5)",
-                      borderRadius: "8px",
-                      padding: "6px 12px",
-                      fontSize: "12px",
+                      background: dark ? "rgba(255,255,255,0.08)" : "#f1f5f9",
+                      color: dark ? "#e5edf7" : "#1e293b",
+                      border: "1px solid " + (dark ? "rgba(255,255,255,0.14)" : "#e2e8f0"),
+                      borderRadius: "10px",
+                      padding: "7px 12px",
+                      fontSize: "13px",
                       cursor: "pointer",
                       fontFamily: 'inherit',
                       fontWeight: 600,
                       display: "inline-flex",
                       alignItems: "center",
-                      gap: "6px"
+                      gap: "6px",
+                      transition: "background 0.15s ease, border-color 0.15s ease"
                     }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = dark ? "rgba(255,255,255,0.14)" : "#e2e8f0"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = dark ? "rgba(255,255,255,0.08)" : "#f1f5f9"; }}
                   >
                     {IconX(13)} Tutup
                   </button>
@@ -1799,20 +1869,40 @@ style={{
           </div>
         )}
 
-        {/* INPUT AREA (kotak tanya kembali ke bawah setelah ada percakapan) */}
+        {/* INPUT AREA — transparan + blur seperti GPT, chat tetap terlihat saat discroll */}
         {(currentMessages.length > 0 || loading) && (
           <div
             style={{
+              position: "absolute",
+              bottom: isMobile ? 0 : "32px",
+              left: 0,
+              right: 0,
               display: "flex",
               gap: "10px",
-              padding: isMobile ? "10px" : "15px",
-              borderTop: "1px solid " + t.border,
+              padding: isMobile ? "10px 10px 12px" : "12px 16px 16px",
+              borderTop: "1px solid " + (dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)"),
               alignItems: isMobile ? "stretch" : "center",
               flexWrap: "wrap",
               flexShrink: 0,
-              background: t.bar
+              background: dark ? "rgba(27,41,68,0.72)" : "rgba(255,255,255,0.78)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+              boxShadow: dark ? "0 -8px 24px rgba(0,0,0,0.28)" : "0 -8px 24px rgba(15,40,80,0.08)",
+              zIndex: 5
             }}
           >
+            <div
+              aria-hidden
+              style={{
+                position: "absolute",
+                top: "-16px",
+                left: 0,
+                right: 0,
+                height: "16px",
+                background: dark ? "linear-gradient(to top, rgba(27,41,68,0.72), transparent)" : "linear-gradient(to top, rgba(255,255,255,0.78), transparent)",
+                pointerEvents: "none"
+              }}
+            />
             <div
               className="textbox-pill"
               style={{
@@ -1902,7 +1992,7 @@ style={{
           <div
             style={{
               textAlign: "center",
-              fontSize: "11px",
+              fontSize: "12px",
               color: t.textMute,
               background: t.bar,
               borderTop: "1px solid " + t.borderSoft,
@@ -2051,7 +2141,7 @@ style={{
                   <div key={g.key}>
                     <div
                       style={{
-                        fontSize: "11px",
+                        fontSize: "12px",
                         fontWeight: 700,
                         color: t.textMute,
                         textTransform: "uppercase",
@@ -2102,7 +2192,7 @@ style={{
                           >
                             {c.title || "Percakapan baru"}
                           </span>
-                          <span style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "11px", color: t.textMute, marginTop: 3, minWidth: 0 }}>
+                          <span style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: t.textMute, marginTop: 3, minWidth: 0 }}>
                             <span
                               title={c.sessionId ? "Tersimpan di server" : "Hanya tersimpan di perangkat ini"}
                               style={{
@@ -2503,7 +2593,7 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
                     <div style={{ fontSize: "13px", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {m.id.split("/").pop()}
                     </div>
-                    <div style={{ fontSize: "11px", color: mt.textMute, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <div style={{ fontSize: "12px", color: mt.textMute, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {m.label}
                     </div>
                   </div>
@@ -2799,7 +2889,7 @@ const citeStyle = {
   borderRadius: "6px",
   padding: "0 5px",
   margin: "0 2px",
-  fontSize: "11px",
+  fontSize: "12px",
   fontWeight: 700,
   lineHeight: "16px",
   cursor: "pointer",
@@ -2813,7 +2903,7 @@ const pageChipStyle = (t) => ({
   border: "1px solid " + t.border,
   borderRadius: "6px",
   padding: "0 7px",
-  fontSize: "11px",
+  fontSize: "12px",
   fontWeight: 700,
   lineHeight: "18px",
   cursor: "pointer",
@@ -2834,7 +2924,7 @@ function CiteAnchor({ href, children, sources, onOpen, node, ...rest }) {
           e.preventDefault();
           onOpen({ filename: src.filename, pages: [src.page] });
         }}
-        title={`Buka ${src.filename} hlm. ${src.page}`}
+        title={`Buka ${src.filename} halaman ${src.page}`}
         style={citeStyle}
       >
         {children}

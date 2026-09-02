@@ -607,7 +607,7 @@ input:focus-visible {
   padding: 12px 14px;
   border-radius: 10px;
   overflow-x: auto;
-  font-size: 12.5px;
+  font-size: 13px;
   line-height: 1.5;
   margin: 10px 0;
 }
@@ -617,7 +617,7 @@ input:focus-visible {
   color: #0f4a8a;
   padding: 1px 6px;
   border-radius: 6px;
-  font-size: 12.5px;
+  font-size: 13px;
   font-family: "JetBrains Mono", "Consolas", monospace;
 }
 

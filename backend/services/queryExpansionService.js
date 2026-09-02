@@ -183,7 +183,6 @@ IMPORTANT: Always include these domain-agnostic keywords if present in the quest
     const entityTerms = entities.join(" ");
 
     return [
-        ...(localTerms || "").split(" ").filter(Boolean),
         ...llmTerms.split(" ").filter(Boolean),
         ...entityTerms.split(" ").filter(Boolean)
     ]

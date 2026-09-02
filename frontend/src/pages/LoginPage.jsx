@@ -348,7 +348,7 @@ fontFamily: FONT_BODY
           left: 0,
           right: 0,
           textAlign: "center",
-          fontSize: 11,
+          fontSize: 12,
           color: t.textMute,
           opacity: 0.85,
           animationDelay: "0.3s"

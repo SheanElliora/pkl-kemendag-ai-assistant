@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { searchDocuments } from "./retrieverService.js";
 import { generateAnswer, generateAnswerStream } from "./llmService.js";
+import { resolveContextualQuery } from "./contextGateService.js";
 
 // Cache jawaban 10 menit untuk pertanyaan identik (hemat embedding+rerank+LLM, <100ms hit)
 const answerCache = new Map();
@@ -103,28 +104,50 @@ function isNotFoundAnswer(answer) {
 
 }
 
+function filterSourcesByCitations(answer, sources) {
+    if (!answer || !Array.isArray(sources) || sources.length === 0) return sources;
+    const matches = [...String(answer).matchAll(/\[\s*(\d+)\s*\]/g)];
+    if (matches.length === 0) {
+        // LLM lupa sitasi tapi jawaban bukan NotFound — tampilkan 1 paling relevan saja biar kerucut
+        return sources.slice(0, 1);
+    }
+    const cited = new Set();
+    for (const m of matches) {
+        const n = parseInt(m[1], 10);
+        if (n >= 1 && n <= sources.length) cited.add(n - 1);
+    }
+    if (cited.size === 0) return sources.slice(0, 1);
+    // Batasi maksimal 2 sumber paling relevan biar kerucut (1 dokumen 1 halaman bila cukup)
+    return [...cited].sort((a, b) => a - b).slice(0, 2).map(i => sources[i]);
+}
+
 
 export async function askRAG(question, model, history) {
-    const key = cacheKey(question, model);
+    const gate = resolveContextualQuery(question, history);
+    const retrievalQuery = gate.gateApplied ? gate.searchQuery : question;
+    const key = cacheKey(retrievalQuery, model);
     const cached = getCached(key);
     if (cached && (!history || history.length === 0)) {
-        console.log("Cache hit ->", question.slice(0, 60));
+        console.log("Cache hit ->", retrievalQuery.slice(0, 60));
         return cached;
     }
 
     console.log("\n======================");
     console.log("PERTANYAAN USER:");
     console.log(question);
+    if (gate.gateApplied) {
+        console.log(`[GATE] follow-up terdeteksi (${gate.reason}) -> retrieval diperkaya:`);
+        console.log(`  Q asli: "${question.slice(0,120)}"`);
+        console.log(`  + konteks: "${gate.contextUsed?.slice(0,120)}"`);
+    }
     console.log("======================");
 
-
-
     // ==========================
-    // 1. RETRIEVE DOCUMENT
+    // 1. RETRIEVE DOCUMENT (dengan Context Gate)
     // ==========================
 
     const result =
-    await searchDocuments(question);
+    await searchDocuments(retrievalQuery);
 
 
 
@@ -258,17 +281,13 @@ ${doc}
 
     let finalSources = sources;
 
-
-// ==============================================
-// Deteksi jawaban "informasi tidak ditemukan"
-//
-// (Definisi konstanta & fungsi dipindah ke level
-//  modul agar bisa dipakai jadi satu oleh
-//  askRAG dan streamRAG. Lihat bagian bawah file.)
-// ==============================================
-
 if (isNotFoundAnswer(answer)) {
         finalSources = [];
+        console.log("[CITE-FILTER] NotFound -> 0 sumber");
+    } else {
+        const before = sources.length;
+        finalSources = filterSourcesByCitations(answer, sources);
+        console.log(`[CITE-FILTER] ${before} -> ${finalSources.length} sumber (kutipan: ${[...answer.matchAll(/\[\s*\d+\s*\]/g)].map(m=>m[0]).join(", ").slice(0,120)})`);
     }
 
     const resultToReturn = {
@@ -299,8 +318,15 @@ export async function* streamRAG(
     history
 ){
 
+    const gateStream = resolveContextualQuery(question, history);
+    const retrievalQueryStream = gateStream.gateApplied ? gateStream.searchQuery : question;
+    if (gateStream.gateApplied) {
+        console.log(`[GATE-STREAM] follow-up (${gateStream.reason}) -> retrieval diperkaya`);
+        console.log(`  Q: "${question.slice(0,120)}" + "${gateStream.contextUsed?.slice(0,120)}"`);
+    }
+
     const result =
-    await searchDocuments(question);
+    await searchDocuments(retrievalQueryStream);
 
     if(
         !result.documents ||
@@ -391,10 +417,12 @@ ${doc}
     const notFound =
     isNotFoundAnswer(full);
 
+    const finalStreamSources = notFound ? [] : filterSourcesByCitations(full, sources);
+
     yield {
         type: "done",
         answer: full.trim(),
-        sources: notFound ? [] : sources
+        sources: finalStreamSources
     };
 
 }

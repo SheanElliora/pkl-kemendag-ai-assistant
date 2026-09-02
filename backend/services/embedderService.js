@@ -1,4 +1,5 @@
 import { pipeline } from "@xenova/transformers";
+import crypto from "crypto";
 
 
 
@@ -19,7 +20,32 @@ import { pipeline } from "@xenova/transformers";
 
 let embedder = null;
 
-
+// Cache embedding query — hemat 180-250ms per tanya berulang (LRU 500, TTL 10m)
+const queryCache = new Map();
+const QUERY_CACHE_MAX = 500;
+const QUERY_CACHE_TTL = 10 * 60 * 1000;
+function qCacheKey(text, role) {
+    return crypto.createHash("md5").update((role || "") + "|" + String(text).toLowerCase().trim()).digest("hex");
+}
+function getQCache(key) {
+    const hit = queryCache.get(key);
+    if (!hit) return null;
+    if (Date.now() - hit.ts > QUERY_CACHE_TTL) {
+        queryCache.delete(key);
+        return null;
+    }
+    // LRU: pindah ke akhir
+    queryCache.delete(key);
+    queryCache.set(key, hit);
+    return hit.value;
+}
+function setQCache(key, value) {
+    if (queryCache.size >= QUERY_CACHE_MAX) {
+        const first = queryCache.keys().next().value;
+        queryCache.delete(first);
+    }
+    queryCache.set(key, { value, ts: Date.now() });
+}
 
 async function getEmbedder() {
 
@@ -63,6 +89,11 @@ export async function createEmbedding(
     role = "passage"
 ) {
 
+    if (role === "query") {
+        const k = qCacheKey(text, role);
+        const hit = getQCache(k);
+        if (hit) return hit;
+    }
 
     const model = await getEmbedder();
 
@@ -84,8 +115,11 @@ export async function createEmbedding(
 
     );
 
-
-    return Array.from(output.data);
+    const vec = Array.from(output.data);
+    if (role === "query") {
+        setQCache(qCacheKey(text, role), vec);
+    }
+    return vec;
 
 }
 

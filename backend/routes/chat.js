@@ -470,7 +470,7 @@ router.get("/history/:sessionId/export", (req, res) => {
     .sources { font-size: 12px; color: #475569; margin-top: 8px; background: #f1f5f9; padding: 6px 10px; border-radius: 6px; }
     .sources ul { margin: 4px 0 0 18px; }
     .feedback { font-size: 12px; color: #475569; margin-top: 6px; }
-    .time { font-size: 11px; color: #94a3b8; margin-top: 6px; }
+    .time { font-size: 12px; color: #94a3b8; margin-top: 6px; }
     @media print { body { margin: 0; } .msg { break-inside: avoid; } }
 </style>
 </head>

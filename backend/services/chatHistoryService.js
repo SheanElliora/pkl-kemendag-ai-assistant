@@ -32,6 +32,9 @@
 
 import { readJson, writeJson } from "./storeService.js";
 import crypto from "crypto";
+import fs from "fs";
+import path from "path";
+import { DATA_FOLDER } from "../config.js";
 
 const STORE = "chats";
 
@@ -43,13 +46,38 @@ function newId(prefix) {
     return `${prefix}-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
 }
 
+let _sessionsCache = null;
+let _sessionsCacheFP = "";
+let _sessionsCacheTime = 0;
+const _CACHE_TTL = 4000;
+
+function _fp() {
+    try {
+        const p = path.join(DATA_FOLDER, STORE + ".json");
+        return fs.existsSync(p) ? String(fs.statSync(p).mtimeMs) : "0";
+    } catch { return "0"; }
+}
+
 function loadSessions() {
+    const fp = _fp();
+    if (_sessionsCache && fp === _sessionsCacheFP && Date.now() - _sessionsCacheTime < _CACHE_TTL) {
+        return _sessionsCache;
+    }
     const data = readJson(STORE, []);
-    return Array.isArray(data) ? data : [];
+    const arr = Array.isArray(data) ? data : [];
+    _sessionsCache = arr;
+    _sessionsCacheFP = fp;
+    _sessionsCacheTime = Date.now();
+    return arr;
 }
 
 function saveSessions(sessions) {
+    _sessionsCache = sessions;
+    _sessionsCacheFP = _fp();
+    _sessionsCacheTime = Date.now();
     writeJson(STORE, sessions);
+    // update fp after write
+    _sessionsCacheFP = _fp();
 }
 
 function findSession(sessions, sessionId) {

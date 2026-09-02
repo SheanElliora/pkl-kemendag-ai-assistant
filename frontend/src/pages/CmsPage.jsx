@@ -811,7 +811,16 @@ export default function CmsPage() {
 
           {/* ===== UPLOAD (maintainer) ===== */}
           {tab === "upload" && (
-            <div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+            <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", gap: 14 }}>
+            <div style={{ ...cardStyle(t), background: dark ? "#1b2944" : "#eef4ff", border: "1px solid " + (dark ? "#2a3d63" : "#dbeafe"), display: "flex", gap: 12, alignItems: "flex-start", padding: "14px 16px" }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: "#e9a319", color: "#0b1e3a", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><SIcon name="file" size={16} /></div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: 14, color: t.text, fontFamily: FONT_HEADING }}>Cara unggah dokumen</div>
+                <div style={{ fontSize: 13, color: t.textSoft, marginTop: 4, lineHeight: 1.5 }}>
+                  1. Pilih file PDF maksimal 20 MB &nbsp;·&nbsp; 2. Klik <b style={{ color: t.text }}>Unggah</b> → masuk antrean &nbsp;·&nbsp; 3. Tunggu admin menyetujui (status <span style={{ color: "#059669", fontWeight: 700 }}>Disetujui</span>) &nbsp;·&nbsp; 4. Langsung bisa ditanya di chat
+                </div>
+              </div>
+            </div>
             <div style={cardStyle(t)}>
               <h3 style={h3Style}>Unggah Dokumen Baru</h3>
               <p style={{ fontSize: 14, color: t.textMute, marginTop: 0 }}>
@@ -845,14 +854,25 @@ export default function CmsPage() {
           {/* ===== DOKUMEN SAYA (maintainer) ===== */}
           {tab === "mydocs" && (
             <div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
-              <FileTable t={t} rows={files} empty="Belum ada dokumen diunggah." loading={loading.files} onView={previewFile} />
+              {files.length === 0 && !loading.files ? (
+                <div style={cardStyle(t)}>
+                  <EmptyState t={t} icon="file" text="Belum ada dokumen diunggah." sub="Mulai dengan mengunggah PDF pertama Anda." />
+                  <div style={{ display: "flex", justifyContent: "center", marginTop: 16 }}>
+                    <button onClick={() => setTab("upload")} style={{ ...primaryBtn, height: 40, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                      <SIcon name="upload" size={14} /> Unggah sekarang
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <FileTable t={t} rows={files} empty="Belum ada dokumen diunggah." loading={loading.files} onView={previewFile} />
+              )}
             </div>
           )}
 
           {/* ===== PERSETUJUAN (admin) ===== */}
           {tab === "approval" && (
             <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", gap: 10, marginBottom: 18, flexShrink: 0, paddingTop: 4 }}>
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, minmax(0, 1fr))" : "repeat(4, minmax(0, 1fr))", gap: 10, marginBottom: 18, flexShrink: 0, paddingTop: 4 }}>
                 {stats.map((s) => (
                   <button
                     key={s.label}
@@ -1139,7 +1159,7 @@ export default function CmsPage() {
           {/* ===== KELOLA USER (admin) ===== */}
           {tab === "users" && (
             <div style={{ flex: 1, minHeight: 0, overflowY: "auto", paddingTop: 4 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0,1fr))", gap: 10, marginBottom: 12 }}>
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, minmax(0,1fr))" : "repeat(3, minmax(0,1fr))", gap: 10, marginBottom: 12 }}>
                 {[
                   { id: "all", label: "Total Pengguna", value: users.length, icon: "users", color: "#7fb1e8" },
                   { id: "admin", label: "Admin", value: users.filter((x) => x.role === "admin").length, icon: "shield", color: "#e9a319" },

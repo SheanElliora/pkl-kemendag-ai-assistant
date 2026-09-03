@@ -14,6 +14,10 @@ export const MODEL_CATALOG = [
         label: "Minimax M3 (gratis, 50 req/hari) — REKOMENDASI gratis"
     },
     {
+        id: "google/gemini-2.0-flash-exp:free",
+        label: "Gemini 2.0 Flash (gratis, mentor rekomendasi)"
+    },
+    {
         id: "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
         label: "Nemotron 3 Nano 30B (gratis, backup)"
     },

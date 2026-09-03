@@ -18,6 +18,7 @@ export default function ChatPage() {
   const [newMsgIndex, setNewMsgIndex] = useState(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [modelOpen, setModelOpen] = useState(false);
+  const [toasts, setToasts] = useState([]);
   const [cmsBtnVariant, setCmsBtnVariant] = useState(() => localStorage.getItem("cms_btn_variant_v2") || "chip");
   const [cmsBtnLabel, setCmsBtnLabel] = useState(() => localStorage.getItem("cms_btn_label_v2") || "Panel Admin");
 
@@ -37,6 +38,12 @@ export default function ChatPage() {
 
   useEffect(() => { localStorage.setItem("cms_btn_variant_v2", cmsBtnVariant); }, [cmsBtnVariant]);
   useEffect(() => { localStorage.setItem("cms_btn_label_v2", cmsBtnLabel); }, [cmsBtnLabel]);
+
+  function showToast(message) {
+    const id = Date.now() + Math.random();
+    setToasts((ts) => [...ts, { id, message }]);
+    setTimeout(() => setToasts((ts) => ts.filter((x) => x.id !== id)), 2500);
+  }
 
   const cmsGearIcon = (s) => (
     <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -292,12 +299,7 @@ export default function ChatPage() {
     "Apa saja persyaratan impor decoration lights ke Nigeria?"
   ];
 
-  const [suggestionIdx, setSuggestionIdx] = useState(0);
-  useEffect(() => {
-    if (online !== true) return;
-    const iv = setInterval(() => setSuggestionIdx((i) => (i + 1) % exampleQuestions.length), 2600);
-    return () => clearInterval(iv);
-  }, [online]);
+
 
   useEffect(() => {
     api("/api/models")
@@ -520,6 +522,7 @@ export default function ChatPage() {
       activeIdRef.current = null;
     }
     setConfirmDeleteId(null);
+    showToast("Riwayat percakapan dihapus");
   }
 
   function deleteMessage(index) {
@@ -848,6 +851,16 @@ export default function ChatPage() {
         overflow: "hidden",
       }}
     >
+      {toasts.length > 0 && (
+        <div style={{ position: "fixed", top: "16px", left: "50%", transform: "translateX(-50%)", zIndex: 100, display: "flex", flexDirection: "column", gap: 8, pointerEvents: "none" }}>
+          {toasts.map((ti) => (
+            <div key={ti.id} className="pop-in" style={{ background: dark ? "#1b2944" : "#ffffff", color: dark ? "#e5edf7" : "#1e293b", border: "1px solid " + t.border, borderRadius: 12, padding: "10px 16px", fontSize: 13, fontWeight: 600, boxShadow: "0 8px 24px rgba(0,0,0,0.12)", display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ width: 20, height: 20, borderRadius: "50%", background: "#16a75c", color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{IconCheck(12)}</span>
+              {ti.message}
+            </div>
+          ))}
+        </div>
+      )}
       <div
         style={{
           maxWidth: "1200px",
@@ -1080,7 +1093,7 @@ export default function ChatPage() {
               }}
             >
               <div style={{ textAlign: "center" }}>
-                <div className="rise" style={{ display: "flex", justifyContent: "center", marginBottom: "14px", animationDelay: "0s" }}>
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: "14px" }}>
                   <img
                     src="/logo-kemendag.png"
                     alt="Logo Kemendag"
@@ -1094,62 +1107,24 @@ export default function ChatPage() {
                     }}
                   />
                 </div>
-                <h2 className="rise" style={{ margin: "0", fontSize: isMobile ? "21px" : "26px", fontWeight: 700, letterSpacing: "-0.5px", color: t.accentText, fontFamily: FONT_HEADING, animationDelay: "0.06s" }}>
+                <h2 style={{ margin: "0", fontSize: isMobile ? "21px" : "26px", fontWeight: 700, letterSpacing: "-0.5px", color: t.accentText, fontFamily: FONT_HEADING }}>
                   AI Document Intelligence – Kemendag
                 </h2>
-                <p className="rise" style={{ margin: "7px 0 0", fontSize: "13px", color: dark ? "#ffffff" : t.textSoft, fontWeight: 600, animationDelay: "0.1s" }}>
+                <p style={{ margin: "7px 0 0", fontSize: "13px", color: dark ? "#ffffff" : t.textSoft, fontWeight: 600 }}>
                   {todayLabel()}
                 </p>
               </div>
 
-                <div className="rise" style={{ width: "190px", height: "1px", margin: "18px auto 0", background: "linear-gradient(90deg, transparent, #c7d2fe, transparent)", animationDelay: "0.24s" }} />
-
-              {online === true && (
-                <button
-                  key={suggestionIdx}
-                  className="rise"
-                  onClick={() => sendMessage(exampleQuestions[suggestionIdx])}
-                  disabled={loading}
-                  title={exampleQuestions[suggestionIdx]}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "7px",
-                    margin: "14px auto 0",
-                    maxWidth: "100%",
-                    background: t.inputBg,
-                    border: "1px solid " + t.border,
-                    borderRadius: "999px",
-                    padding: "7px 16px",
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    fontFamily: 'inherit',
-                    color: t.accentText,
-                    cursor: loading ? "not-allowed" : "pointer",
-                    opacity: loading ? 0.6 : 1,
-                    animationDelay: "0.26s",
-                    visibility: modelOpen ? "hidden" : "visible",
-                    transition: "background 0.15s ease, color 0.15s ease"
-                  }}
-onMouseEnter={(e) => { e.currentTarget.style.background = dark ? "rgba(127,177,232,0.15)" : "rgba(233,163,25,0.14)"; e.currentTarget.style.color = dark ? "#e5edf7" : "#001845"; }}
-onMouseLeave={(e) => { e.currentTarget.style.background = t.inputBg; e.currentTarget.style.color = t.accentText; }}
-                >
-                  <span style={{ display: "inline-flex", flexShrink: 0 }}>{IconSearchModule(13)}</span>
-                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{exampleQuestions[suggestionIdx]}</span>
-                </button>
-              )}
+                <div style={{ width: "190px", height: "1px", margin: "18px auto 0", background: "linear-gradient(90deg, transparent, #c7d2fe, transparent)" }} />
 
               <div
-                className="rise"
                 style={{
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   gap: "10px",
                   margin: "10px auto 0",
-                  width: "100%",
-                  animationDelay: "0.28s"
+                  width: "100%"
                 }}
               >
                 <ModelSelector models={models} model={model} onSelect={setModel} isMobile={isMobile} align="left" onOpenChange={setModelOpen} dark={dark} />
@@ -1220,12 +1195,7 @@ onMouseLeave={(e) => { e.currentTarget.style.background = t.inputBg; e.currentTa
                 </div>
               </div>
 
-              {online === true && (
-                <div className="rise" style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "6px", marginTop: "16px", fontSize: "12px", color: t.textMute, animationDelay: "0.32s", visibility: modelOpen ? "hidden" : "visible" }}>
-                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#16a75c", display: "inline-block", animation: "pulseDot 1.5s infinite" }} />
-                  <span>Terhubung — siap menerima pertanyaan</span>
-                </div>
-              )}
+
             </div>
           )}
 
@@ -1295,7 +1265,7 @@ onMouseLeave={(e) => { e.currentTarget.style.background = t.inputBg; e.currentTa
                         color: dark ? "#7fb1e8" : "#1e40af",
                         border: dark ? "1px solid rgba(255,255,255,0.12)" : "1px solid #dbeafe",
                         alignSelf: "flex-start",
-                        animation: m.streaming ? "pulseRing 1.5s infinite" : "none"
+                        animation: "none"
                       }}
                     >
                       {IconBot(20)}
@@ -1394,7 +1364,7 @@ onMouseLeave={(e) => { e.currentTarget.style.background = t.inputBg; e.currentTa
                             </span>
                           )}
                           {m.streaming && (
-                            <span style={{ fontSize: "12px", color: t.accentText, marginLeft: "8px", fontWeight: 600 }} className="blink">
+                            <span style={{ fontSize: "12px", color: t.accentText, marginLeft: "8px", fontWeight: 600 }}>
                               <span style={{ display: "inline-block", width: 7, height: 7, borderRadius: "50%", background: t.accentText, marginRight: 6, verticalAlign: "middle" }} />
                               mengetik
                             </span>
@@ -1694,8 +1664,7 @@ style={{
                   alignItems: "center",
                   justifyContent: "center",
                   color: dark ? "#7fb1e8" : "#1e40af",
-                  border: dark ? "1px solid rgba(255,255,255,0.12)" : "1px solid #dbeafe",
-                  animation: "pulseRing 1.5s infinite"
+                  border: dark ? "1px solid rgba(255,255,255,0.12)" : "1px solid #dbeafe"
                 }}
               >
                 {IconBot(20)}

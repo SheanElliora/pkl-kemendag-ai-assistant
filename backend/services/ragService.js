@@ -117,8 +117,9 @@ function filterSourcesByCitations(answer, sources) {
         if (n >= 1 && n <= sources.length) cited.add(n - 1);
     }
     if (cited.size === 0) return sources.slice(0, 1);
-    // Batasi maksimal 2 sumber paling relevan biar kerucut (1 dokumen 1 halaman bila cukup)
-    return [...cited].sort((a, b) => a - b).slice(0, 2).map(i => sources[i]);
+    // Universal: tampilkan semua yang dikutip (1 dokumen 1 halaman bila 1 fakta, 3-5 dokumen bila gabungan seperti "informasi lain tentang Jepang")
+    // Batasi longgar 7 biar tidak bawa 10 bila LLM kutip banyak
+    return [...cited].sort((a, b) => a - b).slice(0, 7).map(i => sources[i]);
 }
 
 

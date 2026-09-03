@@ -163,6 +163,7 @@ export default function CmsPage() {
   const [roleFilter, setRoleFilter] = useState("all");
 
   const [logs, setLogs] = useState([]);
+  const [logDate, setLogDate] = useState(() => new Date().toISOString().slice(0, 10));
 
   useEffect(() => {
     if (!userMsg) return;
@@ -726,17 +727,20 @@ export default function CmsPage() {
                   width: "100%",
                   textAlign: "left",
                   padding: isOpen ? "11px 14px" : "11px 0",
-                  borderRadius: 999,
+                  borderRadius: tab === n.id ? "0 8px 8px 0" : "8px",
                   cursor: "pointer",
                   fontFamily: "inherit",
                   fontWeight: 600,
                   fontSize: 14,
-                  border: tab === n.id ? "1px solid #e9a319" : "none",
-                  background: tab === n.id ? "rgba(233,163,25,0.28)" : undefined,
+                  border: tab === n.id ? "none" : "none",
+                  borderLeft: tab === n.id ? "3px solid #e9a319" : "3px solid transparent",
+                  background: tab === n.id ? "rgba(233,163,25,0.12)" : "transparent",
                   color: tab === n.id ? "#ffd97a" : "rgba(255,255,255,0.85)",
                   whiteSpace: "nowrap",
                   overflow: "hidden"
                 }}
+                onMouseEnter={(e) => { if (tab !== n.id) e.currentTarget.style.background = "rgba(255,255,255,0.08)"; }}
+                onMouseLeave={(e) => { if (tab !== n.id) e.currentTarget.style.background = "transparent"; }}
                 className="side-nav-item"
                 {...(!isOpen && n.label ? { "data-tip": n.label } : {})}
               >
@@ -990,7 +994,7 @@ export default function CmsPage() {
                           color: t.text,
                           fontSize: 13,
                           outline: "none",
-                          width: 230,
+                          width: 300,
                           fontFamily: "inherit",
                           boxSizing: "border-box"
                         }}
@@ -1110,7 +1114,7 @@ export default function CmsPage() {
                           color: t.text,
                           fontSize: 13,
                           outline: "none",
-                          width: 230,
+                          width: 300,
                           fontFamily: "inherit",
                           boxSizing: "border-box"
                         }}
@@ -1170,7 +1174,7 @@ export default function CmsPage() {
                           color: t.text,
                           fontSize: 13,
                           outline: "none",
-                          width: 230,
+                          width: 300,
                           fontFamily: "inherit",
                           boxSizing: "border-box"
                         }}
@@ -1321,7 +1325,7 @@ export default function CmsPage() {
                         color: t.text,
                         fontSize: 13,
                         outline: "none",
-                        width: 230,
+                        width: 300,
                         fontFamily: "inherit",
                         boxSizing: "border-box"
                       }}
@@ -1430,16 +1434,22 @@ export default function CmsPage() {
           {tab === "logs" && (
             <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
             <div style={{ ...cardStyle(t), display: "flex", flexDirection: "column", minHeight: 0, flex: 1, marginBottom: 0 }}>
-              <h3 style={{ ...h3Style, display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-                <SIcon name="file" size={17} />
-                Riwayat Aktivitas
-              </h3>
-              {loading.logs && logs.length === 0 ? (
-                <LoadingBlock t={t} text="Memuat riwayat aktivitas…" />
-              ) : logs.length === 0 ? (
-                <EmptyState t={t} icon="file" text="Belum ada aktivitas masuk." />
-              ) : (
-                <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 12, flexShrink: 0 }}>
+                <h3 style={{ ...h3Style, display: "flex", alignItems: "center", gap: 8, margin: 0 }}>
+                  <SIcon name="file" size={17} />
+                  Riwayat Aktivitas
+                </h3>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <input type="date" value={logDate} onChange={(e) => setLogDate(e.target.value)} style={{ ...inputStyle(t), height: 36, padding: "7px 14px", fontSize: 13, borderRadius: 999, width: 150 }} />
+                  <span style={{ fontSize: 12, color: t.textMute, whiteSpace: "nowrap", background: t.cardSoft, border: "1px solid " + t.borderSoft, borderRadius: 999, padding: "5px 10px" }}>{logs.filter((l) => String(l.timestamp || "").slice(0, 10) === logDate).length} aktivitas</span>
+                </div>
+              </div>
+              {(() => {
+                const filteredLogs = logs.filter((l) => String(l.timestamp || "").slice(0, 10) === logDate);
+                if (loading.logs && logs.length === 0) return <LoadingBlock t={t} text="Memuat riwayat aktivitas…" />;
+                if (filteredLogs.length === 0) return <EmptyState t={t} icon="file" text={logs.length === 0 ? "Belum ada aktivitas masuk." : `Tidak ada aktivitas pada ${logDate}.`} sub={logs.length === 0 ? undefined : "Pilih tanggal lain di atas."} />;
+                return (
+                <div style={{ flex: 1, minHeight: 0, overflow: "auto", maxHeight: "calc(100vh - 380px)" }}>
                   <table style={tableStyle(t)} className="zebra">
                     <thead>
                       <tr>
@@ -1447,7 +1457,7 @@ export default function CmsPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {logs.map((l) => (
+                      {filteredLogs.map((l) => (
                         <tr key={l.id} className="hover-row">
                           <Td t={t}>
                             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -1465,7 +1475,8 @@ export default function CmsPage() {
                     </tbody>
                   </table>
                 </div>
-              )}
+                );
+              })()}
             </div>
             </div>
           )}
@@ -1932,7 +1943,7 @@ function RoleSelect({ role, onSelect, t, dark }) {
           height: 40,
           padding: "6px 12px",
           borderRadius: 999,
-          border: open ? "2px solid " + t.accent : "1px solid " + t.border,
+          border: open ? "1px solid " + t.accent : "1px solid " + t.border,
           background: open ? mt.itemBg : t.inputBg,
           color: t.text,
           outline: "none",

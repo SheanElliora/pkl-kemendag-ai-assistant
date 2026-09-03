@@ -88,9 +88,9 @@ body {
 }
 
 
-/* Pesan chat tampil dengan animasi halus */
+/* Pesan chat tampil — simple fade, tidak bounce */
 .msg-in {
-  animation: msgIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: fadeIn 0.25s ease-out both;
 }
 
 /* Konten yang muncul (halaman, kartu) */
@@ -216,36 +216,26 @@ tr.hover-row:hover td {
   background: rgba(255, 255, 255, 0.26);
 }
 
-/* Kartu statistik CMS */
+/* Kartu statistik CMS — flat, tidak terangkat */
 .stat-card {
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
-}
-
-/* Tombol aksi utama CMS: default transparan redup, hover menyala */
+/* Tombol aksi utama CMS — selaras tombol biru solid #004DAF */
 .add-user-btn {
-  background: linear-gradient(135deg, rgba(233, 163, 25, 0.5), rgba(201, 133, 0, 0.42));
-  color: #0b1e3a;
-  border: 1px solid rgba(233, 163, 25, 0.35);
-  box-shadow: 0 2px 8px rgba(201, 133, 0, 0.18);
-  backdrop-filter: blur(8px);
-  transition: background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, filter 0.2s ease;
+  background: #004DAF;
+  color: #fff;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0,77,175,0.25);
+  transition: background 0.15s ease;
 }
 
 .add-user-btn:not(:disabled):hover {
-  background: linear-gradient(135deg, #ffe08a, #f0b429);
-  border-color: rgba(255, 224, 138, 0.9);
-  box-shadow: 0 0 16px rgba(233, 163, 25, 0.55), 0 6px 20px rgba(233, 163, 25, 0.4);
-  filter: brightness(1.05);
+  background: #003d94;
 }
 
 .add-user-btn:not(:disabled):active {
-  filter: brightness(0.95);
+  background: #003570;
 }
 
 /* Logo hero: membesar halus saat hover */
@@ -460,31 +450,14 @@ body.theme-dark .skeleton {
 }
 
 
-/* =====================================
-   Animasi tombol global
-   Efek "hidup": terangkat saat hover,
-   menekan saat diklik. Tidak mengubah
-   warna tombol apa pun.
-   ===================================== */
-
+/* Tombol — tanpa animasi terangkat/shadow berlebihan */
 button:not(:disabled) {
-  position: relative;
-  transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease,
-    filter 0.18s ease;
-  will-change: transform;
   -webkit-tap-highlight-color: transparent;
 }
 
-button:not(:disabled):hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 114, 188, 0.25);
-}
-
-button:not(:disabled):active {
-  transform: translateY(0) scale(0.96);
-  box-shadow: 0 2px 8px rgba(0, 114, 188, 0.2);
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 button:disabled {

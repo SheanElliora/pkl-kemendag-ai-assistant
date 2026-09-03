@@ -279,8 +279,8 @@ fontFamily: FONT_BODY
           <button
             type="submit"
             disabled={loading}
-            onMouseEnter={(e) => { if (!loading) { e.currentTarget.style.transform = "scale(1.02)"; e.currentTarget.style.background = "#003d94"; e.currentTarget.style.boxShadow = "0 8px 22px rgba(0,77,175,0.45)"; } }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.background = "#004DAF"; e.currentTarget.style.boxShadow = "0 6px 16px rgba(0,77,175,0.35)"; }}
+            onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = "#003d94"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "#004DAF"; }}
             style={{
               width: "100%",
               background: "#004DAF",

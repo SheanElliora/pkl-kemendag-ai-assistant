@@ -800,7 +800,8 @@ export default function ChatPage() {
 
   async function copyText(text, index) {
     try {
-      await navigator.clipboard.writeText(text);
+      const clean = String(text).replace(/\[\s*\d+\s*\]/g, "").replace(/[ \t]{2,}/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+      await navigator.clipboard.writeText(clean);
       setCopied(index);
       setTimeout(() => setCopied(null), 1500);
     } catch {
@@ -902,18 +903,16 @@ export default function ChatPage() {
                 boxShadow: dark ? "0 3px 12px rgba(0,0,0,0.18)" : "0 2px 8px rgba(0,24,69,0.08)",
                 backdropFilter: "blur(6px)",
                 WebkitBackdropFilter: "blur(6px)",
-                transition: "background 0.15s ease, transform 0.15s ease, border-color 0.15s ease",
+                transition: "background 0.15s ease, border-color 0.15s ease",
                 flexShrink: 0
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = "rgba(233,163,25,0.28)";
                 e.currentTarget.style.borderColor = "rgba(233,163,25,0.8)";
-                e.currentTarget.style.transform = "scale(1.03)";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = dark ? "rgba(255,255,255,0.1)" : "rgba(0,24,69,0.06)";
                 e.currentTarget.style.borderColor = dark ? "rgba(255,255,255,0.4)" : "rgba(0,24,69,0.3)";
-                e.currentTarget.style.transform = "scale(1)";
               }}
             >
               {IconMenu(18)}
@@ -1211,10 +1210,10 @@ onMouseLeave={(e) => { e.currentTarget.style.background = t.inputBg; e.currentTa
                       cursor: !input.trim() || loading ? "not-allowed" : "pointer",
                       fontSize: "16px",
                       fontFamily: 'inherit',
-                      transition: "transform 0.15s ease"
+                      transition: "background 0.15s ease"
                     }}
-                    onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.transform = "scale(1.06)"; e.currentTarget.style.background = "#96690f"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.background = !input.trim() || loading ? (dark ? "#26324d" : "#cbd5e1") : "#b07d18"; }}
+                    onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.background = "#96690f"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = !input.trim() || loading ? (dark ? "#26324d" : "#cbd5e1") : "#b07d18"; }}
                   >
                     <span style={{ display: "inline-flex", transform: "translate(-1.15px, 1.15px)" }}>{IconSend(15)}</span>
                   </button>
@@ -1824,10 +1823,10 @@ style={{
                       alignItems: "center",
                       gap: "6px",
                       boxShadow: "0 2px 8px rgba(0,77,175,0.25)",
-                      transition: "background 0.15s ease, transform 0.15s ease"
+                      transition: "background 0.15s ease"
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = "#003d94"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = "#004DAF"; e.currentTarget.style.transform = "translateY(0)"; }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = "#003d94"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "#004DAF"; }}
                   >
                     Buka tab baru
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
@@ -2399,12 +2398,11 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
       const btnRect = btn.getBoundingClientRect();
       const areaRect = scrollEl.getBoundingClientRect();
       const padBottom = parseFloat(getComputedStyle(scrollEl).paddingBottom) || 0;
-      // Ruang yang benar-benar terlihat (batas inner box area chat dikurangi padding bawah).
       const usableBottom = areaRect.bottom - padBottom;
       const spaceBelow = usableBottom - btnRect.bottom - 10;
-      setMaxH(Math.max(140, Math.min(420, spaceBelow)));
+      setMaxH(Math.max(220, Math.min(360, spaceBelow)));
     } else {
-      setMaxH(320);
+      setMaxH(300);
     }
   }
 
@@ -2430,8 +2428,6 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
         type="button"
         onClick={toggleOpen}
         title="Pilih model AI"
-        onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.03)"; }}
-        onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
         style={{
           display: "flex",
           alignItems: "center",
@@ -2521,6 +2517,7 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
             display: "flex",
             flexDirection: "column",
             maxHeight: maxH,
+            minHeight: 220,
             overflow: "hidden"
           }}
         >

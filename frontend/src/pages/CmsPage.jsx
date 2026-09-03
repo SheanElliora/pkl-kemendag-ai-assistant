@@ -601,8 +601,8 @@ export default function CmsPage() {
           style={{
             width: isOpen ? 250 : 76,
             flexShrink: 0,
-            background: "linear-gradient(180deg,#001845,#004DAF)",
-            color: "#fff",
+            background: "#0f182c",
+            color: "#e5edf7",
             padding: isOpen ? "20px 16px" : "12px 4px",
             position: "sticky",
             top: 0,
@@ -613,7 +613,8 @@ export default function CmsPage() {
             boxSizing: "border-box",
             overflow: "hidden",
             borderRadius: "0 18px 18px 0",
-            boxShadow: "4px 0 20px rgba(0,0,0,0.15)",
+            borderRight: "1px solid #1e2e4a",
+            boxShadow: "4px 0 20px rgba(0,0,0,0.22)",
             transition: "width 0.25s ease"
           }}
         >
@@ -671,8 +672,8 @@ export default function CmsPage() {
           <div
             title={`${user?.username} · ${roleLabel}`}
             style={{
-              background: "rgba(255,255,255,0.1)",
-              border: "1px solid rgba(255,255,255,0.22)",
+              background: "rgba(255,255,255,0.08)",
+              border: "1px solid rgba(255,255,255,0.14)",
               borderRadius: 999,
               padding: isOpen ? "6px 12px" : "6px",
               fontSize: 13,
@@ -683,7 +684,8 @@ export default function CmsPage() {
               gap: 8,
               minWidth: 0,
               whiteSpace: "nowrap",
-              overflow: "hidden"
+              overflow: "hidden",
+              color: "#e5edf7"
             }}
           >
             <span
@@ -788,11 +790,11 @@ export default function CmsPage() {
           <div style={{ height: 1, background: "rgba(255,255,255,0.15)", margin: "4px 0", flexShrink: 0 }} />
 
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <SideBtn isOpen={isOpen} onClick={() => navigate("/")} title="Kembali ke Chat">
+            <SideBtn isOpen={isOpen} t={t} dark={dark} onClick={() => navigate("/")} title="Kembali ke Chat">
               <span style={{ display: "inline-flex" }}><SIcon name="message" size={16} /></span>
               {isOpen && "Kembali ke Chat"}
             </SideBtn>
-            <SideBtn isOpen={isOpen} danger onClick={logout} title="Keluar">
+            <SideBtn isOpen={isOpen} t={t} dark={dark} danger onClick={logout} title="Keluar">
               <span style={{ display: "inline-flex" }}><SIcon name="logout" size={16} /></span>
               {isOpen && "Keluar"}
             </SideBtn>
@@ -872,8 +874,10 @@ export default function CmsPage() {
           {/* ===== PERSETUJUAN (admin) ===== */}
           {tab === "approval" && (
             <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, minmax(0, 1fr))" : "repeat(4, minmax(0, 1fr))", gap: 10, marginBottom: 18, flexShrink: 0, paddingTop: 4 }}>
-                {stats.map((s) => (
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, minmax(0, 1fr))" : "repeat(4, minmax(0, 1fr))", gap: 8, marginBottom: 8, flexShrink: 0, paddingTop: 4 }}>
+                {stats.slice(0,4).map((s) => {
+                  const isActive = (s.id === "pending" && approvalSub === "pending") || (s.id === "all" && approvalSub === "gabung") || (s.id === "riwayat" && approvalSub === "riwayat" && historyFilter === "all") || (s.id !== "pending" && s.id !== "all" && s.id !== "riwayat" && approvalSub === "riwayat" && historyFilter === s.id);
+                  return (
                   <button
                     key={s.label}
                     className="stat-card"
@@ -893,27 +897,78 @@ export default function CmsPage() {
                     title="Klik untuk menampilkan daftar terkait"
                     style={{
                       background: t.card,
-                      border: (s.id === "pending" && approvalSub === "pending") || (s.id === "all" && approvalSub === "gabung") || (s.id === "riwayat" && approvalSub === "riwayat" && historyFilter === "all") || (s.id !== "pending" && s.id !== "all" && s.id !== "riwayat" && approvalSub === "riwayat" && historyFilter === s.id) ? "1px solid #e9a319" : "1px solid " + t.border,
-                      borderRadius: 16,
-                      padding: "12px 14px",
+                      border: isActive ? "1px solid #e9a319" : "1px solid " + t.border,
+                      borderRadius: 12,
+                      padding: "10px 12px",
                       display: "flex",
                       alignItems: "center",
-                      gap: 10,
+                      gap: 8,
                       cursor: "pointer",
                       textAlign: "left",
                       fontFamily: "inherit",
-                      transition: "border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease"
+                      minHeight: 68
                     }}
                   >
-                    <div style={{ width: 36, height: 36, borderRadius: 11, background: s.color + "1f", color: s.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <SIcon name={s.icon} size={17} />
+                    <div style={{ width: 32, height: 32, borderRadius: 10, background: s.color + "1f", color: s.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <SIcon name={s.icon} size={15} />
                     </div>
                     <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 20, fontWeight: 700, fontFamily: FONT_HEADING, lineHeight: 1.1, color: t.text }}>{s.value}</div>
-                      <div style={{ fontSize: 12, color: t.textMute, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.label}</div>
+                      <div style={{ fontSize: 18, fontWeight: 700, fontFamily: FONT_HEADING, lineHeight: 1.1, color: t.text }}>{s.value}</div>
+                      <div style={{ fontSize: 12, color: t.textMute, marginTop: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.label}</div>
                     </div>
                   </button>
-                ))}
+                  );
+                })}
+              </div>
+              <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 12, flexShrink: 0, flexWrap: isMobile ? "wrap" : "nowrap", paddingTop: 0 }}>
+                {stats.slice(4).map((s) => {
+                  const isActive = (s.id === "pending" && approvalSub === "pending") || (s.id === "all" && approvalSub === "gabung") || (s.id === "riwayat" && approvalSub === "riwayat" && historyFilter === "all") || (s.id !== "pending" && s.id !== "all" && s.id !== "riwayat" && approvalSub === "riwayat" && historyFilter === s.id);
+                  return (
+                  <button
+                    key={s.label}
+                    className="stat-card"
+                    onClick={() => {
+                      if (s.id === "pending") {
+                        setApprovalSub("pending");
+                      } else if (s.id === "all") {
+                        setApprovalSub("gabung");
+                      } else if (s.id === "riwayat") {
+                        setApprovalSub("riwayat");
+                        setHistoryFilter("all");
+                      } else {
+                        setApprovalSub("riwayat");
+                        setHistoryFilter(s.id);
+                      }
+                    }}
+                    title="Klik untuk menampilkan daftar terkait"
+                    style={{
+                      background: t.card,
+                      border: isActive ? "1px solid #e9a319" : "1px solid " + t.border,
+                      borderRadius: 12,
+                      padding: "10px 12px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      cursor: "pointer",
+                      textAlign: "left",
+                      fontFamily: "inherit",
+                      flex: isMobile ? "1 1 calc(50% - 5px)" : "0 0 calc(25% - 7.5px)",
+                      maxWidth: isMobile ? "calc(50% - 5px)" : "calc(25% - 7.5px)",
+                      minWidth: 0,
+                      minHeight: 68,
+                      boxSizing: "border-box"
+                    }}
+                  >
+                    <div style={{ width: 32, height: 32, borderRadius: 10, background: s.color + "1f", color: s.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <SIcon name={s.icon} size={15} />
+                    </div>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: 18, fontWeight: 700, fontFamily: FONT_HEADING, lineHeight: 1.1, color: t.text }}>{s.value}</div>
+                      <div style={{ fontSize: 12, color: t.textMute, marginTop: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.label}</div>
+                    </div>
+                  </button>
+                  );
+                })}
               </div>
 
               {approvalSub === "pending" && (
@@ -997,7 +1052,7 @@ export default function CmsPage() {
                   </p>
                 ) : (
                   <>
-                  <div style={{ overflow: "auto", maxHeight: "calc(100vh - 290px)" }}>
+                  <div style={{ overflow: "auto", maxHeight: "calc(100vh - 320px)" }}>
                     <table style={tableStyle(t)} className="zebra">
                       <thead>
                         <tr>
@@ -1090,7 +1145,7 @@ export default function CmsPage() {
                     </div>
                 </div>
                 </div>
-                <FileTable t={t} rows={filteredHistory} empty="Tidak ada riwayat." sub="Dokumen yang sudah diproses akan tampil di sini." loading={loading.approval} sortable sortKey={sort.key} sortDir={sort.dir} onSort={toggleSort} onDelete={setDeleteDocTarget} onDetail={setDetailTarget} onView={previewFile} maxHeight="calc(100vh - 290px)" bare />
+                <FileTable t={t} rows={filteredHistory} empty="Tidak ada riwayat." sub="Dokumen yang sudah diproses akan tampil di sini." loading={loading.approval} sortable sortKey={sort.key} sortDir={sort.dir} onSort={toggleSort} onDelete={setDeleteDocTarget} onDetail={setDetailTarget} onView={previewFile} maxHeight="calc(100vh - 320px)" bare />
               </div>
               )}
 
@@ -1150,7 +1205,7 @@ export default function CmsPage() {
                     </div>
                   </div>
                 </div>
-                <FileTable t={t} rows={combinedFiltered} empty="Tidak ada dokumen." sub="Belum ada dokumen di dalam sistem." loading={loading.approval} sortable sortKey={sort.key} sortDir={sort.dir} onSort={toggleSort} onDelete={setDeleteDocTarget} onDetail={setDetailTarget} onView={previewFile} maxHeight="calc(100vh - 290px)" bare />
+                <FileTable t={t} rows={combinedFiltered} empty="Tidak ada dokumen." sub="Belum ada dokumen di dalam sistem." loading={loading.approval} sortable sortKey={sort.key} sortDir={sort.dir} onSort={toggleSort} onDelete={setDeleteDocTarget} onDetail={setDetailTarget} onView={previewFile} maxHeight="calc(100vh - 320px)" bare />
               </div>
               )}
             </div>
@@ -1877,7 +1932,7 @@ function RoleSelect({ role, onSelect, t, dark }) {
           height: 40,
           padding: "6px 12px",
           borderRadius: 999,
-          border: open ? "2px solid " + (dark ? "#60a5fa" : "#004DAF") : "1px solid " + t.border,
+          border: open ? "2px solid " + t.accent : "1px solid " + t.border,
           background: open ? mt.itemBg : t.inputBg,
           color: t.text,
           outline: "none",
@@ -1933,7 +1988,7 @@ function RoleSelect({ role, onSelect, t, dark }) {
                   marginBottom: 5,
                   borderRadius: 10,
                   border: o.id === role
-                    ? (dark ? "1px solid #4f7fd4" : "1px solid #004DAF")
+                    ? "1px solid " + t.accent
                     : "1px solid " + (dark ? "#2a3752" : "#e2e8f0"),
                   background: o.id === role ? mt.itemBg : mt.itemIdle,
                   boxShadow: o.id === role ? "0 2px 10px rgba(0,77,175,0.18)" : "0 1px 3px rgba(0,0,0,0.05)",
@@ -1964,7 +2019,7 @@ function RoleSelect({ role, onSelect, t, dark }) {
   );
 }
 
-function SideBtn({ children, onClick, danger, isOpen, title }) {
+function SideBtn({ children, onClick, danger, isOpen, title, t, dark }) {
   return (
     <button
       onClick={onClick}
@@ -1978,8 +2033,8 @@ function SideBtn({ children, onClick, danger, isOpen, title }) {
         gap: 10,
         width: "100%",
         background: danger ? "rgba(220,38,38,0.18)" : "rgba(255,255,255,0.08)",
-        border: "1px solid " + (danger ? "rgba(220,38,38,0.5)" : "rgba(255,255,255,0.22)"),
-        color: danger ? "#fecaca" : "#fff",
+        border: "1px solid " + (danger ? "rgba(220,38,38,0.5)" : "rgba(255,255,255,0.14)"),
+        color: danger ? "#fecaca" : "#e5edf7",
         padding: isOpen ? "10px 14px" : "10px 0",
         borderRadius: 999,
         cursor: "pointer",

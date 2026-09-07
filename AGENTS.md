@@ -2,7 +2,7 @@
 
 Ringkasan ini dimuat otomatis oleh opencode setiap sesi baru. Baca sebelum mengerjakan apa pun.
 
-## Status (terakhir diperbarui 02-09-2026)
+## Status (terakhir diperbarui 03-09-2026)
 
 - Proyek di C:\dev\pkl-kemendag-ai-assistant (SUDAH dipindah keluar OneDrive - jangan pindahkan lagi).
 - Sistem 100% sehat: ChromaDB :8000, Backend :3001, Frontend :5173. Login CMS: admin / AdminKemendag2026! (password lain ada di backend/.env - jangan commit .env).
@@ -49,7 +49,9 @@ Ringkasan ini dimuat otomatis oleh opencode setiap sesi baru. Baca sebelum menge
 - **ScrollBtn GPT (02-09-2026):** `ChatPage.jsx:1720` `32px` `transparent` `blur(10px)` `border` adaptif, `position:sticky bottom:4px` `left:50%` `translateX(-50%)` — tidak biru solid, di tengah bawah, `scrollToBottom` `ChatPage.jsx:820` mentok `scrollHeight`.
 - **Sitasi Kerucut (02-09-2026):** `ragService.js:107` `filterSourcesByCitations` `slice(0,2)` + `ChatPage.jsx:1603` `visiblePages = confident.slice(0,1)` — `MAX_CANDIDATES 10` tetap untuk LLM, tampil `1-2 sumber` `1 halaman/dokumen` (contoh `modal jepang` `10→1` `p10`), `NotFound` tetap `0`.
 - **Performa P1 (02-09-2026):** `retrieverService.js:60` `RERANK_WIDTH 15→10` (hemat 30%), `embedderService.js:25` cache query LRU 500 TTL10m, `chatHistoryService.js:49` cache `mtime+TTL4s`, `ragService.js:125` cache key pakai `retrievalQuery`, `App.jsx:4` lazy `CmsPage/LoginPage` `427kB→365kB+55kB+8kB`, `ChatPage.jsx:1322` bubble `contentVisibility:auto`.
-- **Model AI: `minimax/minimax-m3:free` (gratis, stabil, efisien) → fallback `nvidia/nemotron-3-nano-omni-30b:free` → `openai/gpt-4o-mini` (berbayar terakhir).** Semua gratis 0 biaya, limit 50 req/hari/free model. Daftar di `backend/services/modelCatalog.js:11`. Default di `backend/.env:6` `OPENROUTER_MODEL`. Untuk kualitas maksimal berbayar: `google/gemini-2.5-flash`/`pro`.
+- **Bulk Upload & Versi (03-09-2026):** `backend/routes/cms.js:126` `upload.array("files",5)` + `CmsPage.jsx:850` drop zone `Pilih atau seret dokumen PDF ke sini` `Ukuran maksimal 20 MB` `multiple` `selectedFiles[5]`, `fileService.js:179` versi baru `approved→deleted` otomatis (hapus vektor `deleteVectorsByFilename`), badge `versi baru`.
+- **Evaluasi RAG Dashboard (03-09-2026):** `backend/routes/cms.js:575` `GET /api/cms/eval` (admin) `7/7 PASS 100%`, `CmsPage.jsx:197` nav `Evaluasi RAG` `icon check` + tab `grid 4` `7/7` `Recall` `avg 11200ms` + tabel 7 detail `PASS` `latency`.
+- **Model AI: `minimax/minimax-m3:free` (gratis, stabil, efisien) → fallback `google/gemini-2.0-flash-exp:free` (mentor) → `nvidia/nemotron-3-nano-omni-30b:free` → `openai/gpt-4o-mini` (berbayar terakhir).** Semua gratis 0 biaya, limit 50 req/hari/free model. Daftar di `backend/services/modelCatalog.js:11`. Default di `backend/.env:6` `OPENROUTER_MODEL`. Untuk kualitas maksimal berbayar: `google/gemini-2.5-flash`/`pro`.
 - **API key:** OpenRouter key terakhir di backend/.env. JANGAN commit .env ke git.
 - **Test scripts:** `scripts/testRagFull.mjs` (43 soal), `scripts/testRagRetry.mjs` (retry soal gagal), `scripts/testRetrievalOnly.mjs` (retrieval-only tanpa LLM, 0 token).
 

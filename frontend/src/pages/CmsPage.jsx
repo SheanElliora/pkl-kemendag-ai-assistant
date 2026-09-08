@@ -146,6 +146,8 @@ export default function CmsPage() {
   const [pending, setPending] = useState([]);
   const [history, setHistory] = useState([]);
   const [historyFilter, setHistoryFilter] = useState("all");
+  const [myHistoryFilter, setMyHistoryFilter] = useState("all");
+  const [showHelp, setShowHelp] = useState(false);
   const [fileSearch, setFileSearch] = useState("");
   const [sort, setSort] = useState({ key: "time", dir: "desc" });
   const [loading, setLoading] = useState({ files: false, approval: false, users: false, logs: false });
@@ -847,13 +849,19 @@ export default function CmsPage() {
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, minmax(0, 1fr))" : "repeat(4, minmax(0, 1fr))", gap: 10, marginBottom: 8, flexShrink: 0, paddingTop: 4 }}>
               {[
                 { label: "Total Diunggah", value: files.filter((f) => f.uploadedBy === user?.username).length, icon: "file", color: "#7fb1e8" },
-                { label: "Menunggu", value: files.filter((f) => f.uploadedBy === user?.username && f.status === "pending").length, icon: "inbox", color: "#e9a319" },
+                { label: "Menunggu", value: files.filter((f) => f.uploadedBy === user?.username && f.status === "pending").length, icon: "inbox", color: "#d97706" },
                 { label: "Disetujui", value: files.filter((f) => f.uploadedBy === user?.username && f.status === "approved").length, icon: "check", color: "#059669" },
                 { label: "Ditolak", value: files.filter((f) => f.uploadedBy === user?.username && f.status === "rejected").length, icon: "x", color: "#dc2626" }
               ].map((s) => (
-                <div key={s.label} style={{ background: t.card, border: "1px solid " + t.border, borderRadius: 12, padding: "12px 14px", display: "flex", alignItems: "center", gap: 10, minHeight: 72 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 11, background: s.color + "1f", color: s.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><SIcon name={s.icon} size={17} /></div>
-                  <div style={{ minWidth: 0 }}><div style={{ fontSize: 20, fontWeight: 700, fontFamily: FONT_HEADING, lineHeight: 1, color: t.text }}>{s.value}</div><div style={{ fontSize: 12, color: t.textMute, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.label}</div></div>
+                <div key={s.label} style={{ background: t.card, border: "1px solid " + t.border, borderRadius: 12, padding: "12px 14px", display: "flex", alignItems: "center", gap: 10, minHeight: 72, position: "relative", overflow: "hidden" }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 11, background: s.color + "1f", color: s.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><SIcon name={s.icon} size={15} /></div>
+                  <div style={{ minWidth: 0, flex: 1 }}><div style={{ fontSize: 18, fontWeight: 700, fontFamily: FONT_HEADING, lineHeight: 1, color: t.text }}>{s.value}</div><div style={{ fontSize: 12, color: t.textMute, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.label}</div></div>
+                  {s.label === "Total Diunggah" && files.filter((f) => f.uploadedBy === user?.username).length > 1 && (
+                    <svg width="48" height="20" viewBox="0 0 48 20" style={{ flexShrink: 0, opacity: 0.6 }}>
+                      <polyline points="2,16 12,10 22,14 32,6 46,8" fill="none" stroke={s.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                      <circle cx="46" cy="8" r="2" fill={s.color} />
+                    </svg>
+                  )}
                 </div>
               ))}
             </div>
@@ -888,7 +896,7 @@ export default function CmsPage() {
               {(selectedFiles.length > 0 ? selectedFiles : file ? [file] : []).length > 0 && (
                 <div style={{ fontSize: 13, color: t.textSoft, marginTop: 12, display: "flex", flexDirection: "column", gap: 6 }}>
                   {(selectedFiles.length > 0 ? selectedFiles : [file]).map((f, i) => (
-                    <span key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}><SIcon name="file" size={14} />{f.name} ({(f.size / 1024 / 1024).toFixed(2)} MB){f.name && files.some(x=>x.originalName===f.name && x.status==="approved") ? <span style={{ color: "#e9a319", fontWeight: 600, fontSize: 11 }}> · versi baru</span> : null}</span>
+                    <span key={i} style={{ display: "flex", alignItems: "center", gap: 6, background: t.cardSoft, border: "1px solid " + t.borderSoft, borderRadius: 8, padding: "6px 10px" }}><SIcon name="file" size={14} />{f.name} ({(f.size / 1024 / 1024).toFixed(2)} MB){f.name && files.some(x=>x.originalName===f.name && x.status==="approved") ? <span style={{ color: "#e9a319", fontWeight: 600, fontSize: 11 }}> · versi baru</span> : null}<button type="button" onClick={() => { const arr = selectedFiles.length>0 ? selectedFiles.filter((_,idx)=>idx!==i) : []; setSelectedFiles(arr); if(arr.length===0) setFile(null); else setFile(arr[0]); const el=document.querySelector('input[type=\"file\"][accept=\".pdf\"]'); if(el) el.value=""; }} style={{ marginLeft: "auto", background: "none", border: "none", color: t.textMute, cursor: "pointer", padding: 2, display: "inline-flex" }}><SIcon name="x" size={12} /></button></span>
                   ))}
                 </div>
               )}
@@ -898,26 +906,56 @@ export default function CmsPage() {
           {tab === "history" && (
             <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", gap: 12 }}>
               <div style={cardStyle(t)}>
-                <h3 style={{ ...h3Style, display: "flex", alignItems: "center", gap: 8 }}>
-                  <SIcon name="clock" size={16} /> Riwayat Unggahan Saya
-                </h3>
-                <p style={{ fontSize: 13, color: t.textMute, marginTop: 0, marginBottom: 12 }}>Daftar 10 unggahan terakhir Anda.</p>
-                {files.filter((f) => f.uploadedBy === user?.username).length === 0 ? (
-                  <EmptyState t={t} icon="file" text="Belum ada unggahan." sub="Unggah dokumen pertama di tab Unggah Dokumen." />
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
+                  <h3 style={{ ...h3Style, display: "flex", alignItems: "center", gap: 8, margin: 0 }}>
+                    <SIcon name="clock" size={16} /> Riwayat Unggahan Saya
+                  </h3>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+                    {[
+                      { id: "all", label: "Semua" },
+                      { id: "pending", label: "Menunggu" },
+                      { id: "approved", label: "Disetujui" },
+                      { id: "rejected", label: "Ditolak" },
+                      { id: "processing", label: "Diproses" }
+                    ].map((opt) => (
+                      <button key={opt.id} onClick={() => setMyHistoryFilter(opt.id)} style={{ padding: "5px 10px", borderRadius: 999, border: myHistoryFilter === opt.id ? "1px solid #e9a319" : "1px solid " + t.border, background: myHistoryFilter === opt.id ? "#e9a319" : t.card, color: myHistoryFilter === opt.id ? "#0b1e3a" : t.textSoft, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>{opt.label}</button>
+                    ))}
+                    <button onClick={() => setShowHelp(true)} title="Bantuan" style={{ width: 26, height: 26, borderRadius: "50%", border: "1px solid " + t.border, background: t.cardSoft, color: t.textMute, display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: 12, fontWeight: 700 }}>?</button>
+                  </div>
+                </div>
+                <p style={{ fontSize: 12, color: t.textMute, marginTop: 0, marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}><SIcon name="info" size={12} /> Menampilkan {myHistoryFilter === "all" ? "10 terbaru" : `filter ${myHistoryFilter}`} — {files.filter((f) => f.uploadedBy === user?.username && (myHistoryFilter === "all" || f.status === myHistoryFilter)).length} dokumen</p>
+                {files.filter((f) => f.uploadedBy === user?.username && (myHistoryFilter === "all" || f.status === myHistoryFilter)).length === 0 ? (
+                  <EmptyState t={t} icon="file" text={myHistoryFilter === "all" ? "Belum ada unggahan." : `Tidak ada status ${myHistoryFilter}.`} sub={myHistoryFilter === "all" ? "Unggah dokumen pertama di tab Unggah Dokumen." : "Coba filter Semua."} />
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                    {files.filter((f) => f.uploadedBy === user?.username).slice(0, 10).map((f) => (
+                    {files.filter((f) => f.uploadedBy === user?.username && (myHistoryFilter === "all" || f.status === myHistoryFilter)).slice(0, 10).map((f) => (
                       <div key={f.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: t.cardSoft, border: "1px solid " + t.borderSoft, borderRadius: 12 }}>
                         <span style={{ display: "inline-flex", color: t.textMute }}><SIcon name="file" size={15} /></span>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13, color: t.text, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.originalName}</div>
-                          <div style={{ fontSize: 11, color: t.textMute, marginTop: 2 }}>{fmtDate(f.uploadedAt)} · {(f.size / 1024 / 1024).toFixed(2)} MB</div>
+                          <div style={{ fontSize: 11, color: t.textMute, marginTop: 2, display: "flex", alignItems: "center", gap: 6 }}>{fmtDate(f.uploadedAt)} · {(f.size / 1024 / 1024).toFixed(2)} MB {f.status === "processing" && <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "#e9a319", fontWeight: 600 }}><span style={{ width: 10, height: 10, border: "2px solid #e9a319", borderTopColor: "transparent", borderRadius: "50%", display: "inline-block", animation: "spin 0.8s linear infinite" }} /> Diproses… estimasi 1-2 menit</span>}</div>
                         </div>
-                        <span style={{ ...(statusBadge(t)[f.status] || statusBadge(t).pending), fontSize: 11, padding: "4px 10px", whiteSpace: "nowrap" }}>{f.status === "pending" ? "Menunggu" : f.status === "approved" ? "Disetujui" : f.status === "rejected" ? "Ditolak" : f.status}</span>
+                        <span style={{ ...(statusBadge(t)[f.status] || statusBadge(t).pending), fontSize: 11, padding: "4px 10px", whiteSpace: "nowrap" }}>{f.status === "pending" ? "Menunggu" : f.status === "approved" ? "Disetujui" : f.status === "rejected" ? "Ditolak" : f.status === "processing" ? "Diproses" : f.status}</span>
                       </div>
                     ))}
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+          {showHelp && (
+            <div onClick={() => setShowHelp(false)} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 30, padding: 16 }} className="fade-in">
+              <div onClick={(e) => e.stopPropagation()} className="pop-in" style={{ background: t.card, border: "1px solid " + t.border, borderRadius: 16, padding: 20, maxWidth: 400, width: "100%", boxShadow: "0 20px 50px rgba(0,0,0,0.15)" }}>
+                <h3 style={{ ...h3Style, marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}><SIcon name="info" size={16} /> Bantuan Riwayat</h3>
+                <div style={{ fontSize: 13, color: t.textSoft, lineHeight: 1.6 }}>
+                  <div>• <b>Menunggu:</b> dokumen menunggu persetujuan admin.</div>
+                  <div>• <b>Disetujui:</b> sudah bisa ditanya di chat.</div>
+                  <div>• <b>Ditolak:</b> perbaiki PDF lalu unggah ulang (akan jadi versi baru).</div>
+                  <div style={{ marginTop: 8, color: t.textMute, fontSize: 12 }}>Jika <b>Ditolak</b> dengan alasan, hubungi admin atau unggah versi baru dengan nama sama.</div>
+                </div>
+                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
+                  <button onClick={() => setShowHelp(false)} style={{ ...primaryBtn, height: 36, padding: "0 16px", borderRadius: 999 }}>Tutup</button>
+                </div>
               </div>
             </div>
           )}

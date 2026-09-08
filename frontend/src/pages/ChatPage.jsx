@@ -2162,17 +2162,17 @@ style={{
                           </span>
                           <span style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: t.textMute, marginTop: 3, minWidth: 0 }}>
                             <span
-                              title={c.sessionId ? "Tersimpan di server" : "Hanya tersimpan di perangkat ini"}
+                              title="Tersimpan di server"
                               style={{
                                 display: "inline-flex",
                                 alignItems: "center",
                                 gap: "3px",
-                                color: c.sessionId ? "#16a75c" : "#d97706",
+                                color: "#16a75c",
                                 fontWeight: 700,
                                 flexShrink: 0
                               }}
                             >
-                              {c.sessionId ? IconCloud(11) : IconHardDrive(11)} {c.sessionId ? "tersimpan" : "lokal"}
+                              {IconCloud(11)} tersimpan
                             </span>
                             <span style={{ flexShrink: 0 }}>·</span>
                             <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>

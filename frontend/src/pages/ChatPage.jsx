@@ -971,42 +971,34 @@ export default function ChatPage() {
                   width: "42px",
                   height: "22px",
                   borderRadius: "12px",
-                  border: "1px solid #8a5f10",
-                  background: "#b07d18",
+                  border: "1px solid " + (dark ? "#26324d" : "#c9d4e3"),
+                  background: dark ? "#26324d" : "#c9d4e3",
                   cursor: "pointer",
                   flexShrink: 0,
                   padding: "0",
                   display: "block",
-                  overflow: "hidden"
+                  overflow: "hidden",
+                  transition: "background 0.25s ease, border-color 0.25s ease"
                 }}
               >
                 <span
                   style={{
                     position: "absolute",
-                    top: "3px",
-                    left: dark ? "24px" : "3px",
+                    top: "2px",
+                    left: dark ? "22px" : "2px",
                     width: "16px",
                     height: "16px",
                     borderRadius: "50%",
                     background: "#ffffff",
-                    color: "#78350f",
+                    color: "#001845",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     boxShadow: "0 2px 6px rgba(0,0,0,0.35)",
-                    transition: "left 0.25s ease, color 0.3s ease"
+                    transition: "left 0.25s ease"
                   }}
                 >
-                  {dark ? (
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                    </svg>
-                  ) : (
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="4" />
-                      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
-                    </svg>
-                  )}
+                  {dark ? <ThemeMoonIcon size={10} /> : <ThemeSunIcon size={10} />}
                 </span>
               </button>
               {user ? (
@@ -1021,7 +1013,10 @@ export default function ChatPage() {
                   </button>
                 </>
               ) : (
-                cmsEntryButton(dark, isMobile ? "icon-only" : cmsBtnVariant, cmsBtnLabel, () => window.open("/#/cms/login", "_blank"), "Masuk ke panel administrasi CMS")
+                <button onClick={() => window.open("/#/cms/login", "_blank")} title="Masuk ke panel administrasi CMS" aria-label="Panel Admin" className="theme-toggle-btn" style={{ cursor: "pointer", fontWeight: 600, fontSize: "12px", whiteSpace: "nowrap", fontFamily: "inherit", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px", flexShrink: 0, background: dark ? "rgba(255,255,255,0.12)" : "rgba(0,24,69,0.05)", color: dark ? "#e5edf7" : "#001845", border: "1px solid " + (dark ? "rgba(255,255,255,0.4)" : "rgba(0,24,69,0.3)"), padding: "4px 10px 4px 6px", borderRadius: "16px" }}>
+                  <span style={{ width: "20px", height: "20px", borderRadius: "50%", background: "#004DAF", color: "#ffffff", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{cmsPersonIcon(11)}</span>
+                  Panel Admin
+                </button>
               )}
             </div>
           </div>
@@ -2319,6 +2314,19 @@ const navButtonStyle = (dark) => ({
   whiteSpace: "nowrap",
   fontFamily: 'inherit'
 });
+
+const ThemeSunIcon = ({ size = 14 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+  </svg>
+);
+
+const ThemeMoonIcon = ({ size = 14 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+  </svg>
+);
 
 const miniActionStyle = (t) => ({
   background: "transparent",

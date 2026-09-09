@@ -79,9 +79,9 @@ test("siklus hidup dokumen via UI: upload -> approve -> delete", async ({ page, 
 
     // ---------- 1. Login maintainer lewat form ----------
     await page.goto("/#/cms/login");
-    await page.locator('input[placeholder="Username"]').fill(TES_USERNAME);
-    await page.locator('input[placeholder="Password"]').fill("tespass123");
-    await page.getByRole("button", { name: "Login", exact: true }).click();
+    await page.locator('input[placeholder="Nama Pengguna"]').fill(TES_USERNAME);
+    await page.locator('input[placeholder="Kata Sandi"]').fill("tespass123");
+    await page.getByRole("button", { name: "Masuk", exact: true }).click();
 
     // Maintainer default ke tab "Unggah Dokumen"
     await expect(page).toHaveURL(/#\/cms$/, { timeout: 15000 });
@@ -89,19 +89,19 @@ test("siklus hidup dokumen via UI: upload -> approve -> delete", async ({ page, 
 
     // ---------- 2. Upload PDF ----------
     await page.locator('input[type="file"]').setInputFiles(FIXTURE_PATH);
-    await page.getByRole("button", { name: "Upload", exact: true }).click();
+    await page.getByRole("button", { name: "Unggah", exact: true }).click();
 
-    // Upload selesai -> dokumen muncul di "Dokumen Saya" dengan status Menunggu
-    await page.getByText("Dokumen Saya").first().click();
-    const myRow = page.locator("tr.hover-row", { hasText: TES_PDF_NAME });
-    await expect(myRow.first()).toBeVisible({ timeout: 30000 });
+    // Upload selesai -> dokumen muncul di "Riwayat Saya" (kartu, bukan baris tabel)
+    await page.getByText("Riwayat Saya").first().click();
+    const myRow = page.getByText(TES_PDF_NAME).first();
+    await expect(myRow).toBeVisible({ timeout: 30000 });
 
     // ---------- 3. Login admin & approve ----------
     await page.evaluate(() => localStorage.clear());
     await page.goto("/#/cms/login");
-    await page.locator('input[placeholder="Username"]').fill(ADMIN_USER);
-    await page.locator('input[placeholder="Password"]').fill(ADMIN_PASS_SOURCE);
-    await page.getByRole("button", { name: "Login", exact: true }).click();
+    await page.locator('input[placeholder="Nama Pengguna"]').fill(ADMIN_USER);
+    await page.locator('input[placeholder="Kata Sandi"]').fill(ADMIN_PASS_SOURCE);
+    await page.getByRole("button", { name: "Masuk", exact: true }).click();
     await expect(page).toHaveURL(/#\/cms$/, { timeout: 15000 });
 
     // Admin default ke tab "Kelola Dokumen" -> cari baris pending

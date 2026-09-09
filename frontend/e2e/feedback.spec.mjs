@@ -25,7 +25,7 @@ test("TAHAP 2: feedback up + komentar tersimpan ke server", async ({ page }) => 
   await hero.press("Enter");
 
   const answer = page.locator(".markdown-body");
-  await expect(answer.first()).toContainText(/SIP|Perdagangan|Permendag/i, { timeout: 90000 });
+  await expect(answer.first()).toContainText(/SIP|Perdagangan|Permendag/i, { timeout: 240000 });
 
   // Klik tombol 👍 pada jawaban pertama
   const upBtn = page.locator('button[title="Jawaban membantu"]').first();

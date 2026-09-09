@@ -348,8 +348,6 @@ export default function CmsPage() {
     try {
       const form = new FormData();
       toUpload.forEach((f) => form.append("files", f));
-      // fallback single file key for backward compat
-      if (toUpload.length === 1) form.append("file", toUpload[0]);
       const data = await api("/api/cms/upload", { method: "POST", body: form });
       setUploadMsg(data.message || "Unggah berhasil.");
       showToast("success", data.message || "Unggah berhasil.");

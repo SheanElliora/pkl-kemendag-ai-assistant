@@ -19,6 +19,7 @@ test("halaman chat memuat & hero input tersedia", async ({ page }) => {
 });
 
 test("chat RAG menjawab dengan streaming + sumber referensi", async ({ page }) => {
+    test.setTimeout(300000);
     await page.goto("/");
 
     const hero = page.locator("input.hero-input");
@@ -26,13 +27,13 @@ test("chat RAG menjawab dengan streaming + sumber referensi", async ({ page }) =
     await hero.fill("Apa yang diatur dalam PERMENDAG Nomor 28 Tahun 2024? Jawab singkat.");
     await hero.press("Enter");
 
-    // Jawaban streaming dirender sebagai markdown (perlu waktu untuk LLM)
+    // Jawaban streaming dirender sebagai markdown (model gratis bisa antre lama)
     const answer = page.locator(".markdown-body");
-    await expect(answer.first()).toContainText(/SIP|Perdagangan|Permendag/i, { timeout: 90000 });
+    await expect(answer.first()).toContainText(/SIP|Perdagangan|Permendag/i, { timeout: 240000 });
 
     // Blok sumber referensi muncul beserta dokumen + halaman
     const sources = page.locator("text=Sumber Referensi");
-    await expect(sources.first()).toBeVisible({ timeout: 30000 });
+    await expect(sources.first()).toBeVisible({ timeout: 120000 });
     await expect(page.locator("text=PERMENDAG NOMOR 28 TAHUN 2024.pdf").first()).toBeVisible({ timeout: 10000 });
 
     // Self-cleaning: hapus sesi server yang dibuat tes ini (clientId di localStorage)

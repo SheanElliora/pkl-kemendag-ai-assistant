@@ -14,7 +14,9 @@ const OPENROUTER_CLIENT = new OpenAI({
 });
 
 const FALLBACK_CHAIN = [
-    "minimax/minimax-m3:free",
+    "nex-agi/nex-n2.5-pro:free",
+    "nex-agi/nex-n2.5-mini:free",
+    "inclusionai/ling-3.0-flash-fin:free",
     "openai/gpt-4o-mini",
 ];
 

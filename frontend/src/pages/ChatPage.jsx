@@ -19,8 +19,6 @@ export default function ChatPage() {
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [modelOpen, setModelOpen] = useState(false);
   const [toasts, setToasts] = useState([]);
-  const [cmsBtnVariant, setCmsBtnVariant] = useState(() => localStorage.getItem("cms_btn_variant_v2") || "chip");
-  const [cmsBtnLabel, setCmsBtnLabel] = useState(() => localStorage.getItem("cms_btn_label_v2") || "Panel Admin");
 
   const [dark, setDark] = useState(() => {
     const saved = localStorage.getItem("cms_theme");
@@ -36,21 +34,12 @@ export default function ChatPage() {
     document.body.classList.toggle("theme-dark", dark);
   }, [dark]);
 
-  useEffect(() => { localStorage.setItem("cms_btn_variant_v2", cmsBtnVariant); }, [cmsBtnVariant]);
-  useEffect(() => { localStorage.setItem("cms_btn_label_v2", cmsBtnLabel); }, [cmsBtnLabel]);
-
   function showToast(message) {
     const id = Date.now() + Math.random();
     setToasts((ts) => [...ts, { id, message }]);
     setTimeout(() => setToasts((ts) => ts.filter((x) => x.id !== id)), 2500);
   }
 
-  const cmsGearIcon = (s) => (
-    <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-    </svg>
-  );
   const cmsPersonIcon = (s) => (
     <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="8" r="4" />
@@ -191,42 +180,6 @@ export default function ChatPage() {
       <line x1="10" y1="16" x2="10.01" y2="16" />
     </svg>
   );
-
-  function cmsEntryButton(dark, variant, label, onClick, title) {
-    const base = { cursor: "pointer", fontWeight: 600, fontSize: "14px", whiteSpace: "nowrap", fontFamily: "inherit", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "7px", flexShrink: 0 };
-    const glass = dark
-      ? { background: "rgba(255,255,255,0.12)", color: "#e5edf7", border: "1px solid rgba(255,255,255,0.4)" }
-      : { background: "rgba(0,24,69,0.05)", color: "#001845", border: "1px solid rgba(0,24,69,0.3)" };
-    if (variant === "solid-gold") {
-      return (
-        <button onClick={onClick} title={title} style={{ ...base, background: "#b07d18", color: "#ffffff", border: "none", padding: "10px 16px", borderRadius: "10px" }}>
-          {cmsGearIcon(15)}
-          {label}
-        </button>
-      );
-    }
-    if (variant === "icon-only") {
-      return (
-        <button onClick={onClick} title={title} aria-label={label} style={{ ...base, ...glass, width: "42px", height: "42px", padding: "0", borderRadius: "10px", color: dark ? "#fff" : "#001845" }}>
-          {cmsGearIcon(18)}
-        </button>
-      );
-    }
-    if (variant === "chip") {
-      return (
-        <button onClick={onClick} title={title} style={{ ...base, ...glass, padding: "4px 10px 4px 6px", borderRadius: "16px", fontSize: "12px", gap: "6px" }}>
-          <span style={{ width: "20px", height: "20px", borderRadius: "50%", background: "#b07d18", color: "#ffffff", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{cmsPersonIcon(11)}</span>
-          {label}
-        </button>
-      );
-    }
-    return (
-      <button onClick={onClick} title={title} style={{ ...base, ...glass, padding: "10px 14px", borderRadius: "10px" }}>
-        {cmsGearIcon(15)}
-        {label}
-      </button>
-    );
-  }
 
   const chatEndRef = useRef(null);
   const chatAreaRef = useRef(null);
@@ -1003,7 +956,10 @@ export default function ChatPage() {
               </button>
               {user ? (
                 <>
-                  {cmsEntryButton(dark, isMobile ? "icon-only" : cmsBtnVariant, "CMS (" + user.username + ")", () => window.open("/#/cms", "_blank"), "Buka panel CMS")}
+                  <button onClick={() => window.open("/#/cms", "_blank")} title="Buka panel CMS" aria-label={"CMS (" + user.username + ")"} className="theme-toggle-btn" style={{ cursor: "pointer", fontWeight: 600, fontSize: "12px", whiteSpace: "nowrap", fontFamily: "inherit", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px", flexShrink: 0, background: dark ? "rgba(255,255,255,0.12)" : "rgba(0,24,69,0.05)", color: dark ? "#e5edf7" : "#001845", border: "1px solid " + (dark ? "rgba(255,255,255,0.4)" : "rgba(0,24,69,0.3)"), padding: "4px 10px 4px 6px", borderRadius: "16px" }}>
+                    <span style={{ width: "20px", height: "20px", borderRadius: "50%", background: "#004DAF", color: "#ffffff", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>{cmsPersonIcon(11)}</span>
+                    {"CMS (" + user.username + ")"}
+                  </button>
                   <button
                     onClick={logout}
                     title="Keluar dari akun admin"

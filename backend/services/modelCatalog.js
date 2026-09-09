@@ -10,16 +10,16 @@
 
 export const MODEL_CATALOG = [
     {
-        id: "minimax/minimax-m3:free",
-        label: "Minimax M3 (gratis, 50 req/hari) — REKOMENDASI gratis"
+        id: "nex-agi/nex-n2.5-pro:free",
+        label: "Nex N2.5 Pro (gratis, 50 req/hari) — REKOMENDASI gratis"
     },
     {
-        id: "google/gemini-2.0-flash-exp:free",
-        label: "Gemini 2.0 Flash (gratis, mentor rekomendasi)"
+        id: "nex-agi/nex-n2.5-mini:free",
+        label: "Nex N2.5 Mini (gratis, backup 1)"
     },
     {
-        id: "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
-        label: "Nemotron 3 Nano 30B (gratis, backup)"
+        id: "inclusionai/ling-3.0-flash-fin:free",
+        label: "Ling 3.0 Flash (gratis, backup 2)"
     },
     {
         id: "google/gemini-2.5-flash",

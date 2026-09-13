@@ -427,6 +427,7 @@ export default function ChatPage() {
             role: m.role === "assistant" ? "bot" : "user",
             text: m.content || "",
             sources: m.sources || [],
+            conversational: m.conversational || false,
             model: m.model || conv.model || model,
             time: Date.parse(m.createdAt) || Date.now(),
             messageId: m.id,
@@ -507,7 +508,7 @@ export default function ChatPage() {
     });
   }
 
-  function finalizeStream(answer, sources, question, mdl) {
+  function finalizeStream(answer, sources, question, mdl, conversational) {
     updateMessages((prev) => {
       const i = prev.findIndex((m) => m.streaming);
       if (i === -1) {
@@ -517,6 +518,7 @@ export default function ChatPage() {
             role: "bot",
             text: answer,
             sources: sources || [],
+            conversational: conversational || false,
             streaming: false,
             question,
             model: mdl,
@@ -530,6 +532,7 @@ export default function ChatPage() {
               ...m,
               text: answer,
               sources: sources || [],
+              conversational: conversational || false,
               streaming: false,
               model: mdl
             }
@@ -573,7 +576,7 @@ export default function ChatPage() {
       if (!ct.includes("text/event-stream")) {
         const data = await res.json();
         const answer = data.reply ?? data.answer ?? data.error ?? "Tidak ada jawaban.";
-        finalizeStream(answer, data.sources ?? [], question, mdl);
+        finalizeStream(answer, data.sources ?? [], question, mdl, data.conversational);
         if (data.sessionId) attachSessionInfo(convId, data.sessionId, data.messageId);
         completed = true;
       } else {
@@ -606,7 +609,7 @@ export default function ChatPage() {
               applyDelta(full, question, mdl);
             } else if (data.type === "done") {
               const ans = (data.answer ?? full).trim();
-              finalizeStream(ans, data.sources ?? [], question, mdl);
+              finalizeStream(ans, data.sources ?? [], question, mdl, data.conversational);
               if (data.sessionId) attachSessionInfo(convId, data.sessionId, data.messageId);
               completed = true;
             } else if (data.type === "error") {
@@ -1449,7 +1452,7 @@ export default function ChatPage() {
 
                       {m.role === "bot" && !m.streaming && (
                         <>
-                          {m.sources && m.sources.length === 0 && (
+                          {m.sources && m.sources.length === 0 && !m.conversational && (
                             <div style={{ marginTop: "15px", paddingTop: "12px", borderTop: "1px solid " + t.borderSoft, fontSize: "13px" }}>
                               <div
 style={{

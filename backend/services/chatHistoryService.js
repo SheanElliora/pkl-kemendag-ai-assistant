@@ -160,7 +160,7 @@ export function getRecentMessages(sessionId, maxTurns = 6) {
 // ====================================
 
 // Menambahkan pesan; judul sesi diambil dari pesan user pertama.
-export function appendMessage(sessionId, { role, content, sources, model }) {
+export function appendMessage(sessionId, { role, content, sources, model, conversational }) {
     const sessions = loadSessions();
     const session = findSession(sessions, sessionId);
     if (!session) return null;
@@ -171,6 +171,7 @@ export function appendMessage(sessionId, { role, content, sources, model }) {
         content: String(content || ""),
         sources: role === "assistant" ? (sources || []) : undefined,
         model: role === "assistant" ? model || null : undefined,
+        conversational: role === "assistant" ? (conversational || false) : undefined,
         feedback: null,
         createdAt: now()
     };

@@ -183,6 +183,103 @@ export async function generateAnswerStream(question, context, model, history) {
     throw new Error("Semua model AI gagal untuk streaming.");
 }
 
+// ============================================================
+// Prompt khusus percakapan (sapaan, tanya identitas, terima
+// kasih, dll) — TANPA context dokumen, TANPA sitasi [n].
+// ============================================================
+
+function buildConversationalPrompt(question, history, matchName) {
+    const historyBlock =
+        (history && history.length > 0)
+            ? `\nRIWAYAT PERCAKAPAN:\n${history.map((h) => `- ${h.role === "user" ? "PENGGUNA" : "ASISTEN"}: ${h.content}`).join("\n")}\n`
+            : "";
+
+    const intentHint = {
+        greeting: "User sedang menyapa. Balas sapaan dengan hangat dan ramah. Perkenalkan dirimu sebagai AI Assistant Sistem Informasi Perdagangan Kemendag, dan singgung bahwa kamu siap membantu pertanyaan seputar perdagangan.",
+        identity: "User menanyakan identitasmu. Jelaskan bahwa kamu adalah AI Assistant Sistem Informasi Perdagangan dari Kementerian Perdagangan RI. Sebutkan kemampuanmu: menjawab pertanyaan seputar regulasi perdagangan, data impor-ekspor, komoditas, berdasarkan dokumen resmi Kemendag.",
+        thanks: "User mengucapkan terima kasih. Balas dengan singkat dan ramah.",
+        farewell: "User sedang berpamitan. Balas dengan singkat dan ramah.",
+        capability: "User menanyakan kemampuanmu. Jelaskan bahwa kamu bisa menjawab pertanyaan seputar regulasi perdagangan, data ekspor-impor, komoditas, tarif bea masuk, dan informasi perdagangan lainnya berdasarkan dokumen resmi Kementerian Perdagangan.",
+        affirmation: "User memberikan apresiasi atau konfirmasi. Balas dengan singkat dan positif.",
+        complaint: "User melaporkan kendala teknis. Balas dengan empati dan sarankan untuk mencoba lagi atau menghubungi admin.",
+        encouragement: "User memberikan dukungan/motivasi. Balas dengan singkat dan positif.",
+        general: "User mengobrol santai (bukan pertanyaan dokumen). Balas dengan singkat, ramah, dalam bahasa Indonesia. Jangan mengarang data perdagangan; bila relevan, tawarkan bantuan seputar informasi perdagangan.",
+    };
+
+    const hint = intentHint[matchName] || "Balas pertanyaan non-dokumen ini dengan singkat, ramah, dalam bahasa Indonesia formal.";
+
+    return `Anda adalah AI Assistant Sistem Informasi Perdagangan Kemendag.
+
+${hint}
+
+ATURAN:
+- Jawab SINGKAT (maksimal 3-4 kalimat).
+- Gunakan bahasa Indonesia yang ramah dan formal.
+- JANGAN menyertakan kutipan [n] atau referensi dokumen.
+- JANGAN mengarang informasi perdagangan yang tidak pasti.
+- Jika ditanya sesuatu di luar kemampuanmu, arahkan user untuk bertanya seputar perdagangan.
+
+${historyBlock}
+PERTANYAAN:
+${question}
+
+Jawaban:`;
+}
+
+export async function generateConversationalAnswer(question, model, history, matchName) {
+    const prompt = buildConversationalPrompt(question, history, matchName);
+    const targetModel = model || process.env.OPENROUTER_MODEL || "nex-agi/nex-n2.5-pro:free";
+    await recordQuery(question, targetModel);
+    const chain = FALLBACK_CHAIN.includes(targetModel)
+        ? FALLBACK_CHAIN
+        : [targetModel, ...FALLBACK_CHAIN];
+
+    for (const m of chain) {
+        const client = getClient(m);
+        try {
+            const completion = await callModel(client, m, prompt);
+            const content = completion?.choices?.[0]?.message?.content;
+            if (content) {
+                return content;
+            }
+        } catch (err) {
+            console.log(`[CONV] Model ${m} gagal, mencoba fallback:`, err.message);
+            await recordFallback(m);
+            continue;
+        }
+    }
+
+    throw new Error("Semua model AI gagal memberikan jawaban.");
+}
+
+export async function generateConversationalAnswerStream(question, model, history, matchName) {
+    const prompt = buildConversationalPrompt(question, history, matchName);
+    const targetModel = model || process.env.OPENROUTER_MODEL || "nex-agi/nex-n2.5-pro:free";
+    const chain = FALLBACK_CHAIN.includes(targetModel)
+        ? FALLBACK_CHAIN
+        : [targetModel, ...FALLBACK_CHAIN];
+
+    for (const m of chain) {
+        const client = getClient(m);
+        try {
+            const stream = await client.chat.completions.create({
+                model: m,
+                temperature: 0.2,
+                max_tokens: 256,
+                stream: true,
+                messages: [{ role: "user", content: prompt }],
+            });
+            return stream;
+        } catch (err) {
+            console.log(`[CONV] Stream model ${m} gagal, mencoba fallback:`, err.message);
+            await recordFallback(m);
+            continue;
+        }
+    }
+
+    throw new Error("Semua model AI gagal untuk streaming percakapan.");
+}
+
 export function translateLLMError(error) {
     const status = error?.status;
     const msg = String(error?.message || error || "");

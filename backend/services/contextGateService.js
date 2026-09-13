@@ -116,7 +116,7 @@ let docKeywordCache = null;
 let docKeywordCacheTime = 0;
 const DOC_CACHE_TTL = 30 * 1000;
 
-function buildDocKeywordMap() {
+export function buildDocKeywordMap() {
   const now = Date.now();
   if (docKeywordCache && (now - docKeywordCacheTime) < DOC_CACHE_TTL) {
     return docKeywordCache;

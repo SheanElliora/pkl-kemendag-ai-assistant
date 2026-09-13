@@ -1,7 +1,8 @@
 import crypto from "crypto";
 import { searchDocuments } from "./retrieverService.js";
-import { generateAnswer, generateAnswerStream } from "./llmService.js";
+import { generateAnswer, generateAnswerStream, generateConversationalAnswer, generateConversationalAnswerStream } from "./llmService.js";
 import { resolveContextualQuery } from "./contextGateService.js";
+import { detectConversational } from "./conversationalGateService.js";
 
 // Cache jawaban 10 menit untuk pertanyaan identik (hemat embedding+rerank+LLM, <100ms hit)
 const answerCache = new Map();
@@ -104,6 +105,34 @@ function isNotFoundAnswer(answer) {
 
 }
 
+// ==== Deteksi jawaban berkualitas rendah (jangka pendek) ====
+//
+// Model gratis kadang berhenti di tengah kata ("...31,2 j") atau
+// lupa sitasi [n] padahal sumber ada. Kedua pola ini dideteksi
+// agar bisa retry 1x sebelum dikirim ke user.
+//
+// BUKAN not-found: isNotFoundAnswer dicek duluan oleh pemanggil,
+// helper ini hanya untuk jawaban yang SEHARUSNYA berisi data.
+// =============================================================
+
+function isTruncatedAnswer(answer) {
+    if (!answer || typeof answer !== "string") return true;
+    const t = answer.trim();
+    if (t.length < 50) return true; // terlalu pendek utk jawaban berisi data
+    // Lengkap bila diakhiri tanda akhir kalimat / kutip / kurung / sitasi
+    if (/[.!?…)"'\]}:]\s*$/.test(t)) return false;
+    if (/\[\s*\d+\s*\]\.?$/.test(t)) return false;
+    return true; // berakhir tengah kata/klausa = terpotong
+}
+
+function answerQuality(answer) {
+    // Skor 0-2: +1 lengkap (tidak terpotong), +1 ada sitasi [n]
+    let score = 0;
+    if (!isTruncatedAnswer(answer)) score++;
+    if (CITATION_PATTERN.test(answer || "")) score++;
+    return score;
+}
+
 function filterSourcesByCitations(answer, sources) {
     if (!answer || !Array.isArray(sources) || sources.length === 0) return sources;
     const matches = [...String(answer).matchAll(/\[\s*(\d+)\s*\]/g)];
@@ -124,6 +153,19 @@ function filterSourcesByCitations(answer, sources) {
 
 
 export async function askRAG(question, model, history) {
+    // ==========================================
+    // GATE 0: Deteksi percakapan (sapaan/chit-chat)
+    // Skip retrieval, langsung ke LLM tanpa context
+    // ==========================================
+    const conv = detectConversational(question, history);
+    if (conv.isConversational) {
+        console.log(`[CONV-GATE] Percakapan terdeteksi (${conv.matchName}) -> skip retrieval:`);
+        console.log(`  Q: "${question.slice(0, 80)}"`);
+        const answer = await generateConversationalAnswer(question, model, history, conv.matchName);
+        console.log(`[CONV-GATE] Jawaban: "${answer.slice(0, 100)}..."`);
+        return { answer, sources: [], conversational: true };
+    }
+
     const gate = resolveContextualQuery(question, history);
     const retrievalQuery = gate.gateApplied ? gate.searchQuery : question;
     const key = cacheKey(retrievalQuery, model);
@@ -260,7 +302,7 @@ ${doc}
     console.log(context);
     console.log("===================");
 
-    const answer =
+    let answer =
     await generateAnswer(
 
         question,
@@ -277,6 +319,26 @@ ${doc}
     console.log("\n===== HASIL JAWABAN LLM =====");
     console.log(answer);
     console.log("==============================");
+
+    // Retry 1x bila jawaban berkualitas rendah (terpotong / tanpa
+    // sitasi padahal sumber ada). Bukan untuk NotFound yang sah.
+    if (!isNotFoundAnswer(answer) && sources.length > 0) {
+        const q0 = answerQuality(answer);
+        if (q0 < 2) {
+            console.log(`[RETRY] kualitas rendah (skor ${q0}/2, terpotong:${isTruncatedAnswer(answer)}) -> coba 1x lagi`);
+            try {
+                const retry = await generateAnswer(question, context, model, history);
+                if (!isNotFoundAnswer(retry) && answerQuality(retry) > q0) {
+                    console.log(`[RETRY] hasil retry lebih baik (skor ${answerQuality(retry)}/2) -> pakai retry`);
+                    answer = retry;
+                } else {
+                    console.log(`[RETRY] retry tidak lebih baik (skor ${answerQuality(retry)}/2) -> pakai jawaban awal`);
+                }
+            } catch (err) {
+                console.log("[RETRY] gagal:", err.message, "-> pakai jawaban awal");
+            }
+        }
+    }
 
 
 
@@ -318,6 +380,30 @@ export async function* streamRAG(
     model,
     history
 ){
+    // ==========================================
+    // GATE 0: Deteksi percakapan (sapaan/chit-chat)
+    // Skip retrieval, langsung stream tanpa context
+    // ==========================================
+    const convStream = detectConversational(question, history);
+    if (convStream.isConversational) {
+        console.log(`[CONV-GATE-STREAM] Percakapan terdeteksi (${convStream.matchName}) -> skip retrieval:`);
+        console.log(`  Q: "${question.slice(0, 80)}"`);
+        try {
+            const stream = await generateConversationalAnswerStream(question, model, history, convStream.matchName);
+            let full = "";
+            for await (const part of stream) {
+                const delta = part.choices?.[0]?.delta?.content;
+                if (!delta) continue;
+                full += delta;
+                yield { type: "delta", text: delta };
+            }
+            yield { type: "done", answer: full.trim(), sources: [], conversational: true };
+        } catch (err) {
+            console.log("[CONV-GATE-STREAM] Error:", err.message);
+            yield { type: "done", answer: "Maaf, terjadi kesalahan. Silakan coba lagi.", sources: [], conversational: true };
+        }
+        return;
+    }
 
     const gateStream = resolveContextualQuery(question, history);
     const retrievalQueryStream = gateStream.gateApplied ? gateStream.searchQuery : question;
@@ -415,14 +501,33 @@ ${doc}
 
     }
 
-    const notFound =
-    isNotFoundAnswer(full);
+    // Retry 1x (non-stream) bila hasil stream berkualitas rendah.
+    // Aman: frontend mengganti teks stream dengan answer pada done,
+    // jadi user melihat jawaban retry yang utuh, bukan duplikat.
+    let finalAnswer = full.trim();
+    if (!isNotFoundAnswer(finalAnswer) && sources.length > 0 && answerQuality(finalAnswer) < 2) {
+        console.log(`[RETRY-STREAM] kualitas rendah (skor ${answerQuality(finalAnswer)}/2) -> ambil ulang non-stream 1x`);
+        try {
+            const retry = await generateAnswer(question, context, model, history);
+            if (!isNotFoundAnswer(retry) && answerQuality(retry) > answerQuality(finalAnswer)) {
+                console.log(`[RETRY-STREAM] hasil retry lebih baik (skor ${answerQuality(retry)}/2) -> pakai retry`);
+                finalAnswer = retry.trim();
+            } else {
+                console.log(`[RETRY-STREAM] retry tidak lebih baik -> pakai hasil stream`);
+            }
+        } catch (err) {
+            console.log("[RETRY-STREAM] gagal:", err.message, "-> pakai hasil stream");
+        }
+    }
 
-    const finalStreamSources = notFound ? [] : filterSourcesByCitations(full, sources);
+    const notFound =
+    isNotFoundAnswer(finalAnswer);
+
+    const finalStreamSources = notFound ? [] : filterSourcesByCitations(finalAnswer, sources);
 
     yield {
         type: "done",
-        answer: full.trim(),
+        answer: finalAnswer,
         sources: finalStreamSources
     };
 

@@ -168,7 +168,8 @@ router.post("/", chatLimiter, async (req, res) => {
                             role: "assistant",
                             content: evt.answer,
                             sources: evt.sources,
-                            model: model || null
+                            model: model || null,
+                            conversational: evt.conversational || false
                         }
                     );
 
@@ -176,6 +177,7 @@ router.post("/", chatLimiter, async (req, res) => {
                         type: "done",
                         answer: evt.answer,
                         sources: evt.sources,
+                        conversational: evt.conversational || false,
                         sessionId: session.id,
                         messageId: saved ? saved.id : null
                     })}\n\n`);
@@ -233,7 +235,8 @@ router.post("/", chatLimiter, async (req, res) => {
                 role: "assistant",
                 content: result.answer,
                 sources: result.sources,
-                model: model || null
+                model: model || null,
+                conversational: result.conversational || false
             }
         );
 
@@ -246,6 +249,10 @@ router.post("/", chatLimiter, async (req, res) => {
 
             sources:
             result.sources,
+
+
+            conversational:
+            result.conversational || false,
 
 
             sessionId:

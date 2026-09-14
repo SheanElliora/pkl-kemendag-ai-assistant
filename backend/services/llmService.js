@@ -1,12 +1,6 @@
 import OpenAI from "openai";
 import { recordQuery, recordFallback } from "./analyticsService.js";
 
-const OLLAMA_CLIENT = new OpenAI({
-    apiKey: "ollama",
-    baseURL: "http://localhost:11434/v1",
-    timeout: 60000,
-});
-
 const OPENROUTER_CLIENT = new OpenAI({
     apiKey: process.env.OPENROUTER_API_KEY || "",
     baseURL: "https://openrouter.ai/api/v1",
@@ -19,11 +13,6 @@ const FALLBACK_CHAIN = [
     "inclusionai/ling-3.0-flash-fin:free",
     "openai/gpt-4o-mini",
 ];
-
-function getClient(model) {
-    const localModels = ["phi-3-mini-4k-instruct"];
-    return localModels.includes(model) ? OLLAMA_CLIENT : OPENROUTER_CLIENT;
-}
 
 function extractEntities(question) {
     const entities = [];
@@ -138,7 +127,7 @@ export async function generateAnswer(question, context, model, history) {
         : [targetModel, ...FALLBACK_CHAIN];
 
     for (const m of chain) {
-        const client = getClient(m);
+        const client = OPENROUTER_CLIENT;
         try {
             const completion = await callModel(client, m, prompt);
             const content = completion?.choices?.[0]?.message?.content;
@@ -163,7 +152,7 @@ export async function generateAnswerStream(question, context, model, history) {
         : [targetModel, ...FALLBACK_CHAIN];
 
     for (const m of chain) {
-        const client = getClient(m);
+        const client = OPENROUTER_CLIENT;
         try {
             const stream = await client.chat.completions.create({
                 model: m,
@@ -230,7 +219,7 @@ export async function generateConversationalAnswer(question, model, history, mat
         : [targetModel, ...FALLBACK_CHAIN];
 
     for (const m of chain) {
-        const client = getClient(m);
+        const client = OPENROUTER_CLIENT;
         try {
             const completion = await callModel(client, m, prompt);
             const content = completion?.choices?.[0]?.message?.content;
@@ -255,7 +244,7 @@ export async function generateConversationalAnswerStream(question, model, histor
         : [targetModel, ...FALLBACK_CHAIN];
 
     for (const m of chain) {
-        const client = getClient(m);
+        const client = OPENROUTER_CLIENT;
         try {
             const stream = await client.chat.completions.create({
                 model: m,

@@ -1,20 +1,3 @@
-// ============================================================
-// Layanan Pencarian BM25 (hybrid search)
-//
-// Retrieval utama memakai vektor (Chroma). BM25 menangkap
-// SINYAL KATA KUNCI EKSAK yang sering lemah di embedding:
-// nomor peraturan, kode HS, tahun, nama produk, istilah
-// teknis. Hasilnya digabung (union) dengan kandidat vektor
-// lalu di-rerank bersama oleh cross-encoder.
-//
-// Korpus dibaca dari file chunk JSON (backend/chunks/),
-// DI-CACHE di memori dan di-refresh otomatis bila mtime
-// berubah (dokumen baru masuk/dihapus).
-//
-// Implementasi BM25 standar: k1 = 1.5, b = 0.75, IDF
-// logaritmik dengan pelancar. Tanpa dependency tambahan.
-// ============================================================
-
 import fs from "fs";
 import path from "path";
 import { CHUNK_FOLDER } from "../config.js";
@@ -22,8 +5,6 @@ import { CHUNK_FOLDER } from "../config.js";
 const K1 = 1.5;
 const B = 0.75;
 
-// Stopword yang sama dengan retrieverService (kata umum
-// Indonesia/Inggris) agar token konsisten antara kedua jalur.
 const STOPWORDS = new Set([
     "yang","dengan","untuk","dari","dalam","pada","akan","tidak","juga",
     "dapat","harus","serta","sudah","lebih","saat","agar","supaya",
@@ -63,10 +44,6 @@ function tokenize(text) {
         });
 
 }
-
-// ====================================
-// Korpus + indeks (di-cache)
-// ====================================
 
 let cache = null;
 let cacheKey = "";
@@ -119,7 +96,7 @@ function loadCorpus() {
                 const parsed = JSON.parse(
                     fs.readFileSync(path.join(CHUNK_FOLDER, file), "utf8")
                 );
-                // Backward compat: v1 array vs v2 {version, chunks}
+
                 chunks = Array.isArray(parsed) ? parsed : parsed.chunks || [];
             } catch {
                 continue;
@@ -152,7 +129,6 @@ function loadCorpus() {
 
     }
 
-    // Statistik dokumen untuk panjang rata-rata
     const docCount = docs.length;
 
     const avgdl =
@@ -160,7 +136,6 @@ function loadCorpus() {
         ? docs.reduce((sum, d) => sum + d.tokens.length, 0) / docCount
         : 0;
 
-    // IDF per term (hanya term yang muncul di >= 1 dokumen)
     const df = new Map();
 
     for (const doc of docs) {
@@ -196,10 +171,6 @@ function loadCorpus() {
 
 }
 
-// ====================================
-// Skor BM25 satu dokumen terhadap query
-// ====================================
-
 function scoreDoc(doc, queryTerms, idf) {
 
     const tf = new Map();
@@ -232,10 +203,6 @@ function scoreDoc(doc, queryTerms, idf) {
     return score;
 
 }
-
-// ====================================
-// Pencarian publik
-// ====================================
 
 export function searchBM25(question, topN = 60) {
 

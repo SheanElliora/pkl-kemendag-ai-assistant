@@ -1,8 +1,3 @@
-// ============================================================
-// Unit test: Chunking (chunkService)
-// Fungsi murni — tidak perlu environment apa pun.
-// ============================================================
-
 import { test } from "node:test";
 import assert from "node:assert";
 import { createChunks } from "../services/chunkService.js";

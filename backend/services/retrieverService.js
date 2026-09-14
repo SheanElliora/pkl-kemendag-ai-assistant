@@ -7,48 +7,9 @@ import { getQueryExpansion } from "./queryExpansionService.js";
 import { searchBM25 } from "./bm25Service.js";
 import { DOCS_FOLDER } from "../config.js";
 
-
 const client = new ChromaClient();
 
-// Log detail tiap langkah retrieval (kandidat, filter,
-// skor). Aktifkan hanya saat debugging; matikan saat
-// benchmark agar output ringkas & cepat.
 const DEBUG = process.env.RETRIEVER_DEBUG === "1";
-
-// ============================================
-// Parameter retrieval (bisa di-tune di sini)
-//
-// MAX_CANDIDATES  : jumlah chunk yang dipakai
-//                   sebagai context jawaban.
-//                   Kecil = sitasi lebih sedikit &
-//                   fokus; besar = jangkauan lebih
-//                   luas tapi ada risiko halaman
-//                   kurang relevan ikut tampil.
-// DISTANCE_RATIO  : batas jarak adaptif = terbaik
-//                   * ratio. Naikkan = lebih longgar.
-// DISTANCE_OFFSET : batas minimum mutlak tambahan.
-// SEARCH_WIDTH    : jumlah kandidat awal yang
-//                   diambil dari Chroma sebelum
-//                   di-rerank. Lebar = peluang halaman
-//                   fakta yang tepat ikut masuk.
-// KEYWORD_BONUS   : pengurangan skor per kata kunci
-//                   pertanyaan yang muncul di chunk
-//                   (menguatkan angka/nama yang sering
-//                   gagal dipahami embedding).
-// FILENAME_BONUS  : pengurangan skor bila nama file
-//                   cocok dengan kata pada pertanyaan.
-// MIN_CHUNK_LENGTH: chunk terlalu pendek (header,
-//                   cover, "-") dibuang.
-// RERANK_WIDTH    : berapa kandidat terbaik (berdasar
-//                   skor hybrid) yang dikirim ke model
-//                   cross-encoder untuk dinilai ulang
-//                   secara bersama (query+chunk).
-// RERANK_WEIGHT   : bobot skor relevansi cross-encoder
-//                   dalam skor akhir. Cross-encoder
-//                   lebih akurat dari embedding, jadi
-//                   bobot ini dominan menentukan
-//                   urutan akhir.
-// ============================================
 
 const MAX_CANDIDATES = 10;
 const DISTANCE_RATIO = 3.0;
@@ -61,15 +22,11 @@ const RERANK_WIDTH = 10;
 const RERANK_WEIGHT = 0.7;
 const BM25_WIDTH = 80;
 
-// Bonus chunk pembuktian angka utk pertanyaan fakta-nilai.
-// Chunk berisi "$ 2,490" / "USD" / "12,5%" / "1.234" / "5 juta"
-// layak diunggulkan bila user menanyakan BESARAN.
 const VALUE_FACT_BONUS = 0.1;
 const VALUE_FACT_PATTERN =
 /(\$\s?\d|\busd\b|\brp\s?\d|\beur\b|\d+[.,]\d+\s*%|\d+(?:[.,]\d+)?\s*(?:juta|miliar|triliun|ton|unit)|\d{1,3}(?:\.\d{3})+,\d{2}|\d{1,3}(?:,\d{3})+\.\d{2})/i;
 const BM25_BONUS = 0.3;
 
-// Kata umum yang bising untuk token 3 huruf.
 const STOP3 = new Set([
     "dan","dari","apa","itu","ini","ada","atau",
     "the","and","for","was","are","but","not","you",
@@ -77,11 +34,6 @@ const STOP3 = new Set([
     "who","may","per","dna","nas","hns","xbe"
 ]);
 
-// Kata umum (Indonesia/Inggris) yang TIDAK dihitung sebagai
-// kata kunci penting — meski panjang >= 4 huruf. Kata seperti
-// "untuk", "yang", "digunakan" hampir selalu muncul di SEMUA
-// dokumen, sehingga bila dihitung sebagai keyword, dokumen
-// yang sebenarnya tidak relevan ikut naik peringkat.
 const STOPWORD_ANY_LENGTH = new Set([
     "yang","dengan","untuk","dari","dalam","pada","akan","tidak","juga",
     "dapat","harus","serta","sudah","lebih","saat","agar","supaya",
@@ -106,18 +58,6 @@ const STOPWORD_ANY_LENGTH = new Set([
     "take","took","know","known","see","saw","say","said","give",
     "given","come","came","think","tell","show","find","found"
 ]);
-
-// ============================================
-// Perluasan query Indonesia -> Inggris
-//
-// Dokumen hampir semuanya berbahasa Inggris,
-// sedangkan pertanyaan user berbahasa Indonesia.
-// Model embedding multilingual bisa bekerja lintas
-// bahasa, tapi sinyalnya lemah untuk istilah
-// teknis (harga->price, jurnal->journal, dst.).
-// Kata Inggris yang diketahui ditambahkan ke
-// query embedding agar halaman yang tepat naik.
-// ============================================
 
 const TERM_EN = [
     ["harga", "price pricing"],
@@ -224,18 +164,6 @@ const TERM_EN = [
     ["penghitungan", "calculation computation measure"],
 ];
 
-// ============================================
-// Perluasan query Indonesia -> Inggris
-//
-// Lapisan pertama: kamus manual TERM_EN di
-// bawah (cepat & gratis untuk istilah umum).
-// Lapisan kedua (queryExpansionService):
-// ekspansi otomatis via LLM untuk istilah di
-// luar kamus — agar dokumen baru bertopik
-// apa pun langsung terbantu tanpa perlu
-// menambah kamus manual.
-// ============================================
-
 function getLocalExpansion(questionLower) {
 
     const added = [];
@@ -254,13 +182,6 @@ function getLocalExpansion(questionLower) {
 
 }
 
-// ============================================
-// Dokumen aktif = file yang benar-benar ada di
-// folder docs. Chunk dari dokumen yang sudah
-// dihapus (tertinggal di Chroma) tidak akan
-// pernah ikut ter-retrieve.
-// ============================================
-
 function getActiveFilenames() {
 
     try {
@@ -278,10 +199,7 @@ function getActiveFilenames() {
 
 }
 
-
-
 export async function searchDocuments(question){
-
 
     const collection =
     await client.getCollection({
@@ -292,27 +210,12 @@ export async function searchDocuments(question){
 
     });
 
-
-
-
-    // Dokumen aktif saat ini (file yang ada di folder docs)
     const activeFiles =
     getActiveFilenames();
-
-
-
-
-    // ==================================
-    // Membuat query embedding
-    // ==================================
 
     const lowerQuestion =
     question.toLowerCase();
 
-    // Ekspansi berlapis:
-    // 1) kamus manual (instan, gratis),
-    // 2) LLM otomatis untuk istilah baru
-    //    (di-cache, jadi query berulang cepat).
     const localExpansion =
     getLocalExpansion(lowerQuestion);
 
@@ -333,15 +236,6 @@ export async function searchDocuments(question){
         "query"
     );
 
-
-
-
-
-
-    // ==================================
-    // Search vector database
-    // ==================================
-
     const result =
     await collection.query({
 
@@ -353,13 +247,8 @@ export async function searchDocuments(question){
 
     });
 
-
-
-
-
-
     if (DEBUG) {
-        console.log("\n===== SEARCH RESULT =====");
+        console.log("[search] hasil:");
 
         console.log(
             "Question:",
@@ -367,54 +256,28 @@ export async function searchDocuments(question){
         );
     }
 
-
-
-
-
-
     let candidates = [];
 
-
-
-
-    // kata-kata dari pertanyaan
-    // (tanda baca dibuang agar "jepang?" cocok dengan
-    //  nama file "jepang_...", "learning?" -> "learning", dst.)
-    // Angka (2022, 901890, 7,5% -> "75"?) juga diperhitungkan
-    // sebagai kata kunci karena embedding sering gagal
-    // memahami angka/tahun.
     const questionTokens =
     lowerQuestion
-    // pecah pada semua karakter non-alfanumerik agar
-    // "RAG-Sequence/RAG-Token" -> rag, sequence, rag, token
-    // (bukan satu token campur aduk yang tak cocok apa-apa)
+
     .split(/[^a-z0-9]+/)
     .filter(w=>{
-        // angka 2+ digit, kata 4+ huruf, atau
-        // kata 3 huruf yang bukan stopword
-        // (kata umum 4+ huruf juga dibuang: "untuk",
-        //  "digunakan", dll. hampir muncul di semua dokumen)
+
         return (w.length >= 2 && /^\d+$/.test(w))
             || (w.length >= 4 && !STOPWORD_ANY_LENGTH.has(w))
             || (w.length === 3 && !STOP3.has(w));
     });
 
-
-
 result.documents[0].forEach(
 
         (doc,index)=>{
 
-
             const distance =
             result.distances[0][index];
 
-
             const meta =
             result.metadatas[0][index];
-
-
-
 
             if (DEBUG) {
                 console.log(
@@ -432,14 +295,6 @@ result.documents[0].forEach(
                 );
             }
 
-
-
-
-            // ==================================
-            // Filter dokumen tidak aktif
-            // (sudah dihapus dari folder docs)
-            // ==================================
-
             if (!activeFiles.has((meta.filename || "").toLowerCase())) {
 
                 if (DEBUG) {
@@ -454,20 +309,8 @@ result.documents[0].forEach(
 
             }
 
-
-
-
             const lowerDoc =
             doc.toLowerCase();
-
-
-
-
-
-
-            // ==================================
-            // Filter daftar isi
-            // ==================================
 
             if(
 
@@ -486,20 +329,9 @@ result.documents[0].forEach(
                     );
                 }
 
-
                 return;
 
             }
-
-
-
-
-
-
-
-            // ==================================
-            // Filter cover
-            // ==================================
 
             if(
 
@@ -515,19 +347,9 @@ result.documents[0].forEach(
                     );
                 }
 
-
                 return;
 
             }
-
-
-
-
-            // ==================================
-            // Filter chunk terlalu pendek
-            // (halaman header, judul bab, "-",
-            //  halaman kosong, dst.)
-            // ==================================
 
             if(doc.trim().length < MIN_CHUNK_LENGTH){
 
@@ -540,47 +362,16 @@ result.documents[0].forEach(
                     );
                 }
 
-
                 return;
 
             }
 
-
-
-
-            // ==================================
-// Pemotongan relevansi dilakukan
-    // SETELAH ranking (lihat "Pemotongan
-    // adaptif" di bawah), karena skala jarak
-    // L2 berbeda antarjenis dokumen.
-    //
-//     Jumlah akhir dibatasi MAX_CANDIDATES
-    //     (7) agar jangkauan konteks lebih luas dan
-    //     jawaban benar tidak terlewat. Untuk
-    //     konteks lebih fokus, turunkan kembali.
-    // ==================================
-
-
-
-
-
-
-
-            // ==================================
-            // Cek kecocokan nama file
-            // ==================================
-
             const filename =
             meta.filename.toLowerCase();
 
-
-
             let filenameMatch = false;
 
-
-
             for(const word of questionTokens){
-
 
                 if(
 
@@ -594,25 +385,9 @@ result.documents[0].forEach(
 
             }
 
-
-
-            // ==================================
-            // Cek kata kunci pada isi chunk
-            //
-            // Kata/angka penting dari pertanyaan yang
-            // muncul di dalam teks chunk (mis. "2022",
-            // "901890", "restoran", "mse") merupakan
-            // sinyal kuat bahwa halaman itu memuat
-            // jawaban. Skor (jarak) dikurangi sedikit
-            // tiap kemunculan agar halaman itu naik ke
-            // atas meski jarak embedding-nya kurang
-            // meyakinkan.
-            // ==================================
-
             let keywordHits = 0;
 
             for(const word of questionTokens){
-
 
                 if(lowerDoc.includes(word)){
 
@@ -621,9 +396,6 @@ result.documents[0].forEach(
                 }
 
             }
-
-
-
 
 candidates.push({
 
@@ -639,28 +411,9 @@ candidates.push({
 
             });
 
-
-
         }
 
     );
-
-
-
-    // ==================================
-    // Gabungkan kandidat BM25 (hybrid)
-    //
-    // BM25 menangkap istilah EKSAK (nomor peraturan,
-    // kode HS, tahun, nama produk) yang kadang luput
-    // dari pencarian vektor. Hasil BM25 di-union dengan
-    // kandidat vektor (dedupe berdasarkan teks), lalu
-    // semuanya di-ranking bersama di bawah.
-    //
-    // Kandidat yang HANYA muncul di BM25 tidak punya
-    // jarak vektor asli, jadi diberi jarak sintetis
-    // sedikit di atas jarak terburuk kandidat vektor,
-    // dengan bonus skor sebanding skor BM25-nya.
-    // ==================================
 
     const bm25Results =
     searchBM25(question, BM25_WIDTH);
@@ -689,8 +442,6 @@ candidates.push({
             const lowerDoc =
             hit.doc.toLowerCase();
 
-            // Filter yang sama dengan jalur vektor:
-            // dokumen tidak aktif, daftar isi, cover, chunk pendek.
             if (!activeFiles.has((hit.meta.filename || "").toLowerCase())) continue;
 
             if (
@@ -730,23 +481,6 @@ candidates.push({
 
     }
 
-
-
-
-
-
-
-
-    // ==================================
-    // Ranking hasil
-    //
-    // Skor hybrid = jarak embedding dikurangi
-    //   - bonus tiap kata kunci pertanyaan yang
-    //     muncul di isi chunk (KEYWORD_BONUS)
-    //   - bonus bila nama file cocok (FILENAME_BONUS)
-    // Semakin kecil skor, semakin relevan.
-    // ==================================
-
     candidates.forEach(item=>{
 
         item.score =
@@ -759,38 +493,8 @@ candidates.push({
 
     candidates.sort((a,b)=>a.score - b.score);
 
-
-
-
-    // ==================================
-    // Rerank dengan cross-encoder
-    //
-    // Kandidat terbaik berdasarkan skor hybrid
-    // (embedding + kata kunci) dikirim ke model
-    // ms-marco-MiniLM-L-6-v2 yang menilai pasangan
-    // (query, chunk) secara BERSAMA. Cross-encoder
-    // jauh lebih tajam daripada embedding terpisah,
-    // sehingga urutan akhir mengikuti skor ini.
-    //
-    // Skor akhir menggabungkan skor hybrid (semakin
-    // kecil semakin baik) dengan skor cross-encoder
-    // (semakin besar semakin baik), sehingga:
-    //   item.rerankScore = item.score
-    //                     - RERANK_WEIGHT * rerank[i]
-    // ==================================
-
     if (candidates.length > 0) {
 
-        // Pertanyaan FAKTA ANGKA ("berapa nilai...", "how much")
-        // sering salah urut oleh cross-encoder: chunk berisi
-        // angka yang dicari ($2,490, kode HS, persentase) kerap
-        // berbentuk naratif ("tren penurunan...") sehingga
-        // dinilai rendah, sementara chunk umum bernilai ~1.0.
-        // Dengan RERANK_WEIGHT penuh (0.5), gap itu tak bisa
-        // dikalahkan bonus kata kunci mana pun. Untuk kelas
-        // pertanyaan ini bobot reranker diturunkan agar sinyal
-        // kata kunci eksak tetap menentukan. Pertanyaan lain
-        // tidak terpengaruh sama sekali.
         const isValueQuestion =
         /\b(berapa|nilai|jumlah|volume|persen|how\s+much|what\s+(?:is\s+the\s+)?(?:value|amount|percentage)|export\s+value)\b/i.test(question);
 
@@ -841,8 +545,8 @@ candidates.push({
 
         if (DEBUG) {
             console.log(
-                "\n===== SKOR SETELAH RERANK (weight=" +
-                activeRerankWeight + ", valueQ=" + isValueQuestion + ") ====="
+                "[rerank] weight=" +
+                activeRerankWeight + ", valueQ=" + isValueQuestion
             );
             candidates.slice(0, 15).forEach((item, i)=>{
                 console.log(
@@ -857,24 +561,6 @@ candidates.push({
         }
 
     }
-
-
-
-
-
-
-    // ==================================
-    // Ambil context terbaik
-    //
-    // PEMOTONGAN ADAPTIF:
-    // Skala jarak L2 (embedding ternormalisasi) sangat
-    // berbeda antardokumen: laporan pasar ~0.3-0.6,
-    // sedangkan jurnal akademik ~0.9-1.2. Karena itu kita
-    // TIDAK memakai angka absolut, melainkan membandingkan
-    // tiap kandidat dengan SKOR TERBAIK (paling relevan).
-    // Kandidat yang skornya melampaui batas relatif
-    // dianggap tidak relevan dan dibuang.
-    // ==================================
 
     const bestScore =
     candidates.length > 0
@@ -911,43 +597,25 @@ candidates.push({
     })
     .slice(0, MAX_CANDIDATES);
 
-
-
-
-
     const documents = [];
     const metadata = [];
     const distances = [];
 
-
-
-
-
-
     finalCandidates.forEach(item=>{
-
 
         documents.push(
             item.doc
         );
 
-
         metadata.push(
             item.meta
         );
-
 
         distances.push(
             item.distance
         );
 
-
     });
-
-
-
-
-
 
     if (DEBUG) {
         console.log(
@@ -956,14 +624,7 @@ candidates.push({
         );
     }
 
-
-
-
-
-
-
     return {
-
 
         documents,
 
@@ -971,9 +632,6 @@ candidates.push({
 
         distances
 
-
     };
-
-
 
 }

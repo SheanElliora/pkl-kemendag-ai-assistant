@@ -1,4 +1,3 @@
-// Helper fetch yang otomatis menyertakan JWT jika sudah login.
 export async function api(path, { method = "GET", headers = {}, body } = {}) {
 
   const token = localStorage.getItem("cms_token");
@@ -23,12 +22,11 @@ export async function api(path, { method = "GET", headers = {}, body } = {}) {
   try {
     data = await res.json();
   } catch {
-    // tidak ada body JSON
+
   }
 
   if (!res.ok) {
-    // 401 = token tidak valid/sesi habis -> bersihkan sesi dan tandai
-    // agar halaman login bisa menampilkan pesan "sesi berakhir".
+
     if (res.status === 401) {
       clearSession();
       localStorage.setItem("cms_session_expired", "1");
@@ -40,8 +38,6 @@ export async function api(path, { method = "GET", headers = {}, body } = {}) {
 
   return data;
 }
-
-// ---- Sesimpan sesi login di localStorage ----
 
 export function getUser() {
   try {
@@ -61,8 +57,6 @@ export function clearSession() {
   localStorage.removeItem("cms_user");
 }
 
-// ---- Buka PDF (dengan token) di tab baru ----
-
 export async function openPdf(path) {
   const token = localStorage.getItem("cms_token");
   const res = await fetch(path, {
@@ -78,7 +72,7 @@ export async function openPdf(path) {
       const data = await res.json();
       msg = data.error || msg;
     } catch {
-      // abaikan
+
     }
     throw new Error(msg);
   }
@@ -87,8 +81,6 @@ export async function openPdf(path) {
   window.open(url, "_blank");
   setTimeout(() => URL.revokeObjectURL(url), 30000);
 }
-
-// ---- Format tanggal agar mudah dibaca ----
 
 export function fmtDate(value) {
   if (!value) return "-";

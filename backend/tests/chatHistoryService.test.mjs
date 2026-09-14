@@ -1,9 +1,3 @@
-// ============================================================
-// Unit test: Riwayat Percakapan (chatHistoryService)
-// Data uji ditulis ke %TEMP% via DATA_PATH agar tidak
-// menyentuh data chats.json asli proyek.
-// ============================================================
-
 import { test, before, after } from "node:test";
 import assert from "node:assert";
 import fs from "node:fs";

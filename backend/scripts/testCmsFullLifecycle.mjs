@@ -7,39 +7,6 @@ import {
     DOCS_FOLDER
 } from "../config.js";
 
-
-// =====================================
-// Tes otomatis END-TO-END CMS
-// -------------------------------------
-// Menjalankan seluruh siklus hidup CMS
-// lewat HTTP API (sama seperti UI):
-//
-//   1. Login admin + verifikasi /me
-//   2. Login GAGAL (hak akses / otorisasi)
-//   3. Buat user maintainer (kelola user)
-//   4. Login maintainer
-//   5. Maintainer coba menu admin -> 403
-//   6. Upload PDF -> status pending
-//   7. Maintainer lihat dokumennya sendiri
-//   8. Admin APPROVE -> ingest (OCR+chunk+embed)
-//   9. Verifikasi file di docs + Chroma
-//  10. Upload PDF kedua -> REJECT + alasan
-//  11. DELETE dokumen approved (vektor ikut bersih)
-//  12. Lihat log login
-//  13. Hapus user tes
-//  14. Sinkronisasi ulang (ganti role) -> kembali
-//  15. (Opsional) Tes chat RAG
-//
-// SCRIPT INI MEMBERSIHKAN DIRI: seluruh
-// record & file tes dibuang dari system di
-// akhir, sehingga aman dijalankan berulang
-// tanpa mengotori data asli.
-//
-// Cara pakai (dari folder backend/):
-//   node scripts/testCmsFullLifecycle.mjs
-// =====================================
-
-
 const BASE = "http://127.0.0.1:3001";
 
 const TS = new Date()
@@ -48,23 +15,16 @@ const TS = new Date()
     .slice(0, 19)
     .replace("T", "_");
 
-// Semua nama artefak tes diawali prefix unik
-// agar mudah dikenali & dibersihkan.
 const TES_PREFIX = `Tes_CMS_${TS}`;
 const TEST_PDF_1 = `${TES_PREFIX}_A.pdf`;
 const TEST_PDF_2 = `${TES_PREFIX}_B.pdf`;
 
-// Dokumen sumber uji diambil dari folder docs
-// yang sudah ada (regulasi, ringan).
 const SRC_PDF = "PERMENDAG NOMOR 28 TAHUN 2024.pdf";
 
 const TES_USERNAME = `${TES_PREFIX}_maintainer`;
 const TES_PASSWORD = "TesCms2026";
 
 const COLLECTION = "sip_documents";
-
-
-// ---- Output PASS / FAIL terpusat ----
 
 const results = [];
 
@@ -79,8 +39,6 @@ function fail(name, detail) {
     record(name, false, detail);
 }
 
-// Eksekusi satu langkah. Bila `optional` benar,
-// kegagalan hanya dicatat, tidak menghentikan script.
 async function step(name, fn, optional = false) {
     try {
         await fn();
@@ -95,9 +53,6 @@ async function step(name, fn, optional = false) {
         }
     }
 }
-
-
-// ---- Utilitas ----
 
 function readEnv(key) {
     const env = fs.readFileSync(".env", "utf8");
@@ -130,17 +85,10 @@ function loginBody(username, password) {
     };
 }
 
-
-// =====================================
-// Alur utama
-// =====================================
-
 async function main() {
 
-    console.log(`\n===== TES CMS END-TO-END (${TS}) =====\n`);
+    console.log(`Tes CMS end-to-end (${TS})`);
 
-
-    // 1) Login admin
     const adminPass = readEnv("DEFAULT_ADMIN_PASSWORD");
     if (!adminPass) {
         fail("Login admin", "DEFAULT_ADMIN_PASSWORD tidak ditemukan di backend/.env");
@@ -158,12 +106,9 @@ async function main() {
     const me = await api("/api/auth/me", { token: adminToken });
     record("GET /api/auth/me", me.status === 200 && me.json.user?.username === "admin", `(${me.status})`);
 
-    // 2) Login GAGAL harus ditolak (401)
     const badLogin = await api("/api/auth/login", loginBody("admin", "salah_password"));
     record("Login dengan password salah ditolak", badLogin.status === 401, `(${badLogin.status})`);
 
-
-    // 3) Buat user maintainer tes
     const createUser = await api("/api/cms/users", {
         method: "POST",
         token: adminToken,
@@ -181,7 +126,6 @@ async function main() {
     const tesUserId = createUser.json.user.id;
     record("Buat user maintainer", true, `${TES_USERNAME} (id ${tesUserId})`);
 
-    // 3b. Buat user dgn password pendek harus ditolak
     const badUser = await api("/api/cms/users", {
         method: "POST",
         token: adminToken,
@@ -190,8 +134,6 @@ async function main() {
     });
     record("Tolak user berpassword < 6", badUser.status === 400, `(${badUser.status})`);
 
-
-    // 4) Login maintainer
     const mantLogin = await api("/api/auth/login", loginBody(TES_USERNAME, TES_PASSWORD));
     if (mantLogin.status !== 200) {
         fail("Login maintainer", JSON.stringify(mantLogin.json));
@@ -200,16 +142,12 @@ async function main() {
     const mantToken = mantLogin.json.token;
     record("Login maintainer", true, mantLogin.json.user?.role);
 
-
-    // 5) Maintainer tidak boleh akses menu admin (403)
     const deniedUsers = await api("/api/cms/users", { token: mantToken });
     record("Maintainer dilarang akses /users", deniedUsers.status === 403, `(${deniedUsers.status})`);
 
     const deniedLogs = await api("/api/cms/login-logs", { token: mantToken });
     record("Maintainer dilarang akses /login-logs", deniedLogs.status === 403, `(${deniedLogs.status})`);
 
-
-    // 6) Siapkan & upload PDF uji (yang pertama)
     const uploadsDir = path.join(path.dirname("."), "uploads");
     const localPath1 = path.join(uploadsDir, TEST_PDF_1);
     const localPath2 = path.join(uploadsDir, TEST_PDF_2);
@@ -235,8 +173,6 @@ async function main() {
     const fileId1 = up1.json.fileId;
     record("Upload PDF #1 (pending)", up1.json.status === "pending", `fileId ${fileId1}`);
 
-
-    // 6b. Upload PDF kedua (untuk di-reject nanti)
     const up2 = await api("/api/cms/upload", { method: "POST", token: mantToken, body: formFor(localPath2, TEST_PDF_2) });
     if (up2.status !== 200) {
         fail("Upload PDF #2", JSON.stringify(up2.json));
@@ -245,16 +181,12 @@ async function main() {
     const fileId2 = up2.json.fileId;
     record("Upload PDF #2 (pending)", up2.json.status === "pending", `fileId ${fileId2}`);
 
-
-    // 6c. Upload FILE NON-PDF harus ditolak
     const fake = new Blob(["bukan pdf"], { type: "text/plain" });
     const fdFake = new FormData();
     fdFake.append("file", fake, `${TES_PREFIX}_bukanpdf.txt`);
     const badUp = await api("/api/cms/upload", { method: "POST", token: mantToken, body: fdFake });
     record("Upload non-PDF ditolak", badUp.status === 400, `(${badUp.status})`);
 
-
-    // 7) Maintainer melihat dokumennya sendiri (ada 2 file)
     const mantFiles = await api("/api/cms/files", { token: mantToken });
     const mantOwn = (mantFiles.json.files || []).filter(
         f => f.uploadedBy === TES_USERNAME
@@ -265,8 +197,6 @@ async function main() {
         `${mantOwn.length} file pending`
     );
 
-
-    // 8) Admin APPROVE dokumen #1 (ingest berjalan DI LATAR BELAKANG)
     let appr1;
     try {
         appr1 = await api(`/api/cms/files/${fileId1}/approve`, { method: "POST", token: adminToken });
@@ -282,7 +212,6 @@ async function main() {
         `status=${apprStatus}`
     );
 
-    // Tunggu ingest selesai di latar belakang (polling status)
     const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     let finalStatus = apprStatus;
     const deadline = Date.now() + 180000;
@@ -299,8 +228,6 @@ async function main() {
         `status=${finalStatus}${apprErr ? " · err=" + apprErr.slice(0, 60) : ""}`
     );
 
-
-    // 9) Verifikasi file fisik & vektor di Chroma
     record(
         "File #1 ada di folder docs",
         fs.existsSync(path.join(DOCS_FOLDER, TEST_PDF_1))
@@ -308,8 +235,6 @@ async function main() {
 
     await checkChroma(TEST_PDF_1, "Chunk #1 tersimpan di Chroma");
 
-
-    // 10) REJECT dokumen #2 + alasan
     const rej = await api(`/api/cms/files/${fileId2}/reject`, {
         method: "POST",
         token: adminToken,
@@ -327,8 +252,6 @@ async function main() {
         !fs.existsSync(localPath2)
     );
 
-
-    // 11) DELETE dokumen #1 yang sudah approved
     const del1 = await api(`/api/cms/files/${fileId1}`, { method: "DELETE", token: adminToken });
     record(
         "Delete #1 -> deleted",
@@ -343,8 +266,6 @@ async function main() {
 
     await checkChroma(TEST_PDF_1, "Vektor #1 hilang dari Chroma", true);
 
-
-    // 12) Log login mencatat aktivitas admin & maintainer
     const logs = await api("/api/cms/login-logs", { token: adminToken });
     const logUsers = new Set((logs.json.logs || []).map(l => l.username));
     record(
@@ -353,12 +274,9 @@ async function main() {
         `${(logs.json.logs || []).length} entri`
     );
 
-    // pastikan login yang GAGAL tadi juga tercatat
     const hasFailed = (logs.json.logs || []).some(l => l.status === "failed");
     record("Log mencatat percobaan login gagal", hasFailed);
 
-
-    // 13) Kelola user: ganti role (maintainer -> admin -> maintainer)
     const upRole = await api(`/api/cms/users/${tesUserId}`, {
         method: "PUT",
         token: adminToken,
@@ -375,13 +293,9 @@ async function main() {
     });
     record("Ubah role user -> maintainer", downRole.status === 200 && downRole.json.user?.role === "maintainer", `(${downRole.status})`);
 
-
-    // 14) Hapus user tes
     const delUser = await api(`/api/cms/users/${tesUserId}`, { method: "DELETE", token: adminToken });
     record("Hapus user tes", delUser.status === 200, `(${delUser.status})`);
 
-
-    // 15) (Opsional) Tes chat RAG - cek sistem merespons
     await step("Chat RAG (opsional, butuh API key)", async () => {
         const chat = await api("/api/chat", {
             method: "POST",
@@ -397,12 +311,7 @@ async function main() {
             ok,
             `(${chat.status}) ${ok ? "reply " + chat.json.reply.length + " karakter, " + (chat.json.sources || []).length + " sumber" : JSON.stringify(chat.json).slice(0, 80)}`
         );
-    }, true); // opsional: kegagalan tidak menghentikan script
-
-
-    // =====================================
-    // Bersihkan jejak di files.json
-    // =====================================
+    }, true);
 
     const filesPath = path.join(path.dirname("."), "data", "files.json");
     let files = JSON.parse(fs.readFileSync(filesPath, "utf8"));
@@ -419,35 +328,24 @@ async function main() {
     fs.writeFileSync(filesPath, JSON.stringify(files, null, 2), "utf8");
     record("files.json bersih (record tes dibuang)", files.length < before, `${before} -> ${files.length}`);
 
-
-    // Bersihkan sisa fisik kalau ada yang tertinggal
     [localPath1, localPath2].forEach(p => {
         if (fs.existsSync(p)) fs.unlinkSync(p);
     });
     const docPath = path.join(DOCS_FOLDER, TEST_PDF_1);
     if (fs.existsSync(docPath)) fs.unlinkSync(docPath);
 
-
-    // Ringkasan
     const passed = results.filter(r => r.ok).length;
     const failed = results.filter(r => !r.ok).length;
 
-    console.log("\n=====================================");
     console.log(`HASIL: ${passed} PASS, ${failed} FAIL`);
-    console.log("=====================================\n");
 
     if (failed > 0) {
         process.exitCode = 1;
     }
     else {
-        console.log("===== SELURUH TES CMS LULUS =====");
+        console.log("Seluruh tes CMS lulus");
     }
 }
-
-
-// =====================================
-// Verifikasi jumlah chunk di Chroma
-// =====================================
 
 async function checkChroma(filename, label, expectEmpty = false) {
     try {
@@ -463,15 +361,13 @@ async function checkChroma(filename, label, expectEmpty = false) {
     }
     catch (error) {
         record(label, false, error.message);
-        console.log("        (tidak fatal: server Chroma di localhost:8000 mungkin belum dijalankan)");
+        console.log("        (server Chroma mungkin belum jalan)");
     }
 }
 
 main().catch(error => {
-    console.error("\n===== TES GAGAL DI TENGAH JALAN =====");
-    console.error(error);
+    console.error("Tes gagal:", error);
 
-    // Tetap laporkan ringkasan walau error
     const passed = results.filter(r => r.ok).length;
     const failed = results.filter(r => !r.ok).length;
     console.log(`\nHasil parsial: ${passed} PASS, ${failed} FAIL`);

@@ -1,26 +1,8 @@
 import { pipeline } from "@xenova/transformers";
 import crypto from "crypto";
 
-
-
-// ==============================
-// Local Embedding Model
-//
-// intfloat/multilingual-e5-small:
-// model retrieval lintas bahasa (termasuk
-// Indonesia <-> Inggris) dengan akurasi jauh
-// lebih baik daripada MiniLM untuk pencarian
-// semantik. e5 mengharuskan teks diberi
-// prefix sesuai peran:
-//   - "query: "   untuk pertanyaan user
-//   - "passage: " untuk isi dokumen/chunk
-// Tanpa prefix, kualitas embedding menurun.
-// ==============================
-
-
 let embedder = null;
 
-// Cache embedding query — hemat 180-250ms per tanya berulang (LRU 500, TTL 10m)
 const queryCache = new Map();
 const QUERY_CACHE_MAX = 500;
 const QUERY_CACHE_TTL = 10 * 60 * 1000;
@@ -34,7 +16,7 @@ function getQCache(key) {
         queryCache.delete(key);
         return null;
     }
-    // LRU: pindah ke akhir
+
     queryCache.delete(key);
     queryCache.set(key, hit);
     return hit.value;
@@ -55,12 +37,10 @@ async function getEmbedder() {
             "Loading embedding model (multilingual-e5-small)..."
         );
 
-
         embedder = await pipeline(
             "feature-extraction",
             "Xenova/multilingual-e5-small"
         );
-
 
         console.log(
             "Embedding model siap"
@@ -68,21 +48,9 @@ async function getEmbedder() {
 
     }
 
-
     return embedder;
 
 }
-
-
-
-// ==============================
-// Membuat embedding vector
-//
-// role:
-//   "query"   -> pertanyaan user (prefix "query: ")
-//   "passage" -> isi dokumen (prefix "passage: ")
-// ==============================
-
 
 export async function createEmbedding(
     text,
@@ -97,12 +65,10 @@ export async function createEmbedding(
 
     const model = await getEmbedder();
 
-
     const input =
     role === "query"
         ? "query: " + text
         : "passage: " + text;
-
 
     const output = await model(
 
@@ -122,25 +88,6 @@ export async function createEmbedding(
     return vec;
 
 }
-
-
-// ==============================
-// Embedding BATCH
-//
-// Memanggil model satu kali untuk
-// BANYAK teks sekaligus (jauh lebih
-// cepat daripada per-teks berurutan,
-// terutama saat ingest dokumen baru).
-//
-// CATATAN transformers.js: bentuk
-// keluaran bisa bervariasi antar
-// versi — tensor batch tunggal,
-// array Tensor per-teks, atau array
-// berisi satu tensor batch. Semua
-// bentuk digabung jadi flat lalu
-// dipotong per teks berdasarkan
-// dimensi model.
-// ==============================
 
 export async function createEmbeddingsBatch(
     texts,

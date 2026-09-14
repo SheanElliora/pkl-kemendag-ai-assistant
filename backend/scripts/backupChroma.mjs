@@ -1,33 +1,3 @@
-// =====================================
-// Backup lengkap database Chroma + data
-// -------------------------------------
-// Membuat snapshot yang bisa di-restore:
-//
-//   1. Stop Chroma (agar SQLite tidak
-//      korup saat disalin)
-//   2. Salin folder chroma/ (SQLite +
-//      index HNSW) ke backup/<waktu>/
-//   3. Salin data/files.json + users.json
-//   4. Tulis manifest.json (info backup)
-//   5. Hidupkan Chroma lagi
-//   6. Verifikasi: port 8000 + jumlah
-//      vektor sama seperti sebelum backup
-//   7. Prune: hanya 5 backup terbaru
-//      yang dipertahankan
-//
-// CATATAN:
-// - Wajib dijalankan dari folder backend/
-//   (path Chroma relatif: ./chroma).
-// - .env TIDAK disalin (berisi rahasia);
-//   kredensial sudah tercatat di
-//   KONTEKS_PEMULIHAN.md.
-// - Backup tersimpan di ../backup/ (di
-//   luar folder Temp yang bisa dibersihkan).
-//
-// Cara pakai:
-//   npm run backup
-// =====================================
-
 import { execSync, spawn } from "child_process";
 import fs from "fs";
 import path from "path";
@@ -56,8 +26,6 @@ function no(label, detail = "") {
 function log(label) {
     console.log(`\n[${label}]`);
 }
-
-// ---------- Utilitas ----------
 
 function findChromaPid() {
     try {
@@ -89,7 +57,7 @@ async function waitHttp(url, timeoutMs = 90000) {
         try {
             const res = await fetch(url, { signal: AbortSignal.timeout(3000) });
             if (res.status >= 200 && res.status < 500) return true;
-        } catch { /* belum hidup */ }
+        } catch {  }
         await sleep(1500);
     }
     return false;
@@ -97,7 +65,7 @@ async function waitHttp(url, timeoutMs = 90000) {
 
 function sleepSync(ms) {
     const end = Date.now() + ms;
-    while (Date.now() < end) { /* busy wait sederhana */ }
+    while (Date.now() < end) {  }
 }
 
 function sleep(ms) {
@@ -116,16 +84,14 @@ async function countVectors() {
     return json.ids?.length ?? 0;
 }
 
-// ---------- 1. Deteksi & stop Chroma ----------
-
-console.log("===== BACKUP CHROMA + DATA =====\n");
+console.log("Backup Chroma + data");
 
 log("1. Deteksi proses Chroma");
 const pids = findChromaPid();
 if (pids.length > 0) {
-    console.log(`    Proses aktif di :${CHROMA_PORT} (PID ${pids.join(", ")}) -> menghentikan...`);
+    console.log(`    Hentikan proses Chroma (PID ${pids.join(", ")})...`);
     for (const pid of pids) {
-        try { process.kill(Number(pid), "SIGKILL"); } catch { /* sudah mati */ }
+        try { process.kill(Number(pid), "SIGKILL"); } catch {  }
     }
     if (waitPort(pids)) {
         ok("Chroma dihentikan", `PID ${pids.join(", ")}`);
@@ -136,8 +102,6 @@ if (pids.length > 0) {
 } else {
     console.log("    Tidak ada proses Chroma yang berjalan (backup tanpa stop).");
 }
-
-// ---------- 2. Salin folder Chroma ----------
 
 const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19).replace("T", "_");
 const backupDir = path.join(BACKUP_ROOT, stamp);
@@ -151,8 +115,6 @@ fs.mkdirSync(backupDir, { recursive: true });
 fs.cpSync(CHROMA_DATA_DIR, path.join(backupDir, "chroma"), { recursive: true });
 ok("chroma/ disalin", `-> backup/${stamp}/chroma`);
 
-// ---------- 3. Salin data JSON ----------
-
 log("3. Menyalin files.json + users.json");
 for (const f of ["files.json", "users.json"]) {
     const src = path.join(BACKEND_DIR, "data", f);
@@ -163,8 +125,6 @@ for (const f of ["files.json", "users.json"]) {
         no(`${f} disalin`, "file tidak ditemukan");
     }
 }
-
-// ---------- 4. Manifest ----------
 
 log("4. Menulis manifest.json");
 const chromaBytes = fs.statSync(CHROMA_DATA_DIR).size;
@@ -180,8 +140,6 @@ fs.writeFileSync(
 );
 ok("manifest.json dibuat");
 
-// ---------- 5. Hidupkan kembali ----------
-
 log("5. Menghidupkan Chroma kembali");
 const child = spawn("chroma", ["run", "--path", "./chroma"], {
     cwd: BACKEND_DIR,
@@ -195,8 +153,6 @@ if (waitHttp(CHROMA_V2)) {
 } else {
     no("Chroma hidup kembali", "tidak merespons dalam 90 detik");
 }
-
-// ---------- 6. Verifikasi vektor ----------
 
 log("6. Verifikasi vektor");
 let vectorCount = -1;
@@ -215,8 +171,6 @@ if (vectorCount >= 0) {
     no("jumlah vektor", "tidak bisa dibaca setelah 5 percobaan");
 }
 
-// ---------- 7. Prune backup lama ----------
-
 log("7. Prune backup lama (simpan 5 terbaru)");
 const all = fs.existsSync(BACKUP_ROOT)
     ? fs.readdirSync(BACKUP_ROOT).filter((d) => /^\d{4}-\d{2}-\d{2}/.test(d)).sort().reverse()
@@ -227,10 +181,6 @@ for (const old of all.slice(KEEP_BACKUPS)) {
 }
 ok("prune selesai", `${all.length} backup -> ${Math.min(all.length, KEEP_BACKUPS)} terbaru`);
 
-// ---------- Ringkasan ----------
-
-console.log("\n=====================================");
 console.log(`HASIL: ${fail === 0 ? "SUKSES" : `${fail} GAGAL`}`);
 console.log(`Backup terbaru: backup/${stamp}`);
-console.log("=====================================");
 process.exitCode = fail > 0 ? 1 : 0;

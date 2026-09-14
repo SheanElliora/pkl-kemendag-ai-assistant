@@ -11,30 +11,17 @@ import { readJson, writeJson } from "./storeService.js";
 import { enqueueIngest } from "./ingestQueue.js";
 import { deleteVectorsByFilename } from "./vectorStorage.js";
 
-
-// =====================================
-// File service
-// Mengelola siklus hidup file dokumen:
-// pending (di folder uploads) ->
-// approved (dipindah ke docs + di-ingest)
-// atau rejected (dihapus).
-// Data: data/files.json
-// =====================================
-
-
 function getFiles() {
 
     return readJson("files", []);
 
 }
 
-
 function saveFiles(files) {
 
     writeJson("files", files);
 
 }
-
 
 function nextId(items) {
 
@@ -46,7 +33,6 @@ function nextId(items) {
 
 }
 
-
 function ensureFolder(folder) {
 
     if (!fs.existsSync(folder)) {
@@ -57,14 +43,12 @@ function ensureFolder(folder) {
 
 }
 
-
 export function ensureFolders() {
 
     ensureFolder(UPLOADS_FOLDER);
     ensureFolder(DOCS_FOLDER);
 
 }
-
 
 export function createFileRecord({ filename, size, uploadedBy }) {
 
@@ -92,7 +76,6 @@ export function createFileRecord({ filename, size, uploadedBy }) {
 
 }
 
-
 export function findByOriginalName(filename) {
 
     return getFiles().find(
@@ -100,7 +83,6 @@ export function findByOriginalName(filename) {
     );
 
 }
-
 
 export function getFileById(id) {
 
@@ -110,9 +92,6 @@ export function getFileById(id) {
 
 }
 
-
-// Maintainer hanya melihat file miliknya sendiri,
-// admin melihat semua file.
 export function listFiles(user) {
 
     const all = getFiles()
@@ -133,16 +112,6 @@ export function listFiles(user) {
     );
 
 }
-
-
-// =====================================
-// Approve: pindah file ke docs lalu
-// antrekan ingest di latar belakang.
-// Request langsung balas (tidak nunggu
-// OCR/embedding selesai) — status record
-// jadi "processing" sampai job selesai
-// (approved) atau gagal (error).
-// =====================================
 
 export async function approveFile(id, approvedBy) {
 
@@ -178,12 +147,6 @@ export async function approveFile(id, approvedBy) {
 
     if (fs.existsSync(destPath)) {
 
-        // Dokumen dengan nama sama sudah ada di docs.
-        // Perlakukan sebagai PEMBARUAN (update): hapus
-        // versi lama (PDF + vektor + cache) lalu simpan
-        // versi baru. Jadi meng-upload ulang dokumen
-        // dengan nama yang sama otomatis menggantikan
-        // versi lama, tanpa perlu menghapus manual.
         const oldRecord = getFiles().find(
             f =>
             f.filename === record.filename &&
@@ -212,9 +175,6 @@ export async function approveFile(id, approvedBy) {
 
     fs.renameSync(sourcePath, destPath);
 
-    // Tandai "processing" lalu antrekan ingest.
-    // Pembersihan vektor lama (bila ada sisa) dilakukan
-    // otomatis oleh ingestDocument (jalan rebuilt).
     record.status = "processing";
     record.approvedBy = approvedBy;
     record.approvedAt = new Date().toISOString();
@@ -231,11 +191,6 @@ export async function approveFile(id, approvedBy) {
     return { file: record };
 
 }
-
-
-// =====================================
-// Reject: hapus file pending
-// =====================================
 
 export function rejectFile(id, rejectedBy, reason) {
 
@@ -277,15 +232,6 @@ export function rejectFile(id, rejectedBy, reason) {
 
 }
 
-
-// =====================================
-// Delete: hapus dokumen yang sudah
-// disetujui/diproses.
-// Menghapus file fisik di docs +
-// vector-nya di Chroma, lalu menandai
-// record sebagai "deleted" (audit).
-// =====================================
-
 export async function deleteFile(id, deletedBy) {
 
     const files = getFiles();
@@ -306,7 +252,6 @@ export async function deleteFile(id, deletedBy) {
 
     }
 
-    // 1. Hapus file fisik dari folder docs
     const destPath =
     path.join(DOCS_FOLDER, record.filename);
 
@@ -316,7 +261,6 @@ export async function deleteFile(id, deletedBy) {
 
     }
 
-    // 1b. Hapus artifact hasil proses (teks OCR + chunk json)
     const stem =
     path.basename(record.filename, ".pdf");
 
@@ -336,7 +280,6 @@ export async function deleteFile(id, deletedBy) {
 
     });
 
-    // 2. Hapus vector/chunk-nya dari Chroma
     try {
 
         await deleteVectorsByFilename(record.filename);
@@ -348,7 +291,6 @@ export async function deleteFile(id, deletedBy) {
 
     }
 
-    // 3. Tandai record sebagai deleted (audit trail)
     record.status = "deleted";
     record.deletedBy = deletedBy;
     record.deletedAt = new Date().toISOString();

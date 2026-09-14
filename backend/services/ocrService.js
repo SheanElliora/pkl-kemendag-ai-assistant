@@ -7,23 +7,6 @@ import { OCR_FOLDER } from "../config.js";
 
 const execAsync = promisify(exec);
 
-
-// =====================================
-// Folder temp UNIK per panggilan OCR
-//
-// Dua+ dokumen yang diproses bersamaan
-// (mis. dua admin menyetujui dalam waktu
-// bersamaan) TIDAK boleh menulis gambar
-// ke folder yang sama, karena pdftoppm
-// memberi nama file yang identik
-// (page-1.png, dst.) -> saling menimpa
-// dan hasil OCR korup. Karena itu folder
-// dibuat unik per pemanggilan, dan selalu
-// dibersihkan di finally (tidak ada folder
-// sampah tersisa walau OCR gagal di
-// tengah jalan).
-// =====================================
-
 function makeTempFolder() {
 
     return path.join(
@@ -33,12 +16,9 @@ function makeTempFolder() {
 
 }
 
-
 export async function pdfToTextOCR(pdfPath) {
 
-
     console.log("Mulai OCR:", pdfPath);
-
 
     const TEMP_FOLDER =
     makeTempFolder();
@@ -46,7 +26,6 @@ export async function pdfToTextOCR(pdfPath) {
     if (!fs.existsSync(TEMP_FOLDER)) {
         fs.mkdirSync(TEMP_FOLDER, { recursive: true });
     }
-
 
     try {
 

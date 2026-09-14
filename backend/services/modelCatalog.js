@@ -1,13 +1,3 @@
-// =====================================
-// Katalog model OpenRouter
-//
-// Satu API key OpenRouter berlaku untuk
-// semua model di bawah. ID model dipakai
-// pada request ke OpenRouter; cukup mengubah
-// string ini untuk berpindah model
-// (mis. gemini -> openai).
-// =====================================
-
 export const MODEL_CATALOG = [
     {
         id: "nex-agi/nex-n2.5-pro:free",

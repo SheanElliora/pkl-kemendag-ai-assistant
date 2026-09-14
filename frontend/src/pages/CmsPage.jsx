@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { api, getUser, clearSession, fmtDate, openPdf } from "../api.js";
 import { createTheme, FONT_HEADING, FONT_BODY } from "../theme.js";
 
-const MAX_SIZE = 20 * 1024 * 1024; // 20 MB, sama dengan backend
+const MAX_SIZE = 20 * 1024 * 1024;
 
 const PRESET_REASONS = [
   "Duplikat dokumen yang sudah ada",
@@ -20,7 +20,6 @@ function formatSize(bytes) {
   return (bytes / (1024 * 1024)).toFixed(2) + " MB";
 }
 
-// ---- Modal yang dipakai untuk alasan penolakan & konfirmasi hapus ----
 function Modal({ title, onClose, onConfirm, children, confirmLabel = "Simpan", confirmColor = "#059669", confirmDisabled = false, t }) {
   return (
     <div
@@ -108,7 +107,7 @@ export default function CmsPage() {
 
   const [hovering, setHovering] = useState(false);
   const [pinned, setPinned] = useState(() => localStorage.getItem("cms_sidebar_pinned") !== "0");
-  // Sidebar terbuka bila di-pin, atau sementara kursor berada di atasnya.
+
   const isOpen = pinned || hovering;
 
   const [dark, setDark] = useState(() => {
@@ -117,7 +116,6 @@ export default function CmsPage() {
     return typeof window !== "undefined" && window.matchMedia?.("(prefers-color-scheme: dark)").matches;
   });
 
-  // Palet warna tema (light/dark) — satu sumber warna, serasi dgn chat & login.
   const t = createTheme(dark);
 
   useEffect(() => {
@@ -129,7 +127,7 @@ export default function CmsPage() {
   }, [pinned]);
 
   useEffect(() => {
-    // Ikuti perubahan tema dari tab lain (mis. toggle di halaman chat)
+
     function onStorage(e) {
       if (e.key === "cms_theme") setDark(e.newValue === "dark");
     }
@@ -288,10 +286,6 @@ export default function CmsPage() {
     if (tab === "eval") refreshEval();
   }, [tab]);
 
-  // Polling otomatis: segarkan daftar persetujuan.
-  // Setiap 5 detik dicek: bila ada dokumen sedang
-  // diproses (status "processing") langsung refresh,
-  // bila tenang cukup sekali tiap 30 detik.
   useEffect(() => {
     if (tab !== "approval") return;
     let lastRefresh = 0;
@@ -305,13 +299,10 @@ export default function CmsPage() {
     return () => clearInterval(id);
   }, [tab]);
 
-  // Perbarui penanda "ada dokumen diproses" setiap
-  // daftar disegarkan (untuk interval polling di atas).
   useEffect(() => {
     processingRef.current = files.some((f) => f.status === "processing");
   }, [files]);
 
-  // Segarkan saat window kembali terlihat/difokuskan.
   useEffect(() => {
     if (tab !== "approval") return;
     const onVisible = () => {
@@ -325,8 +316,6 @@ export default function CmsPage() {
       window.removeEventListener("focus", onFocus);
     };
   }, [tab]);
-
-  // ---- Upload ----
 
   async function doUpload(e) {
     e.preventDefault();
@@ -353,7 +342,7 @@ export default function CmsPage() {
       showToast("success", data.message || "Unggah berhasil.");
       setFile(null);
       setSelectedFiles([]);
-      // reset input
+
       const el = document.querySelector('input[type="file"][accept=".pdf"]');
       if (el) el.value = "";
       refreshFiles();
@@ -363,8 +352,6 @@ export default function CmsPage() {
 
     setUploading(false);
   }
-
-  // ---- Persetujuan admin ----
 
   async function approve(id) {
     setProcessingId(id);
@@ -379,7 +366,6 @@ export default function CmsPage() {
     setProcessingId(null);
   }
 
-  // Buka modal penolakan (bukan window.prompt)
   function openReject(file) {
     setRejectTarget(file);
     setRejectReason("");
@@ -488,8 +474,6 @@ export default function CmsPage() {
     navigate("/cms/login");
   }
 
-  // ---- Render ----
-
   function toggleSort(k) {
     setSort((s) =>
       s.key === k
@@ -557,7 +541,7 @@ export default function CmsPage() {
         overflow: "hidden"
       }}
     >
-      {/* ===== SIDEBAR / TOPBAR ===== */}
+      {}
       {isMobile ? (
         <div
           style={{
@@ -832,7 +816,7 @@ export default function CmsPage() {
         </aside>
       )}
 
-      {/* ===== KONTEN ===== */}
+      {}
       <main style={{ flex: 1, minWidth: 0, overflow: "hidden", display: "flex", flexDirection: "column", padding: isMobile ? "16px 14px" : "28px 24px" }}>
         <div style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column", width: "100%", maxWidth: 1000, margin: "auto" }} className="fade-in">
           {uploadMsg && tab === "upload" && (
@@ -841,7 +825,7 @@ export default function CmsPage() {
             </div>
           )}
 
-          {/* ===== UPLOAD (maintainer) ===== */}
+          {}
           {tab === "upload" && (
             <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", gap: 10 }}>
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, minmax(0, 1fr))" : "repeat(4, minmax(0, 1fr))", gap: 10, marginBottom: 8, flexShrink: 0, paddingTop: 4 }}>
@@ -958,7 +942,7 @@ export default function CmsPage() {
             </div>
           )}
 
-          {/* ===== PERSETUJUAN (admin) ===== */}
+          {}
           {tab === "approval" && (
             <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, minmax(0, 1fr))" : "repeat(4, minmax(0, 1fr))", gap: 10, marginBottom: 8, flexShrink: 0, paddingTop: 4 }}>
@@ -1298,7 +1282,7 @@ export default function CmsPage() {
             </div>
           )}
 
-          {/* ===== KELOLA USER (admin) ===== */}
+          {}
           {tab === "users" && (
             <div style={{ flex: 1, minHeight: 0, overflowY: "auto", paddingTop: 4 }}>
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, minmax(0,1fr))" : "repeat(3, minmax(0,1fr))", gap: 10, marginBottom: 12 }}>
@@ -1513,7 +1497,7 @@ export default function CmsPage() {
             </div>
           )}
 
-          {/* ===== LOG AKTIVITAS (admin) ===== */}
+          {}
           {tab === "logs" && (
             <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
             <div style={{ ...cardStyle(t), display: "flex", flexDirection: "column", minHeight: 0, flex: 1, marginBottom: 0 }}>
@@ -1619,7 +1603,7 @@ export default function CmsPage() {
         </div>
       </main>
 
-      {/* ===== MODAL: Terima Semua ===== */}
+      {}
       {approveAllOpen && (
         <Modal
           t={t}
@@ -1635,7 +1619,7 @@ export default function CmsPage() {
         </Modal>
       )}
 
-      {/* ===== MODAL: Detail Dokumen ===== */}
+      {}
       {detailTarget && (
         <Modal
           t={t}
@@ -1711,7 +1695,7 @@ export default function CmsPage() {
           </Modal>
           )}
 
-      {/* ===== MODAL: Alasan Penolakan ===== */}
+      {}
       {rejectTarget && (
         <Modal
           t={t}
@@ -1774,7 +1758,7 @@ export default function CmsPage() {
         </Modal>
       )}
 
-      {/* ===== MODAL: Konfirmasi Hapus User ===== */}
+      {}
       {deleteTarget && (
         <Modal
           t={t}
@@ -1790,7 +1774,7 @@ export default function CmsPage() {
         </Modal>
       )}
 
-      {/* ===== MODAL: Atur Ulang Kata Sandi ===== */}
+      {}
       {resetTarget && (
         <Modal
           t={t}
@@ -1812,7 +1796,7 @@ export default function CmsPage() {
         </Modal>
       )}
 
-      {/* ===== MODAL: Konfirmasi Hapus Dokumen ===== */}
+      {}
       {deleteDocTarget && (
         <Modal
           t={t}
@@ -1829,7 +1813,7 @@ export default function CmsPage() {
         </Modal>
       )}
 
-      {/* ===== TOAST ===== */}
+      {}
       {toasts.length > 0 && (
         <div style={{ position: "fixed", bottom: 20, right: 20, zIndex: 1200, display: "flex", flexDirection: "column", gap: 10, maxWidth: "calc(100% - 40px)" }}>
           {toasts.map((tst) => (
@@ -1861,7 +1845,6 @@ export default function CmsPage() {
     </div>
   );
 
-  // ---- Fungsi tambah user (dibutuhkan submit handler) ----
   async function createUser() {
     setUserMsg("");
     try {
@@ -1883,9 +1866,6 @@ export default function CmsPage() {
   }
 }
 
-// ---- Komponen kecil styling (agar JSX di atas ringkas) ----
-
-// ---- Ikon SVG garis tipis (feather) — selaras dgn halaman lain ----
 function SIcon({ name, size = 15 }) {
   const common = {
     width: size,
@@ -2044,7 +2024,6 @@ function SIcon({ name, size = 15 }) {
   }
 }
 
-// Pemilih role (meniru gaya ModelSelector di halaman chat)
 function RoleSelect({ role, onSelect, t, dark }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);

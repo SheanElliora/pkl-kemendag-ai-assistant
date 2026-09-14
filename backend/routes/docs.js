@@ -1,11 +1,3 @@
-// ============================================================
-// Dokumentasi API (OpenAPI 3.0 + Swagger UI)
-//
-// GET /api/docs.json -> spesifikasi OpenAPI (JSON)
-// GET /api/docs      -> halaman Swagger UI (CDN) yang
-//                       memuat spesifikasi tersebut
-// ============================================================
-
 import { Router } from "express";
 
 const router = Router();

@@ -183,11 +183,6 @@ export async function generateAnswerStream(question, context, model, history) {
     throw new Error("Semua model AI gagal untuk streaming.");
 }
 
-// ============================================================
-// Prompt khusus percakapan (sapaan, tanya identitas, terima
-// kasih, dll) — TANPA context dokumen, TANPA sitasi [n].
-// ============================================================
-
 function buildConversationalPrompt(question, history, matchName) {
     const historyBlock =
         (history && history.length > 0)

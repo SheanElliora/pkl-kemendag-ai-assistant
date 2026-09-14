@@ -1,23 +1,6 @@
-// ============================================================
-// EVALUASI RAG — kualitas retrieval & jawaban
-//
-// Mengukur seberapa baik sistem menemukan dokumen yang benar
-// (recall@k) dan menyitasi dokumen itu pada jawaban akhir.
-//
-// Menjalankan: node scripts/evalRag.mjs          (dari backend/)
-// Opsi:
-//   --no-llm   : hanya cek retrieval (tanpa panggil model,
-//                lebih cepat & tidak memakai kredit OpenRouter)
-//
-// Syarat: Chroma :8000 + backend :3001 hidup (untuk --no-llm
-// hanya perlu Chroma karena memakai searchDocuments langsung).
-// ============================================================
-
 import { searchDocuments } from "../services/retrieverService.js";
 import { askRAG } from "../services/ragService.js";
 
-// Daftar pertanyaan uji + dokumen yang HARUS muncul di hasil
-// (recall). Dokumen ditulis sebagian nama file (case-insensitive).
 const TEST_SET = [
     {
         question: "Apa dasar hukum penyelenggaraan Sistem Informasi Perdagangan?",
@@ -74,7 +57,7 @@ function sleep(ms) {
 async function main() {
 
     console.log(
-        `\n===== EVALUASI RAG (${USE_LLM ? "dengan LLM" : "retrieval saja"}) =====\n`
+        `Evaluasi RAG (${USE_LLM ? "dengan LLM" : "retrieval saja"})`
     );
 
     let totalRecall = 0;
@@ -113,7 +96,6 @@ async function main() {
 
             totalRecall++;
 
-            // Cek jawaban + sitasi (opsional, butuh LLM)
             if (USE_LLM) {
 
                 const t1 = Date.now();
@@ -134,7 +116,6 @@ async function main() {
                     `${(answer.answer || "").length} karakter, ${(answer.sources || []).length} sumber, ${answerMs} ms`
                 );
 
-                // Jeda kecil agar tidak kena rate limit OpenRouter
                 await sleep(500);
 
             }
@@ -158,10 +139,8 @@ async function main() {
     const passed = results.filter((r) => r.ok).length;
     const failed = results.filter((r) => !r.ok).length;
 
-    console.log("=====================================");
     console.log(`Recall: ${totalHits}/${totalRecall}`);
     console.log(`HASIL: ${passed} PASS, ${failed} FAIL`);
-    console.log("=====================================\n");
 
     if (failed > 0 || totalHits < totalRecall) {
 
@@ -171,7 +150,7 @@ async function main() {
 
     else {
 
-        console.log("===== EVALUASI RAG LULUS =====");
+        console.log("Evaluasi RAG lulus");
 
     }
 

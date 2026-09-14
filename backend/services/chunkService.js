@@ -1,44 +1,9 @@
-// =====================================
-// Chunking berbasis kalimat
-//
-// Alih-alih memotong teks mentah per X karakter
-// (yang sering memotong kalimat di tengah dan
-// merusak semantik embedding), kita:
-//   1. Bagi halaman menjadi kalimat (titik, tanda
-//      tanya, seru, atau akhir baris paragraf).
-//   2. Gabungkan kalimat berturut-turut hingga
-//      mendekati chunkSize, dengan overlap berupa
-//      kalimat yang diulang dari chunk sebelumnya.
-//
-// Hasil: chunk selalu berawal/berakhir pada batas
-// kalimat sehingga setiap vektor mewakili makna
-// yang utuh dan retrieval lebih akurat.
-// =====================================
-
-// =====================================
-// Ekstraksi nomor halaman tercetak
-//
-// `page` di pipeline adalah INDEKS PDF (1..N),
-// tetapi dokumen cetak sering memberi nomor
-// halaman sendiri (offset akibat cover, kata
-// pengantar, halaman romawi, dst). Nomor
-// tercetak biasanya muncul di footer/header
-// halaman, sehingga kita coba deteksi dari
-// teks baris teratas / terbawah.
-//
-// Konservatif: hanya dipakai bila deteksi
-// yakin; bila ragu kembalikan null (maka
-// tampilan memakai indeks seperti biasa).
-// =====================================
-
 function looksLikeYear(n) {
 
     return n >= 1900 && n <= 2099;
 
 }
 
-// Angka romawi kecil lazim dipakai halaman pembuka
-// (i, ii, iii, ..., xx) dokumen resmi/laporan.
 const ROMAN_TO_INT = {
 
     i: 1, ii: 2, iii: 3, iv: 4, v: 5, vi: 6, vii: 7, viii: 8,
@@ -70,8 +35,6 @@ export function extractPrintedPage(text, pageIndex) {
 
     if (lines.length === 0) return null;
 
-    // Lokasi favorit nomor halaman: baris paling
-    // bawah (footer) dan paling atas (header).
     const heads = lines.slice(0, 1);
     const tails = lines.slice(-2);
     const lastLine = lines[lines.length - 1];
@@ -79,9 +42,6 @@ export function extractPrintedPage(text, pageIndex) {
 
     for (const line of pool) {
 
-        // 1) Baris BERISI HANYA nomor, boleh dihias
-        //    tanda baca pemisah: "12", "- 12 -",
-        //    ". 7 .", "| 8 |", "23 ", "– 45 –".
         let m =
         line.match(
             /^[\s.\-–—|:]*(\d{1,4})[\s.\-–—|:]*$/
@@ -95,8 +55,6 @@ export function extractPrintedPage(text, pageIndex) {
 
         }
 
-        // 2) Angka romawi kecil saja pada satu baris
-        //    (halaman pembuka: "vi", "iii", dst.).
         m =
         line.match(
             /^[\s.\-–—|:]*([ivxlcdm]{1,7})[\s.\-–—|:]*$/i
@@ -110,9 +68,6 @@ export function extractPrintedPage(text, pageIndex) {
 
         }
 
-        // 3) Pola "- N -" di AWAL baris, umum pada
-        //    dokumen hukum/peraturan: "- 2 -  5. ...",
-        //    "- 10 - Pasal 21 ...".
         m =
         line.match(
             /^[\s.\-–—|:]*[-–—]\s*(\d{1,4})\s*[-–—]/
@@ -126,25 +81,6 @@ export function extractPrintedPage(text, pageIndex) {
 
         }
 
-        // 4) Nomor di AKHIR baris TERAKHIR halaman
-        //    (footer), dipisah spasi/pipa/en-dash dari
-        //    teks isi:
-        //      "...VOL. 1/2020 | 4"
-        //      "...trainable 18"
-        //      "...JMPITA) 43"
-        //    Hanya baris terakhir yang diperiksa — baris
-        //    konten (tabel "Populasi 123", dst.) boleh
-        //    diakhiri angka tapi itu BUKAN nomor halaman.
-        //    Harus benar-benar token terakhir (bukan
-        //    desimal "3.5" atau ribuan "2,400").
-        //
-        // Kandidat ini adalah yang PALING TIDAK ANDAL,
-        // karena teks paparan juga bisa berakhir dengan
-        // angka ("...permainan tersebut. 33"). Bila indeks
-        // halaman diketahui, hanya terima bila nilainya
-        // dekat dengan indeks (offset halaman pembuka
-        // kecil): nomor halaman nyata hampir selalu
-        // berjarak 0-10 halaman dari indeks PDF.
         if (line === lastLine) {
 
             m =
@@ -170,19 +106,9 @@ export function extractPrintedPage(text, pageIndex) {
 
     }
 
-    // Tidak ada pola yang bisa diandalkan: kembalikan
-    // null agar tampilan memakai indeks PDF biasa.
     return null;
 
 }
-
-// =====================================
-// Deteksi tipe dokumen untuk chunking adaptif
-// Dipakai agar dokumen baru langsung dapat
-// chunkSize/overlap yang optimal tanpa config
-// manual. Heuristik berbasis nama file + sampel
-// teks 3 halaman pertama.
-// =====================================
 
 export function detectDocType(pages, filename = "") {
     const name = (filename || "").toLowerCase();
@@ -193,7 +119,6 @@ export function detectDocType(pages, filename = "") {
         .toLowerCase()
         .slice(0, 4000);
 
-    // Peraturan: Permendag, UU, PP, Pasal/Ayat
     if (
         /permendag|permen|peraturan|undang-undang|\buu\b|pp\s*nomor|pasal\s+\d+/.test(
             name
@@ -205,7 +130,6 @@ export function detectDocType(pages, filename = "") {
         return "peraturan";
     }
 
-    // Akademik: jurnal, skripsi, thesis, metodologi
     if (
         /jurnal|journal|artikel|skripsi|thesis|penelitian|riset|e-journal/.test(
             name
@@ -217,7 +141,6 @@ export function detectDocType(pages, filename = "") {
         return "akademik";
     }
 
-    // Praktis: laporan pasar, market intelligence, ekspor-impor
     if (
         /market intelligence|laporan.*pasar|nigeria|jepang|japan|ekspor|impor|kain|tekstil|restoran|game|decoration|ankara|medis/.test(
             name
@@ -235,21 +158,19 @@ export function detectDocType(pages, filename = "") {
 export function getChunkConfig(docType) {
     switch (docType) {
         case "peraturan":
-            // Pasal panjang, butuh chunk lebih kecil + overlap sedang agar ayat tidak terpotong
+
             return { chunkSize: 1600, overlap: 400 };
         case "akademik":
-            // Narasi panjang + tabel, butuh overlap besar agar metodologi utuh (chunkSize dibatasi 512 token reranker)
+
             return { chunkSize: 2000, overlap: 600 };
         case "praktis":
-            // Laporan pasar dengan tabel/angka, default sudah optimal
+
             return { chunkSize: 2000, overlap: 500 };
         default:
             return { chunkSize: 2000, overlap: 500 };
     }
 }
 
-// Pecah teks halaman menjadi daftar "segmen":
-// paragraf (baris kosong) dan kalimat.
 function splitIntoSentences(text) {
 
     const paragraphs =
@@ -262,9 +183,6 @@ function splitIntoSentences(text) {
 
     for(const paragraph of paragraphs) {
 
-        // Pertahankan singkatan umum (hlm., No., dsb.)
-        // dengan membatasi titik yang memisahkan kalimat
-        // hanya jika diikuti spasi + huruf besar/angka.
         const parts =
         paragraph
         .split(/(?<=[.!?])\s+(?=[A-Z0-9"'(])/)
@@ -281,8 +199,6 @@ function splitIntoSentences(text) {
 
 }
 
-// Potong kalimat yang masih terlalu panjang menjadi
-// potongan aman (kasus tabel/OCR tanpa tanda baca).
 function hardSplit(sentence, chunkSize) {
 
     const pieces = [];
@@ -315,9 +231,6 @@ export function createChunks(
 
     for(const page of pages) {
 
-        // Nomor halaman tercetak (dari footer/header
-        // teks). null bila tidak terdeteksi -> tampilan
-        // memakai indeks page.
         const printedPage =
         extractPrintedPage(
             page.text,
@@ -360,8 +273,6 @@ export function createChunks(
 
             for(const piece of pieces) {
 
-                // Kalimat tunggal lebih panjang dari ukuran
-                // chunk: simpan sendiri-sendiri.
                 if(
                     piece.length >= chunkSize &&
                     current.length === 0
@@ -377,9 +288,6 @@ export function createChunks(
 
                 }
 
-                // Cukup? simpan chunk sekarang lalu mulai
-                // chunk baru dengan overlap berupa beberapa
-                // kalimat terakhir yang masih muat.
                 if(
                     currentLen + piece.length > chunkSize &&
                     current.length > 0
@@ -387,9 +295,6 @@ export function createChunks(
 
                     flush();
 
-                    // Overlap: ulangi kalimat-kalimat terakhir
-                    // dari chunk sebelumnya agar konteks tetap
-                    // tersambung antar chunk.
                     let overlapLen = 0;
 
                     const overlapSentences = [];
@@ -437,4 +342,3 @@ export function createChunks(
     return chunks;
 }
 
-// End of chunkService.js

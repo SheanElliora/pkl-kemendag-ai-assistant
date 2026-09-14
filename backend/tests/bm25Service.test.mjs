@@ -1,10 +1,3 @@
-// ============================================================
-// Unit test: BM25 Service
-// Menjalankan: node --test tests/  (dari backend/)
-// Korpus dibuat sementara di %TEMP% agar tidak menyentuh
-// chunk asli proyek.
-// ============================================================
-
 import { test, before } from "node:test";
 import assert from "node:assert";
 import fs from "node:fs";

@@ -3,16 +3,6 @@ import path from "path";
 
 import { DATA_FOLDER } from "../config.js";
 
-
-// =====================================
-// Store JSON sederhana
-// Data disimpan sebagai file .json per
-// "tabel": users.json, login-logs.json,
-// files.json. Cocok untuk volume kecil
-// dan memudahkan belajar/analisis.
-// =====================================
-
-
 function ensureDataFolder() {
 
     if (!fs.existsSync(DATA_FOLDER)) {
@@ -23,13 +13,11 @@ function ensureDataFolder() {
 
 }
 
-
 function getFilePath(name) {
 
     return path.join(DATA_FOLDER, name + ".json");
 
 }
-
 
 export function readJson(name, fallback) {
 
@@ -63,7 +51,6 @@ export function readJson(name, fallback) {
     }
 
 }
-
 
 export function writeJson(name, data) {
 

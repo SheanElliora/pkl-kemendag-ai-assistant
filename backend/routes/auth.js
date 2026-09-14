@@ -13,15 +13,7 @@ import {
     addLoginLog
 } from "../services/loginLogService.js";
 
-
 const router = Router();
-
-
-// ==============================
-// Rate limit khusus halaman login
-// 10 percobaan per 15 menit per IP
-// untuk mempersulit brute-force.
-// ==============================
 
 const loginLimiter = rateLimit({
 
@@ -34,11 +26,6 @@ const loginLimiter = rateLimit({
     }
 
 });
-
-
-// ==============================
-// POST /api/auth/login
-// ==============================
 
 router.post("/login", loginLimiter, (req, res) => {
 
@@ -56,7 +43,6 @@ router.post("/login", loginLimiter, (req, res) => {
 
     if (!user || !verifyPassword(password, user.passwordHash)) {
 
-        // Catat percobaan GAGAL (status failed) untuk audit
         addLoginLog({
             userId: user ? user.id : null,
             username: username || "(kosong)",
@@ -70,7 +56,6 @@ router.post("/login", loginLimiter, (req, res) => {
 
     }
 
-    // Catat aktivitas login (device/browser/OS dari User-Agent)
     addLoginLog({
         userId: user.id,
         username: user.username,
@@ -89,12 +74,6 @@ router.post("/login", loginLimiter, (req, res) => {
     });
 
 });
-
-
-// ==============================
-// GET /api/auth/me
-// Cek token masih valid & ambil data user
-// ==============================
 
 router.get("/me", (req, res) => {
 
@@ -123,6 +102,5 @@ router.get("/me", (req, res) => {
     });
 
 });
-
 
 export default router;

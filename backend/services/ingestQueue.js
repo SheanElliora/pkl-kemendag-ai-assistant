@@ -1,23 +1,3 @@
-// =====================================
-// Antrean ingest background
-// -------------------------------------
-// Approve tidak lagi memblokir request:
-// route langsung balas dengan status
-// "processing", lalu dokumen diproses
-// (OCR -> chunk -> embed -> Chroma)
-// DI LATAR BELAKANG secara berurutan.
-//
-// Keuntungan:
-// - Banyak dokumen baru bisa diantrekan
-//   sekaligus tanpa menggantung admin.
-// - Request tidak terputus oleh timeout.
-// - Satu proses ingest per waktu (tidak
-//   ada tabrakan tulis files.json/Chroma).
-// - Restart server tidak kehilangan
-//   antrean: job "processing" dipulihkan
-//   otomatis saat startup.
-// =====================================
-
 import fs from "fs";
 import path from "path";
 
@@ -26,11 +6,9 @@ import { readJson, writeJson } from "./storeService.js";
 import { ingestDocument } from "../ingest.js";
 import { deleteVectorsByFilename } from "./vectorStorage.js";
 
-
 let queue = [];
 
 let busy = false;
-
 
 function loadFiles() {
 
@@ -38,17 +16,11 @@ function loadFiles() {
 
 }
 
-
 function saveFiles(files) {
 
     writeJson("files", files);
 
 }
-
-
-// =====================================
-// Ambil & jalankan job berikutnya
-// =====================================
 
 async function worker() {
 
@@ -67,8 +39,6 @@ async function worker() {
     }
     catch (jobError) {
 
-        // Jaring pengaman terakhir: kegagalan di luar
-        // ingestDocument (mis. files.json bermasalah).
         markError(job.recordId, jobError.message);
 
         console.log("Job gagal:", job.filename, jobError.message);
@@ -78,22 +48,16 @@ async function worker() {
 
         busy = false;
 
-        // Lanjut ke job berikutnya (bila ada)
         worker();
 
     }
 
 }
 
-
 async function processJob(job) {
 
-    console.log("\n======================================");
-    console.log("INGEST (background):", job.filename);
-    console.log("======================================");
+    console.log("[ingest] background:", job.filename);
 
-    // Pastikan dokumen masih ada sebelum diproses
-    // (bisa saja file dihapus saat antrean menunggu).
     if (!fs.existsSync(path.join(DOCS_FOLDER, job.filename))) {
 
         markError(job.recordId, "File tidak ditemukan saat diproses (mungkin dihapus)");
@@ -103,10 +67,6 @@ async function processJob(job) {
 
     await ingestDocument(job.filename);
 
-    // Perbarui status record — TAPI hanya jika record
-    // masih berstatus "processing". Kalau di antara
-    // waktu itu sudah dihapus (deleted), vektor yang
-    // baru saja tersimpan dibuang dulu.
     const files = loadFiles();
 
     const record = files.find((f) => f.id === job.recordId);
@@ -142,7 +102,6 @@ async function processJob(job) {
 
 }
 
-
 function markError(recordId, message) {
 
     const files = loadFiles();
@@ -158,11 +117,6 @@ function markError(recordId, message) {
 
 }
 
-
-// =====================================
-// API publik
-// =====================================
-
 export function enqueueIngest({ recordId, filename, approvedBy }) {
 
     queue.push({ recordId, filename, approvedBy });
@@ -173,20 +127,11 @@ export function enqueueIngest({ recordId, filename, approvedBy }) {
 
 }
 
-
 export function pendingJobs() {
 
     return queue.length;
 
 }
-
-
-// =====================================
-// Pemulihan setelah restart server:
-// record yang tertinggal "processing"
-// diantrekan lagi (atau ditandai error
-// bila file fisiknya sudah tidak ada).
-// =====================================
 
 export function recoverProcessingJobs() {
 
@@ -222,7 +167,7 @@ export function recoverProcessingJobs() {
 
     if (recovered > 0) {
 
-        console.log(`[ingestQueue] Memulihkan ${recovered} dokumen yang tertinggal "processing".`);
+        console.log(`[ingestQueue] Pulihkan ${recovered} dokumen processing.`);
 
     }
 

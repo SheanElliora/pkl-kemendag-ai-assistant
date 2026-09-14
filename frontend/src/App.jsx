@@ -6,10 +6,6 @@ const CmsPage = lazy(() => import("./pages/CmsPage.jsx"));
 import { getUser } from "./api.js";
 import "./App.css";
 
-// HashRouter dipakai agar rute /#/cms tetap berfungsi
-// ketika halaman di-refresh/dibuka langsung di hosting statis
-// (tidak butuh konfigurasi server untuk fallback ke index.html).
-
 function RequireCms({ children }) {
   return getUser() ? children : <Navigate to="/cms/login" replace />;
 }

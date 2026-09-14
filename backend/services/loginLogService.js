@@ -1,16 +1,6 @@
 import { readJson, writeJson } from "./storeService.js";
 
-
-// =====================================
-// Login activity log
-// Mencatat: username, tanggal login,
-// device/browser/OS (diparse dari User-Agent).
-// Data: data/login-logs.json (maks 500 baris)
-// =====================================
-
-
 const MAX_LOGS = 500;
-
 
 function getLogs() {
 
@@ -18,13 +8,11 @@ function getLogs() {
 
 }
 
-
 function saveLogs(logs) {
 
     writeJson("login-logs", logs);
 
 }
-
 
 function parseDeviceInfo(userAgent) {
 
@@ -103,7 +91,6 @@ function parseDeviceInfo(userAgent) {
 
 }
 
-
 export function addLoginLog({ userId, username, userAgent, status = "success" }) {
 
     const logs = getLogs();
@@ -133,7 +120,6 @@ export function addLoginLog({ userId, username, userAgent, status = "success" })
     return logs[logs.length - 1];
 
 }
-
 
 export function listLoginLogs() {
 

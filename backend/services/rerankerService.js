@@ -4,39 +4,12 @@ import {
     Tensor
 } from "@xenova/transformers";
 
-
-
-// =====================================
-// Reranker Cross-Encoder
-//
-// Model: bge-reranker-base
-// Cross-encoder mengevaluasi pasangan
-// (pertanyaan, dokumen) BERSAMA-sama,
-// sehingga jauh lebih akurat daripada
-// perbandingan embedding terpisah.
-//
-// Dipilih bge-reranker-base (bukan
-// ms-marco-MiniLM-L-6-v2) karena model
-// ini multilingual: skornya tetap tajam
-// untuk pertanyaan berbahasa Indonesia,
-// sedangkan ms-marco hampir selalu
-// memberi skor ~0 sehingga tidak
-// membedakan apa pun.
-//
-// Dipakai setelah pencarian awal Chroma
-// untuk mengurutkan ulang kandidat paling
-// relevan sebelum dikirim ke LLM.
-// =====================================
-
-
 const MODEL_NAME = "Xenova/bge-reranker-base";
 
 const MAX_LENGTH = 512;
 
 let tokenizer = null;
 let model = null;
-
-
 
 async function getReranker() {
 
@@ -70,18 +43,6 @@ async function getReranker() {
 
 }
 
-
-
-// =====================================
-// Skor relevansi untuk daftar kandidat
-//
-// query  : teks pertanyaan user
-// docs   : daftar teks dokumen yang akan
-//          dinilai relevansinya
-// return : array skor [0..1], semakin
-//          besar semakin relevan.
-// =====================================
-
 export async function rerankDocuments(
     query,
     docs
@@ -90,8 +51,6 @@ export async function rerankDocuments(
     const { tokenizer: tok, model: mdl } =
     await getReranker();
 
-
-    // 1) Tokenisasi semua pasangan (query, doc)
     const encodings = [];
 
     for (const doc of docs) {
@@ -111,8 +70,6 @@ export async function rerankDocuments(
 
     }
 
-
-    // 2) Padding agar semua pasangan sama panjang
     const maxLen =
     Math.min(
         MAX_LENGTH,
@@ -120,7 +77,6 @@ export async function rerankDocuments(
             ...encodings.map(e => e.input_ids.length)
         )
     );
-
 
     const ids = new Array(encodings.length);
     const masks = new Array(encodings.length);
@@ -146,7 +102,6 @@ export async function rerankDocuments(
 
     });
 
-
     const flatIds = new BigInt64Array(
         ids.flat().map(x => BigInt(x))
     );
@@ -154,7 +109,6 @@ export async function rerankDocuments(
     const flatMasks = new BigInt64Array(
         masks.flat().map(x => BigInt(x))
     );
-
 
     const input_ids =
     new Tensor(
@@ -170,16 +124,12 @@ export async function rerankDocuments(
         [encodings.length, maxLen]
     );
 
-
-    // 3) Inferensi batch satu kali
     const out =
     await mdl({
         input_ids,
         attention_mask
     });
 
-
-    // 4) Sigmoid logit tunggal -> skor relevansi
     const logits =
     Array.from(out.logits.data);
 

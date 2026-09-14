@@ -3,9 +3,7 @@ import path from "path";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
 import { DOCS_FOLDER } from "../config.js";
 
-
 export async function loadPDFWithPages(filename){
-
 
     const pdfPath =
         path.join(
@@ -13,23 +11,17 @@ export async function loadPDFWithPages(filename){
             filename
         );
 
-
     const data =
         new Uint8Array(
             fs.readFileSync(pdfPath)
         );
-
 
     const pdfDocument =
     await pdfjsLib.getDocument({
         data
     }).promise;
 
-
-
     let pages = [];
-
-
 
     for(
         let pageNumber = 1;
@@ -37,18 +29,13 @@ export async function loadPDFWithPages(filename){
         pageNumber++
     ){
 
-
         const page =
             await pdfDocument.getPage(
                 pageNumber
             );
 
-
-
         const content =
             await page.getTextContent();
-
-
 
         const text =
             content.items
@@ -56,8 +43,6 @@ export async function loadPDFWithPages(filename){
                 item => item.str
             )
             .join(" ");
-
-
 
         pages.push({
 
@@ -67,10 +52,7 @@ export async function loadPDFWithPages(filename){
 
         });
 
-
     }
-
-
 
     return pages;
 

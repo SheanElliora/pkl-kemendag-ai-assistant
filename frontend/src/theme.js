@@ -1,11 +1,3 @@
-// =============================================================
-// THEME TUNGGAL (design system) untuk Chat, Login, dan CMS.
-// Semua halaman memakai token dari sini agar selaras.
-// Font: judul = Plus Jakarta Sans, isi = Source Sans 3.
-// Palet resmi Kemendag (kemendag.go.id): biru #004DAF, hijau #16a75c,
-// navy #13182B, abu-abu #58595B, latar putih.
-// =============================================================
-
 export const FONT_HEADING = '"Sora", sans-serif';
 export const FONT_BODY = '"Source Sans 3", sans-serif';
 

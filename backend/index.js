@@ -20,60 +20,23 @@ import { rerankDocuments } from "./services/rerankerService.js";
 import { readJson } from "./services/storeService.js";
 import { countVectors } from "./services/vectorStorage.js";
 
-
 const app = express();
-
-
-// ======================================
-// Folder upload & dokumen dibuat otomatis
-// (lokasi diatur di config.js)
-// ======================================
 
 ensureFolders();
 
-// CORS dibatasi ke origin yang didaftarkan
-// (daftar di .env: CORS_ORIGINS)
 app.use(cors({
     origin: CORS_ORIGINS
 }));
 
 app.use(express.json());
 
-
-// ==============================
-// Autentikasi CMS (login / me)
-// ==============================
-
 app.use("/api/auth", authRouter);
-
-
-// ==============================
-// CMS (upload, daftar file,
-// approve/reject, user, log)
-// Semua endpoint wajib login.
-// ==============================
 
 app.use("/api/cms", cmsRouter);
 
-
-// ==============================
-// Chat RAG (publik)
-// ==============================
-
 app.use("/api/chat", chatRouter);
 
-
-// ==============================
-// Dokumentasi API (OpenAPI + UI)
-// Menyediakan /api/docs (UI) dan
-// /api/docs.json (spesifikasi).
-// ==============================
-
 app.use("/api", docsRouter);
-
-// ==============================
-// Cek Environment
-// ==============================
 
 console.log(
     "OPENROUTER KEY:",
@@ -82,13 +45,7 @@ console.log(
         : "TIDAK TERBACA"
 );
 
-
-// ==============================
-// Health Check
-// ==============================
-
 app.get("/api/health", (req, res) => {
-
 
     res.json({
 
@@ -97,13 +54,7 @@ app.get("/api/health", (req, res) => {
 
     });
 
-
 });
-
-
-// ==============================
-// Daftar Model (untuk dropdown)
-// ==============================
 
 app.get("/api/models", (req, res) => {
 
@@ -116,14 +67,6 @@ app.get("/api/models", (req, res) => {
     });
 
 });
-
-
-// ==============================
-// Preview PDF dokumen (untuk menampilkan
-// sumber referensi di frontend chat)
-// Hanya file dari folder docs yang dilayani
-// (guard terhadap path traversal).
-// ==============================
 
 app.get("/api/documents", (req, res) => {
 
@@ -157,7 +100,6 @@ app.get("/api/documents", (req, res) => {
 
 });
 
-
 app.get("/api/documents/:filename", (req, res) => {
 
     const safeName = path.basename(req.params.filename);
@@ -183,13 +125,6 @@ app.get("/api/documents/:filename", (req, res) => {
     fs.createReadStream(filePath).pipe(res);
 
 });
-
-
-// ==============================
-// Statistik publik (ringan, untuk
-// halaman utama: jumlah dokumen &
-// vektor yang tersedia)
-// ==============================
 
 app.get("/api/stats", async (req, res) => {
 
@@ -220,11 +155,6 @@ app.get("/api/stats", async (req, res) => {
 
 });
 
-
-// ==============================
-// Error Handler (multer: batas ukuran dsb.)
-// ==============================
-
 app.use((err, req, res, next) => {
 
     if (err instanceof multer.MulterError) {
@@ -249,34 +179,14 @@ app.use((err, req, res, next) => {
 
 });
 
-
-// ==============================
-// Server
-// ==============================
-
 const PORT =
 process.env.PORT || 3001;
-
-
-// ==============================
-// Warm-up model AI (embedding &
-// reranker) saat server start.
-//
-// Model dimuat lazy oleh layanan
-// masing-masing; tanpa warm-up,
-// pertanyaan PERTAMA setelah
-// start akan menunggu muat model
-// yang bisa memakan puluhan detik
-// (buruk untuk demo). Dipanggil
-// setelah listen supaya server
-// langsung merespons.
-// ==============================
 
 async function warmupModels() {
 
     try {
 
-        console.log("\n===== WARMUP MODEL =====");
+        console.log("[warmup] mulai");
 
         if (process.env.WARMUP_MODELS === "off") {
 
@@ -294,7 +204,7 @@ async function warmupModels() {
 
         console.log("Reranker model: siap");
 
-        console.log("===== WARMUP SELESAI =====\n");
+        console.log("[warmup] selesai");
 
     }
     catch(error){
@@ -308,28 +218,16 @@ async function warmupModels() {
 
 }
 
-// Pastikan user admin default tersedia
-// sebelum server menerima permintaan.
 ensureDefaultAdmin();
 
-// Pulihkan dokumen yang tertinggal status
-// "processing" (restart server di tengah
-// ingest) ke antrean latar belakang.
 recoverProcessingJobs();
 
-
-
 app.listen(PORT, () => {
-
 
     console.log(
         `Backend berjalan di http://localhost:${PORT}`
     );
 
-
-    // Muat model di latar belakang
-    // (tidak memblokir permintaan masuk)
     warmupModels();
-
 
 });

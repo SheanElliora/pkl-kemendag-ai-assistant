@@ -2,31 +2,6 @@ import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 
-// =====================================
-// Query Expansion (universal)
-//
-// Tujuan: membantu retrieval memahami
-// pertanyaan Indonesia terhadap dokumen
-// yang mayoritas berbahasa Inggris, untuk
-// TOPIK APA PUN — termasuk dokumen baru
-// yang belum pernah ada di kamus manual.
-//
-// Strategi berlapis (cepat -> lambat):
-//   1. Kamus lokal TERM_EN (dikirim dari
-//      retrieverService) — instan, gratis,
-//      cocok untuk istilah umum & dikenal.
-//   2. Cache (memori + file) — query yang
-//      sama tidak perlu dipanggil API lagi.
-//   3. LLM — menghasilkan sinonim Inggris
-//      untuk istilah di luar kamus. Tunduk
-//      pada timeout; bila gagal, fallback
-//      ke hasil kamus saja (tetap jalan).
-//
-// Bisa dimatikan: QUERY_EXPANSION=off
-// =====================================
-
-// LLM apa yang dipakai untuk ekspansi.
-// Bisa dioverride via .env (QUERY_EXPANSION_MODEL).
 const EXPANSION_MODEL =
 process.env.QUERY_EXPANSION_MODEL ||
 process.env.OPENROUTER_MODEL ||
@@ -35,18 +10,14 @@ process.env.OPENROUTER_MODEL ||
 const EXPANSION_ENABLED =
 (process.env.QUERY_EXPANSION || "on") !== "off";
 
-// Cache di memori (cepat untuk sesi berjalan)
 const memCache = new Map();
 
-// Cache di file (bertahan antar sesi).
-// Lokasi: backend/data/query_expansion_cache.json
 const CACHE_FILE =
 path.resolve(
     process.env.DATA_PATH || "./data",
     "query_expansion_cache.json"
 );
 
-// Max istilah Inggris yang diminta (jaga token kecil)
 const MAX_TERMS = 20;
 
 function extractEntities(question) {
@@ -61,10 +32,6 @@ function extractEntities(question) {
     return [...new Set(entities)].map(e => e.toLowerCase());
 }
 
-// =====================================
-// Cache
-// =====================================
-
 function loadDiskCache() {
 
     try {
@@ -78,7 +45,7 @@ function loadDiskCache() {
         }
 
     }
-    catch { /* cache rusak = mulai kosong */ }
+    catch {  }
 
     return {};
 
@@ -100,7 +67,7 @@ function saveDiskCache(cache) {
         );
 
     }
-    catch { /* gagal simpan = tidak fatal */ }
+    catch {  }
 
 }
 
@@ -112,16 +79,6 @@ function cacheKey(question) {
     .digest("hex");
 
 }
-
-// =====================================
-// Ekspansi via LLM
-//
-// Prompt meminta daftar sinonim/kata kunci
-// Inggris untuk istilah penting dalam
-// pertanyaan. Diminta HANYA kata, tanpa
-// kalimat, agar bisa langsung disuntikkan
-// ke query embedding.
-// =====================================
 
 async function expandWithLLM(question) {
 
@@ -193,21 +150,11 @@ IMPORTANT: Always include these domain-agnostic keywords if present in the quest
 
 }
 
-// =====================================
-// API utama
-//
-// localTerms : hasil ekspansi dari kamus
-//              manual (sudah berupa string).
-// Kembalian : string istilah Inggris ekstra
-//             (kosong bila tidak ada/off).
-// =====================================
-
 export async function getQueryExpansion(
     question,
     localTerms
 ) {
 
-    // Mati total? Kembalikan kamus lokal saja.
     if (!EXPANSION_ENABLED) {
 
         return localTerms || "";
@@ -216,14 +163,12 @@ export async function getQueryExpansion(
 
     const key = cacheKey(question);
 
-    // 1) Cache memori
     if (memCache.has(key)) {
 
         return memCache.get(key);
 
     }
 
-    // 2) Cache disk
     const disk = loadDiskCache();
 
     if (disk[key]) {
@@ -234,7 +179,6 @@ export async function getQueryExpansion(
 
     }
 
-    // 3) Panggil LLM (dengan timeout internal)
     let llmExpansion = "";
 
     try {
@@ -252,7 +196,6 @@ export async function getQueryExpansion(
 
     }
 
-    // Gabung dengan kamus lokal; dedup.
     const combined =
     [
         ...(localTerms || "").split(" "),

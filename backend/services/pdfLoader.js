@@ -21,28 +21,7 @@ import {
     OCR_FOLDER
 } from "../config.js";
 
-// =====================================
-// Ambang minimum karakter untuk dianggap
-// PDF berisi teks digital (selectable text).
-// Bila total teks yang diekstrak pdfjs
-// kurang dari ini ATAU jumlah halaman
-// bermakna <3, PDF dianggap hasil scan
-// dan diteruskan ke OCR (mencegah tabel
-// angka tipis lolos sebagai digital).
-// =====================================
-
 const MIN_DIGITAL_CHARS = 1200;
-
-// =====================================
-// Deteksi perubahan sumber dokumen
-//
-// Cache (TXT hasil OCR/ekstraksi dan file
-// _chunks.json) hanya valid selama file PDF
-// sumber tidak berubah. Bila ada versi baru
-// di-upload (nama sama), mtime PDF lebih baru
-// dari cache sehingga cache dianggap usang
-// dan diproses ulang dari awal.
-// =====================================
 
 function isCacheStale(pdfPath, cachePath) {
 
@@ -54,28 +33,18 @@ function isCacheStale(pdfPath, cachePath) {
         const cacheMtime =
         fs.statSync(cachePath).mtimeMs;
 
-        // Cache lebih TUA dari PDF => PDF sudah
-        // diganti dengan versi baru => cache usang.
         return cacheMtime < pdfMtime;
 
     }
     catch {
 
-        // Cache tidak ada => dianggap perlu dibuat.
         return true;
 
     }
 
 }
 
-
-
-// =====================================
-// Load semua PDF (untuk npm run ingest)
-// =====================================
-
 export async function loadAllPDFs(){
-
 
     const files =
     fs.readdirSync(DOCS_FOLDER)
@@ -84,47 +53,26 @@ export async function loadAllPDFs(){
         file.endsWith(".pdf")
     );
 
-
     const documents = [];
 
-
     for(const file of files){
-
 
         const document =
         await processPDF(file);
 
-
         documents.push(document);
-
 
     }
 
-
     return documents;
 
-
 }
-
-
-
-// =====================================
-// Load satu PDF (untuk upload baru)
-// =====================================
 
 export async function loadSinglePDF(file){
 
-
     return await processPDF(file);
 
-
 }
-
-
-
-// =====================================
-// Ambil judul dokumen dari metadata PDF
-// =====================================
 
 async function getPdfTitle(pdfPath){
 
@@ -169,24 +117,12 @@ async function getPdfTitle(pdfPath){
 
 }
 
-
-
-// =====================================
-// Fungsi utama proses PDF
-// dipakai oleh dua fungsi di atas
-// =====================================
-
 async function processPDF(file){
 
-
-    console.log("\n======================");
     console.log(
         "Memproses:",
         file
     );
-    console.log("======================");
-
-
 
     const txtName =
     path.basename(
@@ -195,8 +131,6 @@ async function processPDF(file){
     )
     +
     ".txt";
-
-
 
     const txtPath =
     path.join(
@@ -215,39 +149,23 @@ async function processPDF(file){
         pdfPath
     );
 
-
-
     let pages;
 
-
-
-    // ==========================
-    // Ambil TXT hasil OCR
-    // ==========================
-
-    // Cache TXT dianggap usang bila PDF sumber
-    // sudah di-update (versi baru) — lihat helper
-    // isCacheStale di atas.
     if(
         fs.existsSync(txtPath) &&
         !isCacheStale(pdfPath, txtPath)
     ){
-
 
         console.log(
             "TXT ditemukan:",
             txtName
         );
 
-
-
         const text =
         fs.readFileSync(
             txtPath,
             "utf8"
         );
-
-
 
         pages =
         text
@@ -261,35 +179,22 @@ async function processPDF(file){
         .map(
             (page,index)=>({
 
-
                 page:index+1,
-
 
                 text:
                 cleanText(page)
 
-
             })
         );
 
-
     }
     else{
-
 
         console.log(
             "TXT belum ada, mencoba ekstraksi teks digital..."
         );
 
-
-        // ======================================
-        // 1) Coba ekstraksi teks digital (pdfjs)
-        //    Lebih cepat & akurat untuk PDF yang
-        //    memang berisi teks (selectable text).
-        // ======================================
-
         let extractedPages = [];
-
 
         try {
 
@@ -298,22 +203,17 @@ async function processPDF(file){
                 file
             );
 
-
         }
         catch(error){
-
 
             console.log(
                 "Ekstraksi teks digital gagal:",
                 error.message
             );
 
-
             extractedPages = [];
 
-
         }
-
 
         const totalChars =
         extractedPages.reduce(
@@ -321,7 +221,6 @@ async function processPDF(file){
             sum + page.text.length,
             0
         );
-
 
         const meaningfulPages = extractedPages.filter(
             (p) => p.text.trim().length > 100
@@ -334,7 +233,6 @@ async function processPDF(file){
             console.log(
                 `Teks digital ditemukan (${totalChars} karakter, ${meaningfulPages} halaman bermakna), tanpa OCR`
             );
-
 
             pages =
             extractedPages.map(
@@ -351,11 +249,6 @@ async function processPDF(file){
                 })
             );
 
-
-            // Simpan cache TXT agar tidak perlu
-            // diekstrak ulang pada ingest berikutnya.
-            // Format sama dengan hasil OCR agar
-            // cabang "TXT ditemukan" bisa membacanya.
             const txtContent =
             extractedPages
             .map(
@@ -365,34 +258,28 @@ async function processPDF(file){
             )
             .join("");
 
-
             fs.writeFileSync(
                 txtPath,
                 txtContent,
                 "utf8"
             );
 
-
             console.log(
                 "TXT hasil ekstraksi tersimpan:",
                 txtName
             );
 
-
         }
         else{
-
 
             console.log(
                 "Teks digital kosong, beralih ke OCR (dokumen scan)..."
             );
 
-
             const result =
             await pdfToTextOCR(
                 pdfPath
             );
-
 
             pages =
             result.pages.map(
@@ -409,31 +296,18 @@ async function processPDF(file){
                 })
             );
 
-
         }
 
-
     }
-
-
 
     console.log(
         "Jumlah halaman:",
         pages.length
     );
 
-
-
-    // ==========================
-    // Chunking
-    // ==========================
-
-
     let chunks =
     loadChunks(file);
 
-    // Flag: chunk di-build ulang? Dipakai ingest.js untuk
-    // menghapus vektor lama sebelum menyimpan yang baru.
     let rebuilt = false;
 
     const chunkPath = getChunkPath(file);

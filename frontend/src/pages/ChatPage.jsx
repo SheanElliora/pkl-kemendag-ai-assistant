@@ -26,7 +26,6 @@ export default function ChatPage() {
     return typeof window !== "undefined" && window.matchMedia?.("(prefers-color-scheme: dark)").matches;
   });
 
-  // Palet warna tema (light/dark) — satu sumber warna dari theme.js.
   const t = createTheme(dark);
 
   useEffect(() => {
@@ -194,7 +193,6 @@ export default function ChatPage() {
   );
   const [online, setOnline] = useState(null);
 
-  // ----- Riwayat percakapan (multi sesi, localStorage) -----
   const [conversations, setConversations] = useState(() => loadConversations());
   const [activeConvId, setActiveConvId] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -205,13 +203,10 @@ export default function ChatPage() {
     activeIdRef.current = activeConvId;
   }, [activeConvId]);
 
-  // Simpan seluruh riwayat ke localStorage setiap ada perubahan
   useEffect(() => {
     saveConversations(conversations);
   }, [conversations]);
 
-  // ----- Sinkron riwayat dengan server (chats.json di backend) -----
-  // clientId persisten per browser -> sesi tamu aman antar refresh/perangkat.
   const clientId = getClientId();
 
   useEffect(() => {
@@ -245,14 +240,11 @@ export default function ChatPage() {
 
   const user = getUser();
 
-  // Pertanyaan contoh di halaman awal (klik langsung terkirim, jawaban ada di dokumen).
   const exampleQuestions = [
     "Bagaimana tahapan mendirikan restoran di Jepang?",
     "Siapa pemasok terbesar kain Ankara ke Nigeria?",
     "Apa saja persyaratan impor decoration lights ke Nigeria?"
   ];
-
-
 
   useEffect(() => {
     api("/api/models")
@@ -267,7 +259,6 @@ export default function ChatPage() {
       .catch(() => setModels([]));
   }, []);
 
-  // Status koneksi backend untuk badge di header
   function refreshHealth() {
     setOnline(null);
     api("/api/health")
@@ -279,13 +270,10 @@ export default function ChatPage() {
     refreshHealth();
   }, []);
 
-  // Simpan pilihan model
   useEffect(() => {
     localStorage.setItem("cms_model", model);
   }, [model]);
 
-  // Auto-scroll ke pesan terbaru — selalu paksa saat user bertanya beberapa kali,
-  // tetap hormati jika user sengaja scroll ke atas membaca riwayat lama.
   useEffect(() => {
     const el = chatAreaRef.current;
     const end = chatEndRef.current;
@@ -294,25 +282,25 @@ export default function ChatPage() {
     const last = currentMessages[currentMessages.length - 1];
     const isUser = last?.role === "user";
     const isStreaming = !!last?.streaming;
-    // Pesan user baru -> paksa auto-scroll (memenuhi "beberapa pertanyaan" selalu terlihat)
+
     if (isUser) {
       autoScrollRef.current = true;
-      // double rAF agar layout selesai dulu sebelum scroll
+
       requestAnimationFrame(() => {
         end.scrollIntoView({ behavior: "smooth", block: "end" });
-        // fallback untuk container scroll (beberapa browser perlu scrollTop)
+
         el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
       });
       return;
     }
-    // Saat streaming / pesan bot baru -> ikuti jika auto-scroll masih aktif
+
     if (autoScrollRef.current || isStreaming) {
-      // streaming: auto (lebih responsif), selesai: smooth
+
       const beh = isStreaming ? "auto" : "smooth";
       end.scrollIntoView({ behavior: beh, block: "end" });
       return;
     }
-    // Jika user sebelumnya mematikan auto-scroll tapi sudah kembali dekat bawah -> aktifkan lagi
+
     const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 160;
     if (nearBottom) {
       autoScrollRef.current = true;
@@ -320,7 +308,6 @@ export default function ChatPage() {
     }
   }, [currentMessages, loading]);
 
-  // Ketika ganti percakapan, paksa scroll ke bawah (riwayat panjang langsung terlihat pesan terbaru)
   useEffect(() => {
     if (!activeConvId) return;
     autoScrollRef.current = true;
@@ -333,7 +320,6 @@ export default function ChatPage() {
     });
   }, [activeConvId]);
 
-  // Shortcut fokus input: Ctrl+K atau "/" (di luar kotak ketik)
   useEffect(() => {
     function onKeyDown(e) {
       const target = e.target;
@@ -357,9 +343,6 @@ export default function ChatPage() {
     return filename;
   }
 
-  // ---------- Helper percakapan ----------
-
-  // Sesuaikan tinggi textarea input agar tidak perlu scroll manual.
   function autoResizeInput() {
     const el = inputRef.current;
     if (!el) return;
@@ -402,7 +385,6 @@ export default function ChatPage() {
     return [...conversations].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
   }
 
-  // Riwayat yang ditampilkan, difilter oleh kata kunci pencarian.
   function filteredHistory() {
     const q = historyQuery.trim().toLowerCase();
     if (!q) return listConversations();
@@ -419,7 +401,7 @@ export default function ChatPage() {
     const conv = conversations.find((c) => c.id === id);
     if (!conv) return;
     setModel(conv.model || model);
-    // Sesi server yang belum pernah dibuka: muat isi percakapan dari backend.
+
     if (conv.sessionId && conv.messages.length === 0) {
       api("/api/chat/history/" + conv.sessionId)
         .then((data) => {
@@ -437,7 +419,7 @@ export default function ChatPage() {
           setConversations((prev) =>
             prev.map((c) => (c.id === id ? { ...c, messages: msgs } : c))
           );
-          // Pulihkan feedback yang sudah pernah diberikan (dari server).
+
           const restored = {};
           for (const m of msgs) {
             if (m.feedback) restored["m" + m.messageId] = { rating: m.feedback.rating, comment: m.feedback.comment || "" };
@@ -484,8 +466,6 @@ export default function ChatPage() {
     updateMessages((prev) => prev.filter((_, i) => i !== index));
     setCopied(null);
   }
-
-  // ---------- Konsumsi jawaban streaming ----------
 
   function applyDelta(text, question, mdl) {
     updateMessages((prev) => {
@@ -545,14 +525,12 @@ export default function ChatPage() {
     updateMessages((prev) => prev.filter((m) => !m.streaming));
   }
 
-  // Jalankan permintaan chat; hasilnya streaming (SSE)
   async function consumeStream(message, mdl, question, convId) {
     const controller = new AbortController();
     abortRef.current = controller;
     setLoading(true);
     let completed = false;
 
-    // Ikatan ke sesi server (bila percakapan sudah punya sessionId).
     const conv = conversations.find((c) => c.id === convId);
     const body = {
       message,
@@ -572,7 +550,6 @@ export default function ChatPage() {
 
       const ct = res.headers.get("content-type") || "";
 
-      // Fallback: server tidak mendukung SSE -> tangani jawaban JSON
       if (!ct.includes("text/event-stream")) {
         const data = await res.json();
         const answer = data.reply ?? data.answer ?? data.error ?? "Tidak ada jawaban.";
@@ -622,7 +599,6 @@ export default function ChatPage() {
         }
       }
 
-      // Streaming selesai tanpa event "done" -> tutup placeholder
       if (!completed) {
         finalizeStream(full.trim(), [], question, mdl);
       }
@@ -673,7 +649,6 @@ export default function ChatPage() {
       setNewMsgIndex(currentMessages.length);
     }
 
-    // Paksa auto-scroll langsung saat user mengirim (beberapa pertanyaan berurutan tetap terlihat)
     autoScrollRef.current = true;
     requestAnimationFrame(() => {
       chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -683,7 +658,6 @@ export default function ChatPage() {
     await consumeStream(text, model, text, id);
   }
 
-  // Tempel sessionId/messageId hasil server ke percakapan & pesan bot terakhir.
   function attachSessionInfo(convId, sessionId, messageId) {
     if (!convId || !sessionId) return;
     setConversations((prev) =>
@@ -701,12 +675,10 @@ export default function ChatPage() {
     );
   }
 
-  // Kunci feedback per pesan: messageId server bila ada, fallback indeks lokal.
   function msgKey(m, index) {
     return m.messageId ? "m" + m.messageId : "i" + index;
   }
 
-  // Kirim rating feedback (up/down) ke server; komentar opsional menyusul.
   function submitFeedback(index, rating, m) {
     const key = msgKey(m, index);
     const conv = conversations.find((c) => c.id === activeIdRef.current);
@@ -722,7 +694,6 @@ export default function ChatPage() {
       });
   }
 
-  // Kirim ulang rating + komentar (backend menimpa feedback per pesan).
   function sendFeedbackComment(index, m) {
     const key = msgKey(m, index);
     const rating = feedback[key]?.rating;
@@ -730,7 +701,6 @@ export default function ChatPage() {
     submitFeedback(index, rating, m);
   }
 
-  // Tanya ulang: hapus jawaban bot lama, jawab lagi dengan model aktif
   async function reask(botIndex) {
     if (loading) return;
     const id = activeIdRef.current;
@@ -750,7 +720,6 @@ export default function ChatPage() {
     await consumeStream(userMsg.text, model, userMsg.text, id);
   }
 
-  // Batalkan proses AI yang sedang berjalan
   function stopAnswer() {
     if (abortRef.current) {
       abortRef.current.abort();
@@ -764,11 +733,10 @@ export default function ChatPage() {
       setCopied(index);
       setTimeout(() => setCopied(null), 1500);
     } catch {
-      // clipboard diblokir browser, abaikan
+
     }
   }
 
-  // Deteksi posisi scroll chat area untuk tombol turun + flag auto-scroll
   function onChatScroll() {
     const el = chatAreaRef.current;
     if (!el) return;
@@ -834,7 +802,7 @@ export default function ChatPage() {
           height: isMobile ? "calc(100vh - 24px)" : "calc(100vh - 40px)"
         }}
       >
-        {/* HEADER — putih + teks navy, selaras dengan kartu */}
+        {}
         <div
           style={{
             background: dark ? "#1b2944" : "#ffffff",
@@ -851,7 +819,7 @@ export default function ChatPage() {
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "14px", minWidth: 0 }}>
-            {/* TOMBOL RIWAYAT — pill outline navy/putih */}
+            {}
             <button
               onClick={() => setSidebarOpen(true)}
               title="Buka riwayat percakapan"
@@ -981,7 +949,7 @@ export default function ChatPage() {
           </div>
         </div>
 
-        {/* BANNER SERVER TIDAK MERESPONS */}
+        {}
         {online === false && (
           <div
             className="fade-in"
@@ -1020,7 +988,7 @@ export default function ChatPage() {
           </div>
         )}
 
-        {/* CHAT AREA */}
+        {}
 <div
             ref={chatAreaRef}
             onScroll={onChatScroll}
@@ -1149,10 +1117,8 @@ export default function ChatPage() {
                 </div>
               </div>
 
-
             </div>
           )}
-
 
           {currentMessages.map((m, index) => {
 
@@ -1504,13 +1470,13 @@ style={{
                             const validDistances = entries
                               .map(([, info]) => info.distance)
                               .filter((d) => typeof d === "number" && isFinite(d));
-                            // Jarak terbaik = paling relevan; dipakai sebagai dasar 100%.
+
                             const bestDistance = validDistances.length
                               ? Math.min(...validDistances)
                               : null;
 
                             return entries.map(([filename, info]) => {
-                              // Halaman unik + skor relevansi, urut jarak kecil (skor besar) dulu.
+
                               const pageMap = new Map();
                               for (const e of info.entries) {
                                 if (!pageMap.has(e.page)) pageMap.set(e.page, e.distance);
@@ -1518,8 +1484,7 @@ style={{
                               const allPages = [...pageMap.entries()]
                                 .map(([page, distance]) => ({ page, distance }))
                                 .sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
-                              // Hanya halaman dengan skor relevansi tinggi yang benar-benar
-                              // berisi informasi jawaban.
+
                               const confident = allPages.filter(
                                 ({ distance }) =>
                                   confidenceOf(distance, bestDistance) !== null &&
@@ -1673,7 +1638,7 @@ style={{
           )}
         </div>
 
-        {/* MODAL PREVIEW PDF SUMBER */}
+        {}
         {previewDoc && (
           <div
             onClick={() => setPreviewDoc(null)}
@@ -1791,7 +1756,7 @@ style={{
           </div>
         )}
 
-        {/* INPUT AREA — transparan + blur seperti GPT, chat tetap terlihat saat discroll */}
+        {}
         {(currentMessages.length > 0 || loading) && (
           <div
             style={{
@@ -1909,7 +1874,7 @@ style={{
           </div>
         )}
 
-        {/* FOOTER */}
+        {}
         {!isMobile && (
           <div
             style={{
@@ -1927,9 +1892,9 @@ style={{
         )}
         </div>
 
-      {/* TOMBOL RIWAYAT — kini berada di header (kiri, sebelum logo) */}
+      {}
 
-      {/* SIDEBAR RIWAYAT PERCAKAPAN */}
+      {}
       {sidebarOpen && (
         <>
           <div
@@ -2161,7 +2126,7 @@ style={{
             </div>
           </aside>
 
-          {/* MODAL KONFIRMASI HAPUS RIWAYAT */}
+          {}
           {confirmDeleteId && (
             <div
               className="fade-in"
@@ -2304,8 +2269,6 @@ const miniActionStyle = (t) => ({
   fontFamily: 'inherit'
 });
 
-// Pemilih model AI; arah dropdown ke bawah, tinggi dibatasi ruang yang tersedia
-// supaya halaman tidak ikut scroll. Daftar model selalu scroll di dalamnya.
 function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOpenChange, dark }) {
   const [open, setOpen] = useState(false);
   const [maxH, setMaxH] = useState(320);
@@ -2457,7 +2420,7 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
             overflow: "hidden"
           }}
         >
-          {/* Judul tetap di luar area scroll; tidak pernah ikut tergeser */}
+          {}
           <div
             style={{
               flexShrink: 0,
@@ -2546,7 +2509,6 @@ function ModelSelector({ models, model, onSelect, isMobile, align = "left", onOp
   );
 }
 
-// Warna aksen kecil untuk ikon model berdasarkan provider.
 function providerBadge(modelId, dark) {
   if (dark) {
     if (modelId.startsWith("google/")) return { background: "#10294a", color: "#7fb1e8" };
@@ -2562,11 +2524,8 @@ function providerBadge(modelId, dark) {
   return { background: "#eef2f7", color: "#475569" };
 }
 
-// ---------- Helper localStorage & topik ----------
-
 const CONV_KEY = "cms_conversations_v1";
 
-// Identitas anonim persisten per browser (untuk sesi server guest).
 let cachedClientId = null;
 function getClientId() {
   if (cachedClientId) return cachedClientId;
@@ -2574,14 +2533,14 @@ function getClientId() {
   try {
     id = localStorage.getItem("cms_client_id");
   } catch {
-    // abaikan
+
   }
   if (!id) {
     id = "web_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
     try {
       localStorage.setItem("cms_client_id", id);
     } catch {
-      // abaikan
+
     }
   }
   cachedClientId = id;
@@ -2602,7 +2561,7 @@ function saveConversations(list) {
   try {
     localStorage.setItem(CONV_KEY, JSON.stringify(list));
   } catch {
-    // penyimpanan penuh / diblokir, abaikan
+
   }
 }
 
@@ -2620,7 +2579,6 @@ function sameDay(a, b) {
   );
 }
 
-// Label grup tanggal untuk sidebar riwayat (Hari Ini / Kemarin / Tanggal).
 function historyGroupLabel(ts) {
   const d = new Date(ts);
   const now = new Date();
@@ -2633,7 +2591,6 @@ function historyGroupLabel(ts) {
   return d.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
 }
 
-// Label tanggal lengkap dalam bahasa Indonesia.
 function todayLabel() {
   return new Date().toLocaleDateString("id-ID", {
     weekday: "long",
@@ -2673,9 +2630,6 @@ function useMediaQuery(query) {
   return matches;
 }
 
-// ---------- Komponen & helper tampilan tambahan ----------
-
-// Siklus indeks untuk teks langkah yang bergiliran
 function useCycle(steps, ms) {
   const [idx, setIdx] = useState(0);
   useEffect(() => {
@@ -2685,7 +2639,6 @@ function useCycle(steps, ms) {
   return steps[idx];
 }
 
-// Indikator "AI sedang bekerja" dengan langkah bergiliran
 const PROCESS_STEPS = [
   "Mencari dokumen…",
   "Membaca halaman…",
@@ -2708,8 +2661,6 @@ function ProcessingIndicator({ dark }) {
   );
 }
 
-// Ikon module-level untuk komponen di luar ChatPage (definisi sama
-// dengan yang ada di dalam ChatPage; dirapikan bila direfactor).
 const iconStrokeModule = { fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
 const IconSearchModule = (s) => (
   <svg width={s} height={s} viewBox="0 0 24 24" {...iconStrokeModule}>
@@ -2718,7 +2669,6 @@ const IconSearchModule = (s) => (
   </svg>
 );
 
-// Kartu sumber "samar" (skeleton berkilau) saat AI mengetik
 function SourceSkeleton({ dark }) {
   return (
     <div className="fade-in" style={{ marginTop: "14px", paddingTop: "12px", borderTop: "1px solid " + (dark ? "#26324d" : "#e4eaf2") }}>
@@ -2750,7 +2700,6 @@ function SourceSkeleton({ dark }) {
   );
 }
 
-// Ilustrasi hero layar selamat datang
 function HeroArt({ size = 170 }) {
   return (
     <svg width={size} height={Math.round((size * 118) / 170)} viewBox="0 0 200 145" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginBottom: "2px", filter: "drop-shadow(0 10px 24px rgba(0,77,175,0.18))" }}>
@@ -2768,20 +2717,20 @@ function HeroArt({ size = 170 }) {
       <circle cx="100" cy="72" r="62" fill="url(#heroBg)" />
       <circle cx="100" cy="72" r="62" fill="url(#heroGlow)" />
       <circle cx="100" cy="72" r="62" fill="none" stroke="#bfdbfe" strokeWidth="2" strokeDasharray="5 8" opacity="0.8" />
-      {/* Kartu dokumen kiri */}
+      {}
       <rect x="42" y="42" width="44" height="58" rx="8" fill="#ffffff" stroke="#93c5fd" strokeWidth="2.5" transform="rotate(-9 42 42)" />
       <line x1="51" y1="55" x2="76" y2="53" stroke="#a5b4fc" strokeWidth="2.5" strokeLinecap="round" />
       <line x1="51" y1="64" x2="76" y2="62" stroke="#a5b4fc" strokeWidth="2.5" strokeLinecap="round" />
       <line x1="51" y1="73" x2="69" y2="71" stroke="#a5b4fc" strokeWidth="2.5" strokeLinecap="round" />
-      {/* Kartu dokumen kanan */}
+      {}
       <rect x="104" y="34" width="44" height="58" rx="8" fill="#ffffff" stroke="#60a5fa" strokeWidth="2.5" transform="rotate(7 104 34)" />
       <line x1="113" y1="47" x2="138" y2="49" stroke="#7dd3fc" strokeWidth="2.5" strokeLinecap="round" />
       <line x1="113" y1="56" x2="138" y2="58" stroke="#7dd3fc" strokeWidth="2.5" strokeLinecap="round" />
       <line x1="113" y1="65" x2="132" y2="67" stroke="#7dd3fc" strokeWidth="2.5" strokeLinecap="round" />
-      {/* Badge AI di tengah */}
+      {}
       <circle cx="161" cy="66" r="20" fill="#ffffff" stroke="#004DAF" strokeWidth="4.5" />
       <line x1="177" y1="81" x2="190" y2="94" stroke="#004DAF" strokeWidth="5" strokeLinecap="round" />
-      {/* Bintang */}
+      {}
       <path d="M0 -11 L3.1 -3.1 L11 0 L3.1 3.1 L0 11 L-3.1 3.1 L-11 0 L-3.1 -3.1 Z" transform="translate(88 138) scale(1.1)" fill="#3b82f6" />
       <path d="M0 -11 L3.1 -3.1 L11 0 L3.1 3.1 L0 11 L-3.1 3.1 L-11 0 L-3.1 -3.1 Z" transform="translate(180 42) scale(0.8)" fill="#60a5fa" />
       <path d="M0 -11 L3.1 -3.1 L11 0 L3.1 3.1 L0 11 L-3.1 3.1 L-11 0 L-3.1 -3.1 Z" transform="translate(30 70) scale(0.6)" fill="#93c5fd" />
@@ -2789,26 +2738,18 @@ function HeroArt({ size = 170 }) {
   );
 }
 
-// Hilangkan semua tanda kutipan dari teks jawaban:
-// "[1]", "[1][2]", "[1, 2]", "[21]", dst.
-// Preview dokumen tetap dibuka lewat nomor halaman di Sumber Referensi,
-// sehingga nomor kutipan di dalam jawaban tidak lagi ditampilkan.
 function withCitations(text) {
   if (!text) return text;
   return text.replace(/\s*\[\d+\s*(?:,\s*\d+\s*)*\]/g, "");
 }
 
-// Skor kecocokan RELATIF terhadap dokumen terbaik dalam jawaban yang sama.
-// Sumber paling relevan (jarak terkecil) => 100%. Sumber lain diskalakan
-// dari rasio jaraknya terhadap jarak terbaik. Ini adil karena skala jarak
-// L2 sangat berbeda antardokumen (laporan pasar ~0.3, jurnal ~1.0+).
 function confidenceOf(distance, bestDistance) {
   if (typeof distance !== "number" || !isFinite(distance)) return null;
   if (typeof bestDistance !== "number" || !isFinite(bestDistance) || bestDistance <= 0) return null;
   const d = Math.max(0, distance);
   if (d <= 0) return 100;
   const ratio = bestDistance / d;
-  // ratio bisa >1 jika bestDistance terhitung lebih kecil dari jarak kartu ini.
+
   return Math.round(Math.min(1, ratio) * 100);
 }
 
@@ -2843,9 +2784,6 @@ const pageChipStyle = (t) => ({
   fontFamily: 'inherit'
 });
 
-// Komponen tautan milik ReactMarkdown:
-// - /cite/<idx> => tombol buka dokumen sumber
-// - selain itu tautan biasa
 function CiteAnchor({ href, children, sources, onOpen, node, ...rest }) {
   if (href && href.startsWith("/cite/")) {
     const idx = parseInt(href.slice(6).split("/")[0], 10);

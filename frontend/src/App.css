@@ -87,18 +87,14 @@ body {
 
 }
 
-
-/* Pesan chat tampil — simple fade, tidak bounce */
 .msg-in {
   animation: fadeIn 0.25s ease-out both;
 }
 
-/* Konten yang muncul (halaman, kartu) */
 .fade-in {
   animation: fadeIn 0.3s ease-out both;
 }
 
-/* Muncul halus tanpa efek naik berurutan (hero landing) — anti kesan AI */
 @keyframes riseIn {
   from {
     opacity: 0;
@@ -112,7 +108,6 @@ body {
   animation: riseIn 0.25s ease-out both;
 }
 
-/* Goyangan singkat saat login gagal */
 @keyframes shakeX {
   0%, 100% { transform: translateX(0); }
   20% { transform: translateX(-8px); }
@@ -125,7 +120,6 @@ body {
   animation: shakeX 0.4s ease;
 }
 
-/* Baris tabel menyala tipis saat hover */
 tr.hover-row {
   transition: background 0.15s ease;
 }
@@ -134,7 +128,6 @@ tr.hover-row:hover td {
   background: rgba(127, 177, 232, 0.12);
 }
 
-/* Zebra striping: latar baris genap */
 .zebra tbody tr:nth-child(even) {
   background: rgba(127, 177, 232, 0.05);
 }
@@ -145,8 +138,6 @@ tr.hover-row:hover td {
   }
 }
 
-/* Hover nav sidebar CMS */
-/* Tombol samping sidebar */
 .side-btn {
   transition: background 0.15s ease;
 }
@@ -157,7 +148,6 @@ tr.hover-row:hover td {
   background: rgba(220, 38, 38, 0.28) !important;
 }
 
-/* Tombol navigasi sidebar: hover halus */
 .side-nav-item {
   background: transparent;
   transition: background 0.15s ease;
@@ -166,7 +156,6 @@ tr.hover-row:hover td {
   background: rgba(255, 255, 255, 0.12);
 }
 
-/* Tooltip cepat untuk sidebar collapsed */
 .side-nav-item[data-tip],
 .side-btn[data-tip] {
   position: relative;
@@ -196,7 +185,6 @@ tr.hover-row:hover td {
   opacity: 1;
 }
 
-/* Tombol hapus gaya ghost: ikon abu memerah saat hover */
 .del-ghost {
   transition: color 0.15s ease, background 0.15s ease;
 }
@@ -206,7 +194,6 @@ tr.hover-row:hover td {
   background: rgba(220, 38, 38, 0.12);
 }
 
-/* Hover nav topbar mobile CMS */
 .top-nav-btn {
   background: rgba(255, 255, 255, 0.14);
   transition: background 0.15s ease;
@@ -216,12 +203,10 @@ tr.hover-row:hover td {
   background: rgba(255, 255, 255, 0.26);
 }
 
-/* Kartu statistik CMS — flat, tidak terangkat */
 .stat-card {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
-/* Tombol aksi utama CMS — selaras tombol biru solid #004DAF */
 .add-user-btn {
   background: #004DAF;
   color: #fff;
@@ -238,7 +223,6 @@ tr.hover-row:hover td {
   background: #003570;
 }
 
-/* Logo hero: membesar halus saat hover */
 .logo-hover {
   transition: transform 0.2s ease;
 }
@@ -247,7 +231,6 @@ tr.hover-row:hover td {
   transform: none;
 }
 
-/* Kotak input pill: sama persis dengan input login (border 1px + ring emas 3px) */
 .textbox-pill {
   border: 1px solid #c9d4e3;
   background: #ffffff;
@@ -270,7 +253,6 @@ body.theme-dark .textbox-pill:focus-within {
   box-shadow: 0 0 0 3px rgba(233, 163, 25, 0.15);
 }
 
-/* Input CMS: fokus ring emas menyala (selaras login & chat) */
 .cms-input:focus-visible {
   border-color: #e9a319;
   box-shadow: 0 0 0 3px rgba(233, 163, 25, 0.15);
@@ -289,7 +271,6 @@ body.theme-dark .hero-input::placeholder {
   opacity: 1;
 }
 
-/* Halo ring di sekitar logo hero: mengembang sekali saat halaman dibuka */
 .logo-halo {
   animation: logoGlow 1s ease-out 0.1s both;
 }
@@ -307,7 +288,6 @@ body.theme-dark .hero-input::placeholder {
   animation: popIn 0.2s ease-out both;
 }
 
-/* Titik-titik indikator "AI sedang mengetik" */
 .typing-dots {
   display: inline-flex;
   align-items: center;
@@ -331,7 +311,6 @@ body.theme-dark .hero-input::placeholder {
   animation-delay: 0.4s;
 }
 
-/* Rotasi lambat untuk ikon pemuat */
 @keyframes spin {
 
   to {
@@ -359,7 +338,6 @@ body.theme-dark .hero-input::placeholder {
   animation-delay: 0.4s;
 }
 
-/* Slide-in untuk panel sidebar riwayat */
 @keyframes slideInLeft {
 
   from {
@@ -376,7 +354,6 @@ body.theme-dark .hero-input::placeholder {
   animation: slideInLeft 0.22s ease-out both;
 }
 
-/* Titik berkedip halus (indikator "sedang mengetik") */
 @keyframes pulseDot {
 
   0%, 100% {
@@ -393,7 +370,6 @@ body.theme-dark .hero-input::placeholder {
   animation: pulseDot 1s infinite;
 }
 
-/* Scrollbar tipis senada tema biru — seragam di area chat & sidebar */
 .chat-scroll::-webkit-scrollbar,
 .thin-scroll::-webkit-scrollbar {
   width: 8px;
@@ -422,7 +398,6 @@ body.theme-dark .hero-input::placeholder {
   scrollbar-color: #cbd5e1 transparent;
 }
 
-/* Skeleton (kartu sedang dimuat) dengan efek kilau */
 @keyframes shimmer {
   100% {
     transform: translateX(100%);
@@ -449,8 +424,6 @@ body.theme-dark .skeleton {
   animation: shimmer 1.4s infinite;
 }
 
-
-/* Tombol — tanpa animasi terangkat/shadow berlebihan */
 button:not(:disabled) {
   -webkit-tap-highlight-color: transparent;
 }
@@ -465,7 +438,6 @@ button:disabled {
   opacity: 0.6;
 }
 
-/* Seleksi teks: emas transparan — serasi di bubble biru & tidak bentrok dgn palet */
 ::selection {
   background: rgba(233, 163, 25, 0.32);
 }
@@ -474,40 +446,28 @@ body.theme-dark ::selection {
   background: rgba(233, 163, 25, 0.42);
 }
 
-/* =====================================
-   Fokus keyboard (a11y)
-   Ring yang jelas & konsisten saat
-   navigasi tab, tanpa merusak desain
-   saat memakai mouse/klik.
-   ===================================== */
-
 :focus-visible {
   outline: 3px solid #1d6fd6;
   outline-offset: 2px;
 }
 
-/* Kontras di header bergradasi biru tua: ring emas terang */
 .app-header :focus-visible {
   outline-color: #f6c453;
 }
 
-/* Mode gelap: ring fokus ikut aksen biru muda sistem */
 body.theme-dark :focus-visible {
   outline-color: #7fb1e8;
 }
 
-/* Kotak ketik: tanpa ring biru di dalam pill */
 .chat-input:focus-visible {
   outline: none;
 }
 
-/* Input hero & pencarian: highlight pill sudah via .textbox-pill:focus-within */
 .hero-input:focus-visible,
 input:focus-visible {
   outline: none;
 }
 
-/* Toggle tema: matikan efek terangkat/shrink bawaan semua tombol */
 .theme-toggle-btn:not(:disabled),
 .theme-toggle-btn:not(:disabled):hover,
 .theme-toggle-btn:not(:disabled):active {
@@ -515,12 +475,6 @@ input:focus-visible {
   box-shadow: none;
 }
 
-
-/* =====================================
-   Styling markdown jawaban AI (tabel dll.)
-   ===================================== */
-
-/* Tabel lebar: bungkus scroll horizontal di layar kecil */
 .md-table-wrap {
   overflow-x: auto;
   margin: 12px 0;
@@ -565,7 +519,6 @@ input:focus-visible {
   background: #eef6fd;
 }
 
-/* Elemen markdown lain, biar seragam */
 .markdown-body p:first-child {
   margin-top: 0;
 }
@@ -644,19 +597,9 @@ input:focus-visible {
   color: #0f172a;
 }
 
-
-/* =====================================
-   Latar halaman utama chat
-   ===================================== */
-
 .hero-panel {
   position: relative;
 }
-
-/* =====================================
-   Dark mode (body.theme-dark) — override
-   elemen tampilan di halaman chat.
-   ===================================== */
 
 body.theme-dark .markdown-body {
   color: #e9eff8;
@@ -720,7 +663,6 @@ body.theme-dark .markdown-body a {
   color: #7fb1e8;
 }
 
-/* Scrollbar area chat */
 body.theme-dark .chat-scroll::-webkit-scrollbar-thumb,
 body.theme-dark .thin-scroll::-webkit-scrollbar-thumb {
   background: #2b3a5c;
@@ -731,7 +673,6 @@ body.theme-dark .thin-scroll {
   scrollbar-color: #2b3a5c transparent;
 }
 
-/* ===== Gaya scrollbar CMS (muncul saat hover) ===== */
 .scroll-hover *::-webkit-scrollbar {
   width: 8px;
   height: 8px;

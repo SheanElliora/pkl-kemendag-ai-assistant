@@ -1,35 +1,3 @@
-// ============================================================
-// Layanan Riwayat Percakapan
-//
-// Menyimpan sesi percakapan chat ke data/chats.json via
-// storeService (pola sama dengan users.json / files.json).
-//
-// Struktur data:
-//   [
-//     {
-//       id: "sesi-<timestamp>-<acak>",
-//       owner: "guest" | "<clientId>" | "<userId>",
-//       title: "Pertanyaan pertama...",
-//       createdAt: ISO,
-//       updatedAt: ISO,
-//       messages: [
-//         {
-//           id: "msg-...",
-//           role: "user" | "assistant",
-//           content: "...",
-//           sources: [...],      // hanya untuk assistant
-//           model: "...",        // hanya untuk assistant
-//           feedback: null | { rating: "up"|"down", comment: "", at: ISO },
-//           createdAt: ISO
-//         }
-//       ]
-//     }
-//   ]
-//
-// Volume kecil (sesuai pemakaian demo), jadi membaca/menulis
-// seluruh file per operasi masih aman dan sederhana.
-// ============================================================
-
 import { readJson, writeJson } from "./storeService.js";
 import crypto from "crypto";
 import fs from "fs";
@@ -76,17 +44,13 @@ function saveSessions(sessions) {
     _sessionsCacheFP = _fp();
     _sessionsCacheTime = Date.now();
     writeJson(STORE, sessions);
-    // update fp after write
+
     _sessionsCacheFP = _fp();
 }
 
 function findSession(sessions, sessionId) {
     return sessions.find((s) => s.id === sessionId) || null;
 }
-
-// ====================================
-// Sesi
-// ====================================
 
 export function createSession(owner, title) {
     const sessions = loadSessions();
@@ -103,8 +67,6 @@ export function createSession(owner, title) {
     return session;
 }
 
-// Ambil sesi; buat baru bila tidak ada. Dipakai route chat agar
-// klien tidak perlu dua panggilan (buat sesi lalu kirim pesan).
 export function getOrCreateSession(owner, sessionId) {
     if (sessionId) {
         const sessions = loadSessions();
@@ -114,7 +76,6 @@ export function getOrCreateSession(owner, sessionId) {
     return createSession(owner, "Percakapan baru");
 }
 
-// Daftar sesi milik owner (tanpa pesan, ringan untuk list sidebar).
 export function listSessions(owner, limit = 50) {
     return loadSessions()
         .filter((s) => s.owner === owner)
@@ -142,8 +103,6 @@ export function deleteSession(sessionId) {
     return true;
 }
 
-// Riwayat ringkas untuk konteks multi-turn: N pesan terakhir.
-// Hanya {role, content} yang dikirim ke LLM (tanpa sources).
 export function getRecentMessages(sessionId, maxTurns = 6) {
     const session = getSession(sessionId);
     if (!session) return [];
@@ -155,11 +114,6 @@ export function getRecentMessages(sessionId, maxTurns = 6) {
         }));
 }
 
-// ====================================
-// Pesan
-// ====================================
-
-// Menambahkan pesan; judul sesi diambil dari pesan user pertama.
 export function appendMessage(sessionId, { role, content, sources, model, conversational }) {
     const sessions = loadSessions();
     const session = findSession(sessions, sessionId);
@@ -187,10 +141,6 @@ export function appendMessage(sessionId, { role, content, sources, model, conver
     return { ...message, sessionId };
 }
 
-// ====================================
-// Feedback
-// ====================================
-
 export function setFeedback(sessionId, messageId, rating, comment) {
     if (!["up", "down"].includes(rating)) {
         return { error: "Rating harus 'up' atau 'down'" };
@@ -211,10 +161,6 @@ export function setFeedback(sessionId, messageId, rating, comment) {
     saveSessions(sessions);
     return { ok: true, messageId, rating };
 }
-
-// ====================================
-// Statistik
-// ====================================
 
 export function chatStats() {
     const sessions = loadSessions();

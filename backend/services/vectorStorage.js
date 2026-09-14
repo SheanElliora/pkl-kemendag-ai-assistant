@@ -30,10 +30,6 @@ async function getCollection() {
 
 }
 
-// ======================================================
-// Menyimpan SATU chunk saja
-// ======================================================
-
 export async function saveVector(chunk, vector) {
 
     const collection = await getCollection();
@@ -79,8 +75,6 @@ export async function saveVector(chunk, vector) {
 
 }
 
-// ======================================================
-
 export async function getExistingIds() {
 
     try {
@@ -101,11 +95,6 @@ export async function getExistingIds() {
 
 }
 
-// ======================================================
-// Menghapus SEMUA vector milik satu dokumen (per filename)
-// Dipakai saat dokumen dihapus dari sistem.
-// ======================================================
-
 export async function deleteVectorsByFilename(filename) {
 
     const collection = await getCollection();
@@ -117,10 +106,6 @@ export async function deleteVectorsByFilename(filename) {
     });
 
 }
-
-// ======================================================
-// Menghitung total vektor (untuk statistik dashboard)
-// ======================================================
 
 export async function countVectors() {
 

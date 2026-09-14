@@ -26,35 +26,20 @@ import { readJson } from "../services/storeService.js";
 import { countVectors } from "../services/vectorStorage.js";
 import { chatStats } from "../services/chatHistoryService.js";
 
-
 const router = Router();
-
-
-// ======================================
-// Konfigurasi Upload PDF
-// Batas ukuran: 20 MB (dari config.js)
-// Hanya menerima application/pdf
-// Nama file disanitasi: hanya mengambil
-// basename & menolak karakter berbahaya
-// (path traversal, karakter Windows
-// ilegal) agar tidak merusak folder.
-// ======================================
 
 function sanitizeFilename(name) {
 
-    // Buang semua bagian direktori/path
     const base = String(name || "")
         .replace(/^.*[\\/]/, "")
         .trim();
 
-    // Karakter yang menyebabkan masalah di
-    // sistem file Windows/berbagi situasi
     return base
         .replace(/[<>:"/\\|?*\x00-\x1F]/g, "_")
-        // Buang spasi ganda & di ujung
+
         .replace(/\s+/g, " ")
         .trim()
-        // Nama kosong -> fallback acak
+
         .slice(0, 180) || `dokumen_${Date.now()}`;
 
 }
@@ -75,7 +60,6 @@ const storage = multer.diskStorage({
 
 });
 
-
 const upload = multer({
 
     storage: storage,
@@ -85,7 +69,6 @@ const upload = multer({
     },
 
     fileFilter: function(req, file, cb){
-
 
         if(file.mimetype === "application/pdf"){
 
@@ -106,31 +89,18 @@ const upload = multer({
 
         }
 
-
     }
 
 });
 
-
-// Semua endpoint CMS wajib login
 router.use(requireAuth);
-
-
-// ==============================
-// POST /api/cms/upload
-// File masuk folder uploads dengan
-// status "pending" dan BELUM diproses
-// sampai admin menyetujui.
-// ==============================
 
 router.post(
     "/upload",
     upload.array("files", 5),
     async (req, res) => {
 
-
         try {
-
 
             const files = req.files && req.files.length > 0 ? req.files : (req.file ? [req.file] : []);
             if(files.length === 0){
@@ -144,7 +114,6 @@ router.post(
 
             }
 
-
             const results = [];
             const errors = [];
             for (const f of files) {
@@ -152,7 +121,6 @@ router.post(
                 fileService.findByOriginalName(
                     f.filename
                 );
-
 
                 if(existing && existing.status === "pending"){
                     fs.unlinkSync(f.path);
@@ -163,7 +131,6 @@ router.post(
                 if (existing && ["approved", "error"].includes(existing.status)) {
                     isUpdate = true;
                 }
-
 
             const record =
                 fileService.createFileRecord({
@@ -178,7 +145,6 @@ router.post(
                 req.user.username
 
             });
-
 
                 if (isUpdate) record.isUpdate = true;
                 console.log(
@@ -215,13 +181,10 @@ router.post(
 
             });
 
-
         }
         catch(error){
 
-
             console.error(error);
-
 
             res.status(500).json({
 
@@ -230,18 +193,10 @@ router.post(
 
             });
 
-
         }
-
 
     }
 );
-
-
-// ==============================
-// GET /api/cms/files
-// Daftar file (admin: semua, maintainer: miliknya)
-// ==============================
 
 router.get("/files", (req, res) => {
 
@@ -250,13 +205,6 @@ router.get("/files", (req, res) => {
     });
 
 });
-
-
-// ==============================
-// GET /api/cms/files/:id/download
-// Unduh/pratinjau PDF.
-// Admin: semua file; maintainer: file miliknya.
-// ==============================
 
 router.get(
     "/files/:id/download",
@@ -290,12 +238,6 @@ router.get(
     }
 );
 
-
-// ==============================
-// POST /api/cms/files/:id/approve
-// Hanya admin. Memicu pemrosesan (ingest).
-// ==============================
-
 router.post(
     "/files/:id/approve",
     requireRole("admin"),
@@ -322,12 +264,6 @@ router.post(
 
     }
 );
-
-
-// ==============================
-// POST /api/cms/files/:id/reject
-// Hanya admin. Menghapus file pending.
-// ==============================
 
 router.post(
     "/files/:id/reject",
@@ -357,14 +293,6 @@ router.post(
     }
 );
 
-
-// ==============================
-// DELETE /api/cms/files/:id
-// Hanya admin. Menghapus dokumen
-// yang sudah disetujui/diproses:
-// file fisik + vector Chroma + record.
-// ==============================
-
 router.delete(
     "/files/:id",
     requireRole("admin"),
@@ -392,11 +320,6 @@ router.delete(
     }
 );
 
-
-// ==============================
-// Manajemen user (khusus admin)
-// ==============================
-
 router.get(
     "/users",
     requireRole("admin"),
@@ -408,7 +331,6 @@ router.get(
 
     }
 );
-
 
 router.post(
     "/users",
@@ -438,7 +360,6 @@ router.post(
 
     }
 );
-
 
 router.put(
     "/users/:id",
@@ -470,13 +391,11 @@ router.put(
     }
 );
 
-
 router.delete(
     "/users/:id",
     requireRole("admin"),
     (req, res) => {
 
-        // Cegah admin menghapus akunnya sendiri
         if (Number(req.params.id) === Number(req.user.id)) {
 
             return res.status(400).json({
@@ -504,11 +423,6 @@ router.delete(
     }
 );
 
-
-// ==============================
-// Log aktivitas login (khusus admin)
-// ==============================
-
 router.get(
     "/login-logs",
     requireRole("admin"),
@@ -520,13 +434,6 @@ router.get(
 
     }
 );
-
-
-// ==============================
-// Statistik sistem (khusus admin)
-// Dokumen per status, jumlah vektor,
-// user, dan ringkasan percakapan.
-// ==============================
 
 router.get(
     "/stats",
@@ -577,11 +484,6 @@ router.get(
 
     }
 );
-
-
-// ==============================
-// Evaluasi RAG (khusus admin)
-// ==============================
 
 router.get(
     "/eval",

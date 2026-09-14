@@ -11,7 +11,7 @@ function loadStats() {
         if (fs.existsSync(STATS_FILE)) {
             return JSON.parse(fs.readFileSync(STATS_FILE, "utf8"));
         }
-    } catch { /* ignore */ }
+    } catch {  }
     return {
         totalQueries: 0,
         totalAnswers: 0,
@@ -29,7 +29,7 @@ function saveStats(stats) {
         fs.mkdirSync(path.dirname(STATS_FILE), { recursive: true });
         stats.lastUpdated = new Date().toISOString();
         fs.writeFileSync(STATS_FILE, JSON.stringify(stats, null, 2));
-    } catch { /* ignore */ }
+    } catch {  }
 }
 
 export async function recordQuery(question, model, fallback = false) {

@@ -1,21 +1,8 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
-
-// =====================================
-// Auth service
-// - hash password (bcrypt)
-// - sign & verify JWT
-//
-// JWT_SECRET WAJIB diisi di file .env.
-// Tanpa itu, server ditolak start demi
-// keamanan (tidak ada fallback hardcoded).
-// =====================================
-
-
 const JWT_SECRET =
 process.env.JWT_SECRET;
-
 
 if (!JWT_SECRET) {
 
@@ -31,9 +18,7 @@ if (!JWT_SECRET) {
 
 }
 
-
 const JWT_EXPIRES = "12h";
-
 
 export function hashPassword(password) {
 
@@ -41,13 +26,11 @@ export function hashPassword(password) {
 
 }
 
-
 export function verifyPassword(password, hash) {
 
     return bcrypt.compareSync(password, hash);
 
 }
-
 
 export function signToken(user) {
 
@@ -62,7 +45,6 @@ export function signToken(user) {
     );
 
 }
-
 
 export function verifyToken(token) {
 

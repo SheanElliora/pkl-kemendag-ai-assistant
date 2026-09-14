@@ -1,98 +1,85 @@
 # PKL Kemendag AI Assistant
 
-Sistem **Retrieval-Augmented Generation (RAG)** untuk membantu pencarian dan tanya jawab dokumen perdagangan bagian Kementerian Perdagangan (Kemendag), dilengkapi **CMS (Content Management System)** untuk mengelola dokumen dan pengguna.
+Sistem tanya-jawab dokumen perdagangan Kementerian Perdagangan (Kemendag) berbasis Retrieval-Augmented Generation (RAG), dilengkapi CMS untuk mengelola dokumen dan pengguna.
 
----
+## Fitur
 
-## Fitur Utama
-
-* Chatbot tanya-jawab berbasis RAG atas dokumen regulasi/perdagangan resmi.
-* **Pilihan model AI** di antarmuka chat (Gemini, GPT-4o, Llama, Claude) — satu API key OpenRouter.
-* **CMS Knowledge Management** dengan autentikasi **JWT** dan dua peran:
+* Chatbot tanya-jawab berbasis dokumen resmi (regulasi, data pasar, komoditas).
+* Jawaban disertai sitasi nomor halaman tercetak dari dokumen sumber.
+* Pilihan model AI di antarmuka chat, satu API key OpenRouter (model gratis sebagai utama, fallback berurutan).
+* Sapaan dan pertanyaan umum dijawab langsung tanpa retrieval dan tanpa sitasi.
+* CMS dengan autentikasi JWT dan dua peran:
   * **Admin** — menyetujui/menolak dokumen, mengelola pengguna, melihat log login.
-  * **Maintainer** — mengunggah dokumen dan melihat status dokumennya.
-* Alur upload dokumen: **pending → approved/ditolak**. Dokumen baru baru diproses (OCR → chunking → embedding) setelah disetujui admin.
-* OCR, chunking, dan embedding otomatis saat dokumen disetujui.
-* Penyimpanan embedding pada ChromaDB.
-* **Sitasi nomor halaman tercetak**: jawaban disertai nomor halaman yang benar-benar tercetak pada dokumen (bukan nomor chunk retrieval). Bila tidak terdeteksi, memakai indeks PDF sebagai cadangan.
+  * **Pengelola (Maintainer)** — mengunggah dokumen dan melihat statusnya.
+* Alur dokumen: pending → processing → approved/ditolak. OCR, chunking, dan embedding berjalan otomatis setelah admin menyetujui.
+* Riwayat percakapan multi-turn, feedback (up/down + komentar), dan export riwayat (HTML/DOC).
+* Dokumentasi API (Swagger UI) dan endpoint statistik.
 
----
+## Teknologi
 
-## Teknologi yang Digunakan
-
-### Backend
+Backend:
 
 * Node.js + Express.js
-* ChromaDB
-* OpenRouter API (multi-model)
-* OCR (Tesseract CLI via `pdftoppm`)
-* PDF Parsing (pdf-parse, pdf-poppler)
-* Autentikasi JWT + bcrypt + rate-limit login (express-rate-limit)
-* Upload file (multer)
+* ChromaDB (penyimpanan vektor)
+* OpenRouter API (multi-model, rantai fallback)
+* OCR (Tesseract CLI via `pdftoppm`), parsing PDF (pdf-parse, pdf-poppler)
+* JWT + bcrypt + rate-limit login, upload via multer
 
-### Frontend
+Frontend:
 
-* React.js + Vite
-* React Router (HashRouter)
-* react-markdown
+* React.js + Vite, React Router (HashRouter), react-markdown
 
-### Model AI
+Model AI:
 
-* **Chat (OpenRouter, multi-model)**: Gemini 2.5 Flash/Pro, GPT-4o/mini, Llama 3.1, Claude 3.5 Sonnet (satu API key).
-* **Embedding lokal** (`Xenova/multilingual-e5-small`): retrieval lintas bahasa (Indonesia ↔ Inggris) dengan prefix `query:`/`passage:`.
-* **Reranker lokal** (`Xenova/bge-reranker-base`): cross-encoder multibahasa yang menilai ulang kandidat (query, chunk) secara bersamaan setelah pencarian awal. (Percobaan awal memakai `ms-marco-MiniLM-L-6-v2`, tetapi memberi skor ~0 untuk query Indonesia sehingga tidak membedakan dokumen.)
+* Chat (OpenRouter): `nex-agi/nex-n2.5-pro:free` (default) → `nex-agi/nex-n2.5-mini:free` → `inclusionai/ling-3.0-flash-fin:free` → `openai/gpt-4o-mini` (fallback terakhir, berbayar). Rincian di `backend/services/modelCatalog.js`.
+* Embedding lokal (`Xenova/multilingual-e5-small`), prefix `query:`/`passage:` untuk retrieval Indonesia ↔ Inggris.
+* Reranker lokal (`Xenova/bge-reranker-base`), cross-encoder multibahasa.
 
-### Pendekatan AI
+Pendekatan retrieval:
 
-* Retrieval-Augmented Generation (RAG)
-* Text Chunking berbasis kalimat (chunk selalu berawal/berakhir di batas kalimat)
-* Embedding Vector
-* Semantic Retrieval + Hybrid Ranking (embedding + kata kunci + rerank cross-encoder)
-
----
+* Hybrid: pencarian vektor + BM25, lalu rerank cross-encoder.
+* Chunking adaptif berbasis kalimat (ukuran menyesuaikan jenis dokumen).
+* Query expansion + gate konteks untuk pertanyaan lanjutan ("gamenya", "berapa modalnya").
 
 ## Struktur Proyek
 
 ```
 pkl-kemendag-ai-assistant/
 ├── backend/
-│   ├── docs/               # dokumen sumber (diproses saat ingest)
-│   ├── uploads/            # file pending hasil upload CMS (belum disetujui)
-│   ├── data/               # data JSON akun & riwayat (users.json, files.json)
+│   ├── docs/               # dokumen sumber yang sudah disetujui
+│   ├── uploads/            # file pending hasil upload CMS
+│   ├── data/               # users.json, files.json, chats.json
 │   ├── ocr_text/           # hasil OCR sementara
-│   ├── chunks/             # hasil chunking sementara
-│   ├── chroma/             # data penyimpanan ChromaDB
-│   ├── routes/             # auth.js, cms.js, chat.js
-│   ├── services/           # rag, retriever, ocr, user, file, auth, dll.
-│   ├── scripts/            # alat bantu (resetChroma, checkChroma, dll.)
-│   ├── utils/              # authMiddleware (acak-token)
-│   ├── config.js           # satu sumber konfigurasi folder & batas upload
-│   ├── ingest.js           # OCR → chunking → embedding
+│   ├── chunks/             # hasil chunking (<nama>_chunks.json)
+│   ├── chroma/             # data ChromaDB
+│   ├── routes/             # auth.js, cms.js, chat.js, docs.js
+│   ├── services/           # rag, retriever, llm, ocr, user, file, auth, dll.
+│   ├── scripts/            # healthCheck, evalRag, tes E2E, backup
+│   ├── tests/              # unit test (bm25, chatHistory, chunk)
+│   ├── utils/              # authMiddleware
+│   ├── config.js           # konfigurasi folder & batas upload
+│   ├── ingest.js           # alur OCR → chunking → embedding
 │   ├── index.js            # entrypoint server API
-│   └── package.json
+│   └── package.json        # install WAJIB pakai --legacy-peer-deps
 ├── frontend/
-│   ├── src/
-│   │   ├── pages/          # ChatPage, LoginPage, CmsPage
-│   │   ├── api.js          # klien API + penyimpanan sesi
-│   │   ├── App.jsx         # routing (HashRouter)
-│   │   └── vite.config.js  # proxy /api → backend
+│   ├── src/pages/          # ChatPage, LoginPage, CmsPage
+│   ├── src/api.js          # klien API
+│   ├── src/App.jsx         # routing (HashRouter)
 │   └── package.json
-├── .gitignore
+├── AGENTS.md               # catatan konteks proyek
+├── RUNBOOK.md              # panduan operasi ringkas
+├── DEMO.md                 # panduan demo
 └── README.md
 ```
 
----
-
 ## Konfigurasi Environment
 
-### Backend
-
-Buat file `.env` di dalam folder `backend/` berdasarkan `.env.example`:
+Backend — buat `backend/.env` dari `.env.example`:
 
 ```bash
 # OpenRouter
 OPENROUTER_API_KEY=YOUR_OPENROUTER_API_KEY
-OPENROUTER_MODEL=google/gemini-2.5-flash
+OPENROUTER_MODEL=nex-agi/nex-n2.5-pro:free
 
 # Server
 PORT=3001
@@ -100,7 +87,7 @@ PORT=3001
 # ChromaDB
 CHROMA_URL=http://localhost:8000
 
-# Auth JWT (WAJIB string acak panjang — server menolak start bila kosong)
+# Auth JWT (wajib string acak panjang, server menolak start bila kosong)
 JWT_SECRET=ganti-dengan-secret-acak-panjang
 
 # Password admin default pertama (min. 6 karakter)
@@ -109,7 +96,7 @@ DEFAULT_ADMIN_PASSWORD=ganti-password-admin
 # Origin yang boleh akses API (dipisah koma)
 CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
 
-# Folder data (opsional, sudah sesuai struktur proyek)
+# Folder data (opsional)
 DOCS_PATH=./docs
 UPLOADS_PATH=./uploads
 DATA_PATH=./data
@@ -117,35 +104,27 @@ OCR_PATH=./ocr_text
 CHUNKS_PATH=./chunks
 ```
 
-> **Admin default:** saat `data/users.json` masih kosong, server membuat user `admin` otomatis dengan password dari `DEFAULT_ADMIN_PASSWORD` saat pertama kali dijalankan.
+Saat `data/users.json` masih kosong, server membuat user `admin` otomatis dengan password dari `DEFAULT_ADMIN_PASSWORD` pada start pertama.
 
-### Frontend
-
-Buat file `.env` di folder `frontend/` berdasarkan `.env.example` (opsional):
+Frontend — `frontend/.env` (opsional):
 
 ```bash
 # Target backend untuk proxy dev (default: http://localhost:3001)
 VITE_API_TARGET=http://localhost:3001
 ```
 
----
-
 ## Cara Menjalankan
 
-### 1. Jalankan ChromaDB
+Urutan wajib: ChromaDB → Backend → Frontend. Ketiganya harus hidup bersamaan.
 
-Buka terminal pertama:
+Terminal 1 — ChromaDB (`http://localhost:8000`):
 
 ```bash
 cd backend
 chroma run --path ./chroma
 ```
 
-ChromaDB berjalan pada `http://localhost:8000`.
-
-### 2. Jalankan Backend
-
-Buka terminal kedua:
+Terminal 2 — Backend (`http://localhost:3001`):
 
 ```bash
 cd backend
@@ -153,13 +132,9 @@ npm install --legacy-peer-deps
 npm start
 ```
 
-> **Catatan:** flag `--legacy-peer-deps` wajib — ada konflik peer antara `@langchain/community` → `stagehand` (pustaka browser otomasi yang tidak terpakai) dengan `dotenv@^17`. Tanpa flag, instalasi gagal.
+Flag `--legacy-peer-deps` wajib (tanpa itu instalasi gagal karena konflik peer dependency). Tiap mengubah `llmService.js`/`.env`, restart manual (`npm start` tanpa watch).
 
-Backend berjalan pada `http://localhost:3001`.
-
-### 3. Jalankan Frontend
-
-Buka terminal ketiga:
+Terminal 3 — Frontend (`http://localhost:5173`):
 
 ```bash
 cd frontend
@@ -167,147 +142,94 @@ npm install
 npm run dev
 ```
 
-Frontend dev berjalan pada `http://localhost:5173` dan meneruskan request `/api` ke backend melalui Vite proxy.
-
-### Urutan Menjalankan Sistem
-
-1. **ChromaDB**
-2. **Backend**
-3. **Frontend**
-
-Ketiga proses harus berjalan bersamaan agar fitur RAG dapat digunakan.
-
----
+Request `/api` diteruskan ke backend lewat proxy Vite.
 
 ## Menggunakan CMS
 
-1. Buka `http://localhost:5173/#/cms/login` lalu login dengan akun (user `admin` dibuat otomatis saat pertama start server).
-2. **Maintainer** mengunggah dokumen PDF (maks. 20 MB) — masuk status *pending*.
-3. **Admin** menyetujui atau menolak dokumen melalui tab *Persetujuan*.
-   * Disetujui → file dipindah ke `docs/` dan langsung diproses (OCR, chunking, embedding).
-   * Ditolak → file dihapus (bisa dengan alasan penolakan).
-4. Admin juga dapat mengelola akun user dan memantau *log aktivitas login*.
-
----
+1. Buka `http://localhost:5173/#/cms/login`, login (user `admin` dibuat otomatis saat start pertama).
+2. Pengelola mengunggah PDF (maks. 20 MB) — status pending.
+3. Admin menyetujui/menolak di tab Persetujuan. Approve bersifat asinkron: status `processing` (antrean latar, 1 worker) lalu `approved`/`error`.
+4. File yang disetujui pindah ke `docs/` dan diproses (OCR → chunking → embedding), lalu bisa ditanya lewat chat.
 
 ## Alur Sistem
 
-1. Dokumen PDF diunggah dan disetujui admin.
-2. Teks diekstrak menggunakan OCR.
-3. Teks dipecah menjadi beberapa chunk.
-4. Chunk diubah menjadi embedding vector.
-5. Embedding disimpan di ChromaDB.
-6. Pertanyaan pengguna dicocokkan dengan chunk paling relevan.
-7. Model AI menghasilkan jawaban berdasarkan konteks dokumen (RAG).
-
----
+1. PDF diunggah dan disetujui admin.
+2. Teks diekstrak (digital langsung, OCR bila hasil scan).
+3. Teks dipecah menjadi chunk berbasis kalimat.
+4. Chunk diubah menjadi embedding, disimpan di ChromaDB.
+5. Pertanyaan pengguna di-embedding, dicari chunk paling relevan (vektor + BM25 + rerank).
+6. Model AI menyusun jawaban dari konteks chunk beserta sitasi halaman.
 
 ## Endpoint API
 
 | Method | Endpoint | Keterangan |
 | ------ | -------- | ---------- |
-| `POST` | `/api/auth/login` | Login (dibatasi 10 percobaan/15 menit per IP) |
+| `POST` | `/api/auth/login` | Login (10x/15 mnt/IP) |
 | `GET`  | `/api/auth/me` | Cek sesi token |
-| `POST` | `/api/chat` | Tanya-jawab RAG (publik) |
-| `GET`  | `/api/models` | Daftar model yang tersedia |
-| `GET`  | `/api/health` | Status server |
+| `POST` | `/api/chat` | Tanya-jawab RAG, (`stream: true` untuk SSE) |
+| `GET`  | `/api/chat/history` | Daftar sesi (per owner) |
+| `GET/DELETE` | `/api/chat/history/:sessionId` | Isi/hapus sesi |
+| `POST` | `/api/chat/feedback` | Rating up/down + komentar |
+| `GET`  | `/api/chat/history/:sessionId/export?format=html\|doc` | Export riwayat |
+| `GET`  | `/api/docs`, `/api/docs.json` | Swagger UI / OpenAPI |
+| `GET`  | `/api/stats` | Statistik publik |
 | `POST` | `/api/cms/upload` | Upload PDF (login) |
 | `GET`  | `/api/cms/files` | Daftar file (login) |
 | `POST` | `/api/cms/files/:id/approve` | Setujui dokumen (admin) |
 | `POST` | `/api/cms/files/:id/reject` | Tolak dokumen (admin) |
 | `GET/POST/PUT/DELETE` | `/api/cms/users` | Kelola user (admin) |
-| `GET`  | `/api/cms/login-logs` | Log aktivitas login (admin) |
+| `GET`  | `/api/cms/login-logs` | Log login (admin) |
+| `GET`  | `/api/cms/stats` | Statistik admin |
+| `GET`  | `/api/cms/eval` | Evaluasi RAG (admin) |
+| `GET`  | `/api/health` | Status server |
 
----
+Chat dibatasi 20 request/menit/IP.
 
-## Alat Bantu (backend/scripts)
+## Pengujian
 
-```
-node scripts/resetChroma.js   # hapus isi database ChromaDB
-node scripts/checkChroma.js    # cek jumlah data di ChromaDB
-node scripts/listModels.js     # tampilkan daftar model OpenRouter
-node scripts/healthCheck.mjs   # cek kesehatan: backend, frontend, ChromaDB, vektor, chat RAG (--no-chat untuk skip LLM)
-node scripts/testCmsFullLifecycle.mjs  # tes E2E CMS: login, CRUD dokumen, log, dll. (27 tes, self-cleaning)
-npm run backup               # backup Chroma + data ke backup/ (5 terbaru disimpan)
-node scripts/_reindex.mjs      # bangun ulang semua vektor dari chunks (setelah ganti embedding model)
-node scripts/_benchmark.mjs    # evaluasi retrieval terhadap 82 soal (dokumen/halaman/frasa)
-node scripts/_updatePrintedPages.mjs  # hitung ulang nomor halaman tercetak di chunks + metadata Chroma
-```
-
-### Tes UI browser (Playwright, dari folder `frontend/`)
+Dari folder `backend/` (ChromaDB + backend hidup):
 
 ```
-npx playwright test          # 5 tes: chat (2) + siklus hidup CMS via UI (1) + feedback (1) + export (1)
-npx playwright test --headed # lihat browser berjalan
+npm test                                # 14 unit test (bm25, chatHistory, chunk)
+node scripts/healthCheck.mjs            # cek backend, ChromaDB, vektor (--no-chat = skip LLM)
+node scripts/evalRag.mjs                # evaluasi RAG (--no-llm = retrieval saja)
+node scripts/testCmsFullLifecycle.mjs   # E2E CMS 28 tes (self-cleaning)
+node scripts/testNewDocE2E.mjs          # E2E dokumen baru 11 tes (self-cleaning)
+npm run backup                          # backup chroma + files.json + users.json ke backup/<waktu>/
 ```
 
-Prasyarat: ChromaDB + Backend + Vite hidup (lihat "Cara menjalankan"). Test CMS self-cleaning: user tes & record dibuang, file & vektor dihapus. Artefak gagal (screenshot/trace) di `frontend/test-results/` (git-ignored).
-
-> **Runbook cepat**: panduan ultra-ringkas (start, cek, tes, backup, jebakan) ada di `RUNBOOK.md`.
-
-> **Penting**: bila model embedding diganti, jalankan `npm run ingest` (atau `node scripts/_reindex.mjs`) agar seluruh vektor di ChromaDB dihitung ulang dengan model baru. Vektor lama dari model lain tidak kompatibel.
-
----
-
-
----
-
-## Cadangan & Pemulihan (Backup & Restore)
-
-### Yang wajib dicadangkan
-
-| Item | Lokasi | Keterangan |
-| ---- | ------ | ---------- |
-| Data ChromaDB | `backend/chroma/` | Seluruh vektor retrieval (ratusan chunk) |
-| Hasil chunking | `backend/chunks/` | Teks chunk + metadata — sumber untuk re-index |
-| Akun & riwayat | `backend/data/` (`users.json`, `files.json`) | User CMS + status dokumen |
-| Dokumen disetujui | `backend/docs/` | Dokumen sumber yang sudah diproses |
-| File pending | `backend/uploads/` | Dokumen yang belum disetujui |
-| Konfigurasi rahasia | `backend/.env` | API key, JWT secret — **jangan pernah di-commit** |
-| Cache model lokal | `backend/node_modules/@xenova/transformers/.cache` | ±434 MB; **ikut terhapus bila `node_modules` dihapus** → unduh ulang |
-
-### Prosedur backup (manual)
-
-1. Pastikan backend tidak sedang memproses dokumen (atau hentikan dulu).
-2. Salin folder di tabel ke lokasi aman **di luar folder proyek** (mis. `C:\Users\<user>\Documents\backup\...`).
-3. Simpan salinan `.env` secara terpisah dan rahasia.
-
-### Backup otomatis (disarankan)
+Tes UI browser (dari folder `frontend/`, ketiga service hidup):
 
 ```
-cd backend
-npm run backup
+npx playwright test                     # chat, CMS upload->approve->delete, feedback, export
 ```
 
-Script `scripts/backupChroma.mjs` melakukan semuanya dalam satu perintah:
+Detail operasi singkat ada di `RUNBOOK.md`, panduan demo di `DEMO.md`.
 
-1. Menghentikan Chroma sementara (agar SQLite tidak korup saat disalin),
-2. menyalin `backend/chroma/` + `data/files.json` + `data/users.json` ke `backup/<waktu>/` di akar repo (folder `backup/` di-ignore git),
-3. menulis `manifest.json`,
-4. menghidupkan Chroma lagi dan **memverifikasi jumlah vektor**,
-5. mempertahankan hanya **5 backup terbaru** (yang lebih lama dihapus otomatis).
+## Cadangan & Pemulihan
 
-> Setiap kali selesai menambah/menyetujui dokumen baru, jalankan `npm run backup` agar vektor baru ikut tercadangkan. Bisa juga dijadwalkan via **Windows Task Scheduler** (mis. tiap hari pukul 22:00).
+Yang perlu dicadangkan:
 
-### Prosedur pemulihan dari nol
+| Item | Lokasi |
+| ---- | ------ |
+| Data ChromaDB (vektor) | `backend/chroma/` |
+| Hasil chunking | `backend/chunks/` |
+| Akun, status file, riwayat | `backend/data/` |
+| Dokumen disetujui | `backend/docs/` |
+| File pending | `backend/uploads/` |
+| Konfigurasi rahasia | `backend/.env` (**jangan di-commit**) |
+| Cache model lokal | `backend/node_modules/@xenova/transformers/.cache` (±434 MB, ikut hilang bila `node_modules` dihapus) |
 
-1. `git clone` repo, lalu `npm install --legacy-peer-deps` di `backend/` dan `frontend/`.
-2. Kembalikan folder `chroma`, `chunks`, `data`, `docs`, `uploads` dari backup ke posisinya.
-3. Salin `.env` (nilai `JWT_SECRET` dan `DEFAULT_ADMIN_PASSWORD` **harus sama** dengan sebelumnya, dan `users.json` lama ikut dikembalikan — jika tidak, token lama hangus dan password admin kembali ke default).
-4. Jalankan berurutan: ChromaDB → Backend → Frontend.
+Backup otomatis: `cd backend` lalu `npm run backup` (menghentikan Chroma sementara, menyalin data + manifest, verifikasi jumlah vektor, menyimpan 5 terbaru). Jalankan tiap selesai menyetujui dokumen baru.
 
-### Catatan pemeliharaan npm
+Pemulihan dari nol: clone repo → `npm install --legacy-peer-deps` di `backend/` dan `frontend/` → kembalikan folder data + `.env` → jalankan ChromaDB → Backend → Frontend.
 
-* `npm audit` backend dipertahankan **0 kerentanan** lewat `overrides` di `package.json`: `protobufjs` 7.6.5, `js-yaml` 4.3.1, dan `sharp@0.32.6 → 0.35.3`.
-* Bila suatu saat override tidak diterapkan (versi lama masih terpasang di `package-lock.json`), **hapus `package-lock.json` + `node_modules`** lalu install ulang dengan `--legacy-peer-deps` — `npm install`/`--force` biasa tidak menengahi.
-* `sharp` di bawah `@xenova/transformers` tidak pernah di-import oleh kode (kerentanan inert), tetapi tetap di-override agar audit bersih.
+Catatan:
 
-### Pelajaran dari insiden
-
-* Sinkronisasi OneDrive pernah menghasilkan file duplikat `*-DESKTOP-*` yang merusak repo; solusi: restore dari git + pola `*-DESKTOP-*` di `.gitignore`. **Disarankan menjalankan proyek di luar folder OneDrive.**
-
----
+* `npm audit` backend dipertahankan 0 kerentanan lewat `overrides` di `package.json`. Bila override tidak diterapkan, hapus `package-lock.json` + `node_modules` lalu install ulang dengan `--legacy-peer-deps`.
+* Bila model embedding diganti, vektor lama tidak kompatibel — ingest ulang seluruh dokumen.
+* Jalankan proyek di luar folder OneDrive (sinkronisasi OneDrive pernah merusak repo dengan file duplikat).
 
 ## Status Proyek
 
-Dikembangkan sebagai **sistem pencarian dan asisten informasi perdagangan berbasis RAG** dengan **CMS pengelolaan dokumen dan pengguna** dalam kegiatan **Praktik Kerja Lapangan (PKL) Kemendag**.
+Sistem pencarian dan asisten informasi perdagangan berbasis RAG dengan CMS pengelolaan dokumen dan pengguna, dikembangkan dalam kegiatan Praktik Kerja Lapangan (PKL) Kemendag.

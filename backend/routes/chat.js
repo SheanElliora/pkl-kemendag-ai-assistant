@@ -5,18 +5,7 @@ import { translateLLMError } from "../services/llmService.js";
 import { verifyToken } from "../services/authService.js";
 import * as chatHistory from "../services/chatHistoryService.js";
 
-
 const router = Router();
-
-
-// ==============================
-// Rate limit chat: 20 pertanyaan
-// per menit per IP. Melindungi
-// kredit API OpenRouter dari
-// pemakaian berlebihan, karena
-// endpoint ini publik (tanpa
-// login) sesuai desain demo.
-// ==============================
 
 const chatLimiter = rateLimit({
 
@@ -29,16 +18,6 @@ const chatLimiter = rateLimit({
     }
 
 });
-
-
-// ==============================
-// Autentikasi OPSIONAL (tidak wajib)
-//
-// Chat tetap publik. Bila header Bearer valid, riwayat
-// dicatat atas nama user login; bila tidak, dipakai
-// clientId dari body (frontend menyimpan UUID di
-// localStorage) atau fallback "guest".
-// ==============================
 
 function resolveOwner(req, clientId) {
 
@@ -62,7 +41,6 @@ function resolveOwner(req, clientId) {
 
 }
 
-
 function sessionFromBody(req) {
 
     const { sessionId, clientId } = req.body || {};
@@ -80,28 +58,11 @@ function sessionFromBody(req) {
 
 }
 
-
-// ==============================
-// POST /api/chat
-// Tanya jawab RAG. Publik (tidak
-// perlu login) sesuai desain demo.
-// - Body normal -> jawaban sekali kirim (JSON)
-// - Body { stream: true } -> Server-Sent Events
-//   (delta teks bertahap, lalu done + sources).
-// - Body { sessionId } -> pesan disimpan ke riwayat
-//   dan pertanyaan berikutnya memakai konteks
-//   percakapan (multi-turn).
-// ==============================
-
 router.post("/", chatLimiter, async (req, res) => {
 
-
-    console.log("\n==============================");
     console.log("Request diterima");
 
-
     const { message, model, stream } = req.body;
-
 
     if (!message) {
 
@@ -114,7 +75,6 @@ router.post("/", chatLimiter, async (req, res) => {
 
     }
 
-
     console.log("Pertanyaan:");
     console.log(message);
 
@@ -123,9 +83,6 @@ router.post("/", chatLimiter, async (req, res) => {
 
     console.log("Stream:", stream ? "ya" : "tidak");
 
-
-    // Sesi riwayat (multi-turn) — opsional, tidak mengubah
-    // perilaku bila klien tidak mengirim sessionId.
     const { session } = sessionFromBody(req);
 
     const history =
@@ -134,15 +91,10 @@ router.post("/", chatLimiter, async (req, res) => {
         6
     );
 
-    // Simpan pesan user SEKARANG (sebelum proses), supaya
-    // riwayat tetap utuh walau jawaban gagal/gagal stream.
     chatHistory.appendMessage(
         session.id,
         { role: "user", content: message }
     );
-
-
-    // ------------- MODE STREAMING (SSE) -------------
 
     if (stream) {
 
@@ -188,8 +140,7 @@ router.post("/", chatLimiter, async (req, res) => {
 
         } catch (err) {
 
-            console.error("\n===== ERROR (STREAM) =====");
-            console.error(err);
+            console.error("[chat-stream] error:", err);
 
             res.write(`data: ${JSON.stringify({
                 type: "error",
@@ -206,12 +157,7 @@ router.post("/", chatLimiter, async (req, res) => {
 
     }
 
-
-    // ------------- MODE BIASA (JSON) -------------
-
-
     try {
-
 
         console.log("Memanggil askRAG...");
 
@@ -222,11 +168,9 @@ router.post("/", chatLimiter, async (req, res) => {
         console.log(result);
         
 
-
         console.log(
             "Jawaban berhasil dibuat."
         );
-
 
         const saved =
         chatHistory.appendMessage(
@@ -240,40 +184,28 @@ router.post("/", chatLimiter, async (req, res) => {
             }
         );
 
-
         res.json({
 
             reply:
             result.answer,
 
-
             sources:
             result.sources,
-
 
             conversational:
             result.conversational || false,
 
-
             sessionId:
             session.id,
-
 
             messageId:
             saved ? saved.id : null
 
         });
 
-
-
     } catch (err) {
 
-
-        console.error("\n===== ERROR =====");
-
-        console.error(err);
-
-
+        console.error("[chat] error:", err);
 
         res.status(500).json({
 
@@ -285,18 +217,9 @@ router.post("/", chatLimiter, async (req, res) => {
 
         });
 
-
     }
 
-
 });
-
-
-// ==============================
-// GET /api/chat/history
-// Daftar sesi percakapan milik
-// pemilik (guest / clientId / user).
-// ==============================
 
 router.get("/history", (req, res) => {
 
@@ -311,12 +234,6 @@ router.get("/history", (req, res) => {
     res.json({ sessions });
 
 });
-
-
-// ==============================
-// GET /api/chat/history/:sessionId
-// Isi lengkap satu percakapan.
-// ==============================
 
 router.get("/history/:sessionId", (req, res) => {
 
@@ -335,12 +252,6 @@ router.get("/history/:sessionId", (req, res) => {
 
 });
 
-
-// ==============================
-// DELETE /api/chat/history/:sessionId
-// Hapus satu percakapan.
-// ==============================
-
 router.delete("/history/:sessionId", (req, res) => {
 
     const ok =
@@ -357,14 +268,6 @@ router.delete("/history/:sessionId", (req, res) => {
     res.json({ ok: true });
 
 });
-
-
-// ==============================
-// POST /api/chat/feedback
-// Penilaian jawaban (up/down) +
-// komentar opsional. Dipakai untuk
-// mengevaluasi kualitas RAG.
-// ==============================
 
 router.post("/feedback", (req, res) => {
 
@@ -395,14 +298,6 @@ router.post("/feedback", (req, res) => {
     res.json(result);
 
 });
-
-
-// ==============================
-// GET /api/chat/history/:sessionId/export
-// Ekspor percakapan ke HTML (bisa dicetak
-// jadi PDF dari browser) atau DOC (dibuka
-// Word). format=html | doc, default html.
-// ==============================
 
 router.get("/history/:sessionId/export", (req, res) => {
 
@@ -505,7 +400,6 @@ ${rows}
 
 });
 
-
 function escapeHtml(text) {
 
     return String(text ?? "")
@@ -515,6 +409,5 @@ function escapeHtml(text) {
         .replace(/"/g, "&quot;");
 
 }
-
 
 export default router;

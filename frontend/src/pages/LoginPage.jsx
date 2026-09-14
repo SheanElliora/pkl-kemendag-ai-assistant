@@ -19,7 +19,7 @@ export default function LoginPage() {
   const [dark, setDark] = useState(() => localStorage.getItem("cms_theme") === "dark");
 
   useEffect(() => {
-    // Ikuti perubahan tema dari tab lain (mis. toggle di halaman chat)
+
     function onStorage(e) {
       if (e.key === "cms_theme") setDark(e.newValue === "dark");
     }
@@ -28,7 +28,7 @@ export default function LoginPage() {
   }, []);
 
   useEffect(() => {
-    // Flag diset oleh api.js saat API menolak token (401)
+
     if (localStorage.getItem("cms_session_expired")) {
       setSessionExpired(true);
       localStorage.removeItem("cms_session_expired");

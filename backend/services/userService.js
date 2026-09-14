@@ -1,27 +1,17 @@
 import { readJson, writeJson } from "./storeService.js";
 import { hashPassword } from "./authService.js";
 
-
-// =====================================
-// User service
-// Kelola user CMS (role: admin / maintainer)
-// Data: data/users.json
-// =====================================
-
-
 function getUsers() {
 
     return readJson("users", []);
 
 }
 
-
 function saveUsers(users) {
 
     writeJson("users", users);
 
 }
-
 
 function sanitize(user) {
 
@@ -35,7 +25,6 @@ function sanitize(user) {
 
 }
 
-
 function nextId(items) {
 
     return items.reduce(
@@ -46,11 +35,6 @@ function nextId(items) {
 
 }
 
-
-// Admin default pertama (dipanggil saat server start).
-// Password diambil dari .env (DEFAULT_ADMIN_PASSWORD).
-// Bila tidak di-set, admin TIDAK dibuat otomatis
-// (lebih aman daripada memakai password hardcoded).
 export function ensureDefaultAdmin() {
 
     const users = getUsers();
@@ -92,13 +76,11 @@ export function ensureDefaultAdmin() {
 
 }
 
-
 export function listUsers() {
 
     return getUsers().map(sanitize);
 
 }
-
 
 export function findUserByUsername(username) {
 
@@ -109,7 +91,6 @@ export function findUserByUsername(username) {
     );
 
 }
-
 
 export function createUser({ username, password, role, createdBy }) {
 
@@ -161,7 +142,6 @@ export function createUser({ username, password, role, createdBy }) {
 
 }
 
-
 export function updateUser(id, { password, role }) {
 
     const users = getUsers();
@@ -184,7 +164,6 @@ export function updateUser(id, { password, role }) {
 
         }
 
-        // Jangan biarkan admin terakhir turun role
         if (
             user.role === "admin" &&
             role !== "admin"
@@ -226,7 +205,6 @@ export function updateUser(id, { password, role }) {
 
 }
 
-
 export function deleteUser(id) {
 
     const users = getUsers();
@@ -243,7 +221,6 @@ export function deleteUser(id) {
 
     const [ removed ] = users.splice(index, 1);
 
-    // Pastikan minimal satu admin tetap ada
     if (removed.role === "admin") {
 
         const adminLeft = users.some(

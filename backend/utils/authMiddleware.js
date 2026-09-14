@@ -1,12 +1,5 @@
 import { verifyToken } from "../services/authService.js";
 
-
-// =====================================
-// Middleware autentikasi & role
-// Dipasang pada endpoint CMS.
-// =====================================
-
-
 function getToken(req) {
 
     const auth = req.headers.authorization || "";
@@ -16,7 +9,6 @@ function getToken(req) {
         : "";
 
 }
-
 
 export function requireAuth(req, res, next) {
 
@@ -37,7 +29,6 @@ export function requireAuth(req, res, next) {
     next();
 
 }
-
 
 export function requireRole(...roles) {
 

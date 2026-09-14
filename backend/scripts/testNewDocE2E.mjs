@@ -1,19 +1,3 @@
-// ============================================================
-// TES E2E DOKUMEN BARU (regression untuk pipeline ingest)
-//
-// Membuktikan bahwa dokumen BARU (bukan 8 dokumen lama) yang
-// diunggah & disetujui benar-benar:
-//   1. Diproses antrean latar belakang (status processing -> approved)
-//   2. Punya file chunk JSON di backend/data/chunks/
-//   3. Punya vektor di Chroma (dengan metadata filename)
-//   4. Bisa ditemukan & disitasi oleh chat RAG
-//   5. Bersih total setelah dihapus (vektor + chunk + record)
-//
-// Menjalankan: node scripts/testNewDocE2E.mjs   (dari backend/)
-// Syarat: Chroma :8000 + backend :3001 hidup, .env terbaca.
-// Self-cleaning: tidak meninggalkan jejak di files.json/chunks/dokumen.
-// ============================================================
-
 import fs from "fs";
 import path from "path";
 import { ChromaClient } from "chromadb";
@@ -24,7 +8,6 @@ const CHUNKS_FOLDER = path.join(path.dirname("."), "chunks");
 const FILES_JSON = path.join(path.dirname("."), "data", "files.json");
 const COLLECTION = "sip_documents";
 
-// Sumber PDF yang SALINANNYA dijadikan "dokumen baru"
 const SRC_PDF = "PERMENDAG NOMOR 28 TAHUN 2024.pdf";
 
 const STAMP = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
@@ -56,9 +39,8 @@ async function api(pathname, { method = "GET", token, body, headers = {} } = {})
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function main() {
-    console.log(`\n===== TES E2E DOKUMEN BARU (${STAMP}) =====\n`);
+    console.log(`Tes E2E dokumen baru (${STAMP})`);
 
-    // 1) Login admin
     const adminUser = readEnv("ADMIN_USERNAME") || "admin";
     const adminPass = readEnv("ADMIN_PASSWORD");
     const login = await api("/api/auth/login", {
@@ -70,7 +52,6 @@ async function main() {
     record("Login admin", login.status === 200 && !!adminToken, adminUser);
     if (!adminToken) throw new Error("Login admin gagal");
 
-    // 2) Upload salinan PDF sebagai dokumen BARU
     const blob = new Blob([fs.readFileSync(path.join(DOCS_FOLDER, SRC_PDF))], { type: "application/pdf" });
     const fd = new FormData();
     fd.append("file", blob, NEW_NAME);
@@ -79,11 +60,9 @@ async function main() {
     record("Upload dokumen baru (pending)", up.status === 200 && !!fileId, `fileId ${fileId}`);
     if (!fileId) throw new Error("Upload gagal");
 
-    // 3) Approve -> antrean
     const appr = await api(`/api/cms/files/${fileId}/approve`, { method: "POST", token: adminToken });
     record("Approve -> diantrekan (processing)", appr.status === 200 && appr.json?.file?.status === "processing", `status=${appr.json?.file?.status}`);
 
-    // 4) Polling sampai approved (ingest latar belakang)
     let status = appr.json?.file?.status;
     const deadline = Date.now() + 180000;
     while (["processing", "pending"].includes(status) && Date.now() < deadline) {
@@ -95,13 +74,11 @@ async function main() {
     record("Ingest selesai -> approved", status === "approved", `status=${status}${errMsg ? " · err=" + errMsg.slice(0, 60) : ""}`);
     if (status !== "approved") throw new Error("Dokumen tidak mencapai status approved");
 
-    // 5) File chunk JSON ada (format: <nama-tanpa-pdf>_chunks.json)
     const chunkPath = path.join(CHUNKS_FOLDER, NEW_NAME.replace(/\.pdf$/i, "") + "_chunks.json");
     const raw = fs.existsSync(chunkPath) ? JSON.parse(fs.readFileSync(chunkPath, "utf8")) : [];
     const chunks = Array.isArray(raw) ? raw : raw.chunks || [];
     record("File chunk JSON dibuat", chunks.length > 0, `${chunks.length} chunk`);
 
-    // 6) Vektor di Chroma (metadata filename)
     let vecCount = 0;
     try {
         const client = new ChromaClient();
@@ -114,7 +91,6 @@ async function main() {
     }
     record("Vektor tersimpan di Chroma", vecCount > 0, `${vecCount} vektor`);
 
-    // 7) Chat RAG menemukan & menyitasi dokumen baru
     const chat = await api("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -128,7 +104,6 @@ async function main() {
         `reply ${(chat.json.reply || "").length} karakter, ${sources.length} sumber, sitasi baru=${cited}`
     );
 
-    // 8) Hapus dokumen -> semua bersih
     const del = await api(`/api/cms/files/${fileId}`, { method: "DELETE", token: adminToken });
     record("Hapus dokumen baru", del.status === 200, `(${del.status})`);
 
@@ -146,21 +121,17 @@ async function main() {
     const chunkGone = !fs.existsSync(chunkPath);
     record("Chunk JSON terhapus", chunkGone, chunkGone ? "hilang" : "MASIH ADA");
 
-    // 9) Bersihkan record files.json
     const files = JSON.parse(fs.readFileSync(FILES_JSON, "utf8"));
     const before = files.length;
     const cleaned = files.filter((f) => !String(f.originalName || "").startsWith("TES_DOK_BARU_"));
     fs.writeFileSync(FILES_JSON, JSON.stringify(cleaned, null, 2), "utf8");
     record("files.json bersih (record tes dibuang)", cleaned.length < before, `${before} -> ${cleaned.length}`);
 
-    // Ringkasan
     const passed = results.filter((r) => r.ok).length;
     const failed = results.filter((r) => !r.ok).length;
-    console.log("\n=====================================");
     console.log(`HASIL: ${passed} PASS, ${failed} FAIL`);
-    console.log("=====================================\n");
     if (failed > 0) process.exitCode = 1;
-    else console.log("===== TES E2E DOKUMEN BARU LULUS =====");
+    else console.log("Tes E2E dokumen baru lulus");
 }
 
 main().catch((error) => {

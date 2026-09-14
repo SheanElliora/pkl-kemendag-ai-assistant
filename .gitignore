@@ -53,3 +53,6 @@ scripts/testRagResults.json
 
 # Tugas sampingan (di luar korpus RAG)
 arsip-permendag-HS/
+
+# Legacy root artifacts
+scripts/

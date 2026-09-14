@@ -66,9 +66,7 @@ pkl-kemendag-ai-assistant/
 │   ├── src/api.js          # klien API
 │   ├── src/App.jsx         # routing (HashRouter)
 │   └── package.json
-├── AGENTS.md               # catatan konteks proyek
-├── RUNBOOK.md              # panduan operasi ringkas
-├── DEMO.md                 # panduan demo
+├── DEMO.md                 # panduan demo (termasuk lampiran golden question)
 └── README.md
 ```
 
@@ -204,7 +202,7 @@ Tes UI browser (dari folder `frontend/`, ketiga service hidup):
 npx playwright test                     # chat, CMS upload->approve->delete, feedback, export
 ```
 
-Detail operasi singkat ada di `RUNBOOK.md`, panduan demo di `DEMO.md`.
+Panduan demo ada di `DEMO.md`.
 
 ## Cadangan & Pemulihan
 

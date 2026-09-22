@@ -127,12 +127,6 @@ export function enqueueIngest({ recordId, filename, approvedBy }) {
 
 }
 
-export function pendingJobs() {
-
-    return queue.length;
-
-}
-
 export function recoverProcessingJobs() {
 
     const files = loadFiles();

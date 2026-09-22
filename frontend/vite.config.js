@@ -19,7 +19,7 @@ export default defineConfig(({ mode }) => {
       },
       watch: {
 
-        ignored: ['**/e2e/.tmp/**', '**/test-results/**', '**/dist/**', '**/node_modules/**'],
+        ignored: ['**/dist/**', '**/node_modules/**'],
       },
     },
   };

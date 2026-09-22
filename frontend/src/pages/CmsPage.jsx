@@ -165,8 +165,6 @@ export default function CmsPage() {
 
   const [logs, setLogs] = useState([]);
   const [logDate, setLogDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [evalData, setEvalData] = useState(null);
-  const [evalLoading, setEvalLoading] = useState(false);
 
   useEffect(() => {
     if (!userMsg) return;
@@ -202,8 +200,7 @@ export default function CmsPage() {
     ? [
         { id: "approval", label: "Kelola Dokumen", icon: "folder" },
         { id: "users", label: "Kelola Pengguna", icon: "users" },
-        { id: "logs", label: "Riwayat Aktivitas", icon: "file" },
-        { id: "eval", label: "Evaluasi RAG", icon: "check" }
+        { id: "logs", label: "Riwayat Aktivitas", icon: "file" }
       ]
     : [
         { id: "upload", label: "Unggah Dokumen", icon: "upload" },
@@ -263,18 +260,6 @@ export default function CmsPage() {
     }
   }
 
-  async function refreshEval() {
-    setEvalLoading(true);
-    try {
-      const data = await api("/api/cms/eval");
-      setEvalData(data);
-    } catch (err) {
-      showToast("error", err.message);
-    } finally {
-      setEvalLoading(false);
-    }
-  }
-
   useEffect(() => {
     setFileSearch("");
     setSort({ key: "time", dir: "desc" });
@@ -283,7 +268,6 @@ export default function CmsPage() {
     if (tab === "approval") refreshApproval();
     if (tab === "users") refreshUsers();
     if (tab === "logs") refreshLogs();
-    if (tab === "eval") refreshEval();
   }, [tab]);
 
   useEffect(() => {
@@ -1545,59 +1529,6 @@ export default function CmsPage() {
                 );
               })()}
             </div>
-            </div>
-          )}
-          {tab === "eval" && (
-            <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", gap: 12 }}>
-              <div style={cardStyle(t)}>
-                <h3 style={{ ...h3Style, display: "flex", alignItems: "center", gap: 8 }}>
-                  <SIcon name="check" size={16} /> Evaluasi RAG — Recall@7
-                </h3>
-                <p style={{ fontSize: 13, color: t.textMute, marginTop: 0 }}>7 soal uji retrieval, hitung berapa yang dokumen sumbernya masuk 7 teratas.</p>
-                {evalLoading ? <LoadingBlock t={t} text="Memuat evaluasi..." /> : evalData ? (
-                  <>
-                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 10, marginTop: 12 }}>
-                      <div style={{ background: t.cardSoft, border: "1px solid " + t.borderSoft, borderRadius: 12, padding: "12px 14px", textAlign: "center" }}>
-                        <div style={{ fontSize: 22, fontWeight: 800, color: "#059669" }}>{evalData.summary.pass}/{evalData.summary.total}</div>
-                        <div style={{ fontSize: 11, color: t.textMute }}>PASS</div>
-                      </div>
-                      <div style={{ background: t.cardSoft, border: "1px solid " + t.borderSoft, borderRadius: 12, padding: "12px 14px", textAlign: "center" }}>
-                        <div style={{ fontSize: 22, fontWeight: 800, color: t.text }}>{evalData.summary.recall}</div>
-                        <div style={{ fontSize: 11, color: t.textMute }}>Recall</div>
-                      </div>
-                      <div style={{ background: t.cardSoft, border: "1px solid " + t.borderSoft, borderRadius: 12, padding: "12px 14px", textAlign: "center" }}>
-                        <div style={{ fontSize: 18, fontWeight: 700, color: t.text }}>{evalData.summary.avgLatencyMs}ms</div>
-                        <div style={{ fontSize: 11, color: t.textMute }}>Rata-rata</div>
-                      </div>
-                      <div style={{ background: t.cardSoft, border: "1px solid " + t.borderSoft, borderRadius: 12, padding: "12px 14px", textAlign: "center" }}>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: t.text }}>{evalData.summary.lastRun}</div>
-                        <div style={{ fontSize: 11, color: t.textMute }}>Terakhir</div>
-                      </div>
-                    </div>
-                    <div style={{ marginTop: 16, overflowX: "auto" }}>
-                      <table style={tableStyle(t)} className="zebra">
-                        <thead><tr><Th t={t}>Topik</Th><Th t={t}>Pertanyaan</Th><Th t={t}>Status</Th><Th t={t}>Waktu</Th></tr></thead>
-                        <tbody>
-                          {evalData.details.map((d) => (
-                            <tr key={d.id} className="hover-row">
-                              <Td t={t}>{d.topic}</Td>
-                              <Td t={t} style={{ maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={d.question}>{d.question}</Td>
-                              <Td t={t}><span style={{ ...(d.status === "PASS" ? { background: "#dcfce7", color: "#059669", border: "1px solid #059669" } : { background: "#fee2e2", color: "#dc2626", border: "1px solid #dc2626" }), padding: "3px 8px", borderRadius: 999, fontSize: 11, fontWeight: 700 }}>{d.status}</span></Td>
-                              <Td t={t}>{d.latencyMs}ms</Td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </>
-                ) : (
-                  <p style={{ fontSize: 13, color: t.textMute }}>Klik Refresh untuk memuat.</p>
-                )}
-                <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-                  <button onClick={refreshEval} disabled={evalLoading} style={{ ...primaryBtn, height: 36, opacity: evalLoading ? 0.6 : 1 }}>Refresh</button>
-                  <span style={{ fontSize: 12, color: t.textMute, alignSelf: "center" }}>Sumber: bm25Service + Chroma 515 chunks</span>
-                </div>
-              </div>
             </div>
           )}
         </div>

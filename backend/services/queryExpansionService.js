@@ -3,9 +3,8 @@ import path from "path";
 import crypto from "crypto";
 
 const EXPANSION_MODEL =
-process.env.QUERY_EXPANSION_MODEL ||
 process.env.OPENROUTER_MODEL ||
-"openai/gpt-4o-mini";
+"cohere/north-mini-code:free";
 
 const EXPANSION_ENABLED =
 (process.env.QUERY_EXPANSION || "on") !== "off";

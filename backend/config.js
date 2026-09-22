@@ -1,5 +1,4 @@
 import "dotenv/config";
-import path from "path";
 
 export const DOCS_FOLDER =
 process.env.DOCS_PATH || "./docs";
@@ -27,7 +26,3 @@ export const CORS_ORIGINS =
 .split(",")
 .map(origin => origin.trim())
 .filter(Boolean);
-
-export const resolvePath =
-relativePath =>
-path.resolve(relativePath);

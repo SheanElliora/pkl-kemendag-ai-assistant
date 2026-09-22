@@ -31,25 +31,13 @@ data/
 
 # Backup
 *.zip
-structure.txt
 chroma/
 backup/
 
 # Logs
 *.log
-
-# Test artifacts (Playwright)
-frontend/test-results/
-frontend/playwright-report/
-frontend/e2e/.tmp/
-
-# Test output artifacts
-scripts/testRagLog.txt
-scripts/testRagErr.txt
-scripts/testRagResults.json
+log-backend.txt
+backend/log-backend.txt
 
 # OneDrive conflict copies
 *-DESKTOP-*
-
-# Legacy root artifacts
-scripts/

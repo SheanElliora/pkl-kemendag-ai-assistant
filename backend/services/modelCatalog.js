@@ -1,30 +1,22 @@
 export const MODEL_CATALOG = [
     {
+        id: "cohere/north-mini-code:free",
+        label: "Cohere North Mini (gratis) — REKOMENDASI"
+    },
+    {
+        id: "dots-studio/dots-3-note-preview:free",
+        label: "Dots 3 Note (gratis, backup 1)"
+    },
+    {
+        id: "nvidia/nemotron-3-super-120b-a12b:free",
+        label: "Nemotron Super 120B (gratis, backup 2)"
+    },
+    {
         id: "nex-agi/nex-n2.5-pro:free",
-        label: "Nex N2.5 Pro (gratis, 50 req/hari) — REKOMENDASI gratis"
+        label: "Nex N2.5 Pro (gratis, backup 3)"
     },
     {
         id: "nex-agi/nex-n2.5-mini:free",
-        label: "Nex N2.5 Mini (gratis, backup 1)"
-    },
-    {
-        id: "inclusionai/ling-3.0-flash-fin:free",
-        label: "Ling 3.0 Flash (gratis, backup 2)"
-    },
-    {
-        id: "google/gemini-2.5-flash",
-        label: "Gemini 2.5 Flash (berbayar, cepat/hemat)"
-    },
-    {
-        id: "openai/gpt-4o-mini",
-        label: "OpenAI GPT-4o mini (berbayar, hemat)"
-    },
-    {
-        id: "openai/gpt-4o",
-        label: "OpenAI GPT-4o (berbayar, akurat)"
-    },
-    {
-        id: "anthropic/claude-3.5-sonnet",
-        label: "Anthropic Claude 3.5 Sonnet (berbayar)"
+        label: "Nex N2.5 Mini (gratis, backup 4)"
     }
 ];

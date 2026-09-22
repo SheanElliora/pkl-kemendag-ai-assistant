@@ -98,8 +98,6 @@ Jalankan 5 menit sebelum demo:
 
 ```powershell
 cd backend; node scripts/healthCheck.mjs --no-chat  # harus 4 PASS
-node scripts/primeDemo.mjs                          # 8 query, cache 10 menit, hit kedua <100ms
-# jika perlu bersih: node scripts/resetDemo.mjs    # backup otomatis ke backup/pre-reset-*
 ```
 
 | # | Pertanyaan | Ekspektasi |
@@ -115,4 +113,4 @@ Cadangan aman: `Apa yang diatur dalam PERMENDAG Nomor 28 Tahun 2024?` dan `Apa s
 
 Follow-up konteks (demo gate): setelah #4 coba `berapa modalnya?` → harus jawab `JPY 5jt [1]` (inject `jepang restoran`, `contextGateService.js:25`); setelah #6 coba `gamenya disana gimana?` → tetap `Jepang_Data_Game.pdf`.
 
-Hindari saat demo: `JURNAL.pdf` Q15-Q16 (instabilitas model gratis), flood >20 req/menit/IP → 429, tampilkan `.env`. Jika free model 429/404, ganti `backend/.env` `OPENROUTER_MODEL=openai/gpt-4o-mini` lalu `npm start` (±30 detik).
+Hindari saat demo: `JURNAL.pdf` Q15-Q16 (instabilitas model gratis), flood >20 req/menit/IP → 429, tampilkan `.env`. Kuota gratis OpenRouter = 50 req/hari (reset 07:00 WIB); bila 429, tunggu reset atau isi minimal 10 USD kredit di https://openrouter.ai/settings/credits.

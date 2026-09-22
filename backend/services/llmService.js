@@ -4,15 +4,27 @@ import { recordQuery, recordFallback } from "./analyticsService.js";
 const OPENROUTER_CLIENT = new OpenAI({
     apiKey: process.env.OPENROUTER_API_KEY || "",
     baseURL: "https://openrouter.ai/api/v1",
-    timeout: 60000,
+    timeout: 20000,
 });
 
 const FALLBACK_CHAIN = [
+    "cohere/north-mini-code:free",
+    "dots-studio/dots-3-note-preview:free",
+    "nvidia/nemotron-3-super-120b-a12b:free",
     "nex-agi/nex-n2.5-pro:free",
     "nex-agi/nex-n2.5-mini:free",
-    "inclusionai/ling-3.0-flash-fin:free",
-    "openai/gpt-4o-mini",
 ];
+
+const DEFAULT_MODEL = "cohere/north-mini-code:free";
+
+function hasVisibleAnswer(content) {
+    if (!content || typeof content !== "string") return false;
+    const visible = content
+        .replace(/\s*\[\d+\s*(?:,\s*\d+\s*)*\]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+    return visible.length >= 10;
+}
 
 function extractEntities(question) {
     const entities = [];
@@ -118,9 +130,14 @@ async function callModel(client, model, prompt) {
     });
 }
 
+function isDailyFreeLimit(err) {
+    const msg = String(err?.message || "");
+    return err?.status === 429 && /free-models-per-day|free-model daily/i.test(msg);
+}
+
 export async function generateAnswer(question, context, model, history) {
     const prompt = buildPrompt(question, context, history);
-    const targetModel = model || process.env.OPENROUTER_MODEL || "minimax/minimax-m3:free";
+    const targetModel = model || process.env.OPENROUTER_MODEL || DEFAULT_MODEL;
     await recordQuery(question, targetModel);
     const chain = FALLBACK_CHAIN.includes(targetModel)
         ? FALLBACK_CHAIN
@@ -131,12 +148,21 @@ export async function generateAnswer(question, context, model, history) {
         try {
             const completion = await callModel(client, m, prompt);
             const content = completion?.choices?.[0]?.message?.content;
-            if (content) {
+            if (hasVisibleAnswer(content)) {
                 return content;
             }
-        } catch (err) {
-            console.log(`Model ${m} gagal, mencoba fallback:`, err.message);
+            console.log(`Model ${m} kosong/hanya sitasi, lanjut fallback`);
             await recordFallback(m);
+        } catch (err) {
+            console.log(`Model ${m} gagal:`, err.message);
+            await recordFallback(m);
+            if (isDailyFreeLimit(err)) {
+                throw new Error(
+                    "Kuota model gratis OpenRouter hari ini habis. " +
+                    "Isi minimal 10 USD kredit di https://openrouter.ai/settings/credits " +
+                    "atau tunggu reset harian, lalu coba lagi."
+                );
+            }
             continue;
         }
     }
@@ -146,7 +172,7 @@ export async function generateAnswer(question, context, model, history) {
 
 export async function generateAnswerStream(question, context, model, history) {
     const prompt = buildPrompt(question, context, history);
-    const targetModel = model || process.env.OPENROUTER_MODEL || "minimax/minimax-m3:free";
+    const targetModel = model || process.env.OPENROUTER_MODEL || DEFAULT_MODEL;
     const chain = FALLBACK_CHAIN.includes(targetModel)
         ? FALLBACK_CHAIN
         : [targetModel, ...FALLBACK_CHAIN];
@@ -163,8 +189,15 @@ export async function generateAnswerStream(question, context, model, history) {
             });
             return stream;
         } catch (err) {
-            console.log(`Stream model ${m} gagal, mencoba fallback:`, err.message);
+            console.log(`Stream model ${m} gagal:`, err.message);
             await recordFallback(m);
+            if (isDailyFreeLimit(err)) {
+                throw new Error(
+                    "Kuota model gratis OpenRouter hari ini habis. " +
+                    "Isi minimal 10 USD kredit di https://openrouter.ai/settings/credits " +
+                    "atau tunggu reset harian, lalu coba lagi."
+                );
+            }
             continue;
         }
     }
@@ -212,7 +245,7 @@ Jawaban:`;
 
 export async function generateConversationalAnswer(question, model, history, matchName) {
     const prompt = buildConversationalPrompt(question, history, matchName);
-    const targetModel = model || process.env.OPENROUTER_MODEL || "nex-agi/nex-n2.5-pro:free";
+    const targetModel = model || process.env.OPENROUTER_MODEL || DEFAULT_MODEL;
     await recordQuery(question, targetModel);
     const chain = FALLBACK_CHAIN.includes(targetModel)
         ? FALLBACK_CHAIN
@@ -223,12 +256,21 @@ export async function generateConversationalAnswer(question, model, history, mat
         try {
             const completion = await callModel(client, m, prompt);
             const content = completion?.choices?.[0]?.message?.content;
-            if (content) {
+            if (hasVisibleAnswer(content)) {
                 return content;
             }
-        } catch (err) {
-            console.log(`[CONV] Model ${m} gagal, mencoba fallback:`, err.message);
+            console.log(`[CONV] Model ${m} kosong, lanjut fallback`);
             await recordFallback(m);
+        } catch (err) {
+            console.log(`[CONV] Model ${m} gagal:`, err.message);
+            await recordFallback(m);
+            if (isDailyFreeLimit(err)) {
+                throw new Error(
+                    "Kuota model gratis OpenRouter hari ini habis. " +
+                    "Isi minimal 10 USD kredit di https://openrouter.ai/settings/credits " +
+                    "atau tunggu reset harian, lalu coba lagi."
+                );
+            }
             continue;
         }
     }
@@ -238,7 +280,7 @@ export async function generateConversationalAnswer(question, model, history, mat
 
 export async function generateConversationalAnswerStream(question, model, history, matchName) {
     const prompt = buildConversationalPrompt(question, history, matchName);
-    const targetModel = model || process.env.OPENROUTER_MODEL || "nex-agi/nex-n2.5-pro:free";
+    const targetModel = model || process.env.OPENROUTER_MODEL || DEFAULT_MODEL;
     const chain = FALLBACK_CHAIN.includes(targetModel)
         ? FALLBACK_CHAIN
         : [targetModel, ...FALLBACK_CHAIN];
@@ -255,8 +297,15 @@ export async function generateConversationalAnswerStream(question, model, histor
             });
             return stream;
         } catch (err) {
-            console.log(`[CONV] Stream model ${m} gagal, mencoba fallback:`, err.message);
+            console.log(`[CONV] Stream model ${m} gagal:`, err.message);
             await recordFallback(m);
+            if (isDailyFreeLimit(err)) {
+                throw new Error(
+                    "Kuota model gratis OpenRouter hari ini habis. " +
+                    "Isi minimal 10 USD kredit di https://openrouter.ai/settings/credits " +
+                    "atau tunggu reset harian, lalu coba lagi."
+                );
+            }
             continue;
         }
     }
@@ -268,7 +317,13 @@ export function translateLLMError(error) {
     const status = error?.status;
     const msg = String(error?.message || error || "");
 
-    const isCredits = status === 402 || /credits|billing|quota|payment|insufficient/i.test(msg);
+    if (/kuota model gratis|free-models-per-day|free-model daily/i.test(msg)) {
+        return "Kuota model gratis OpenRouter hari ini habis. " +
+        "Isi minimal 10 USD kredit di https://openrouter.ai/settings/credits " +
+        "atau tunggu reset harian, lalu coba lagi.";
+    }
+
+    const isCredits = status === 402 || (/\bcredits?\b|billing|insufficient/i.test(msg) && !/free-model/i.test(msg));
     const isRateLimit = status === 429 || /rate limit|too many requests|resourceexhausted|worker.*limit reached/i.test(msg);
 
     if (isCredits) {

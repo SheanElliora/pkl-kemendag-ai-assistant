@@ -114,21 +114,3 @@ export function loadChunks(filename){
     }
 
 }
-
-export function deleteChunks(filename){
-
-    const filePath =
-    getChunkPath(filename);
-
-    if(fs.existsSync(filePath)){
-
-        fs.unlinkSync(filePath);
-
-        console.log(
-            "Chunk dihapus:",
-            filePath
-        );
-
-    }
-
-}

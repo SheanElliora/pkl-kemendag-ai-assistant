@@ -189,7 +189,7 @@ export default function ChatPage() {
 
   const [models, setModels] = useState([]);
   const [model, setModel] = useState(() =>
-    localStorage.getItem("cms_model") || "google/gemini-2.5-flash"
+    localStorage.getItem("cms_model") || "cohere/north-mini-code:free"
   );
   const [online, setOnline] = useState(null);
 
@@ -552,7 +552,11 @@ export default function ChatPage() {
 
       if (!ct.includes("text/event-stream")) {
         const data = await res.json();
-        const answer = data.reply ?? data.answer ?? data.error ?? "Tidak ada jawaban.";
+        const answer = (data.reply && String(data.reply).trim())
+          ? data.reply
+          : (data.answer && String(data.answer).trim())
+            ? data.answer
+            : data.error || "Model tidak menghasilkan jawaban. Silakan coba lagi.";
         finalizeStream(answer, data.sources ?? [], question, mdl, data.conversational);
         if (data.sessionId) attachSessionInfo(convId, data.sessionId, data.messageId);
         completed = true;
@@ -585,8 +589,8 @@ export default function ChatPage() {
               full += data.text || "";
               applyDelta(full, question, mdl);
             } else if (data.type === "done") {
-              const ans = (data.answer ?? full).trim();
-              finalizeStream(ans, data.sources ?? [], question, mdl, data.conversational);
+              const ans = (data.answer && data.answer.trim()) ? data.answer : full.trim();
+              finalizeStream(ans || "Model tidak menghasilkan jawaban. Silakan coba lagi.", data.sources ?? [], question, mdl, data.conversational);
               if (data.sessionId) attachSessionInfo(convId, data.sessionId, data.messageId);
               completed = true;
             } else if (data.type === "error") {
@@ -2740,7 +2744,8 @@ function HeroArt({ size = 170 }) {
 
 function withCitations(text) {
   if (!text) return text;
-  return text.replace(/\s*\[\d+\s*(?:,\s*\d+\s*)*\]/g, "");
+  const stripped = text.replace(/\s*\[\d+\s*(?:,\s*\d+\s*)*\]/g, "").trim();
+  return stripped ? text.replace(/\s*\[\d+\s*(?:,\s*\d+\s*)*\]/g, "") : text;
 }
 
 function confidenceOf(distance, bestDistance) {

@@ -22,7 +22,7 @@ Backend:
 * Node.js + Express.js
 * ChromaDB (penyimpanan vektor)
 * OpenRouter API (multi-model, rantai fallback)
-* OCR (Tesseract CLI via `pdftoppm`), parsing PDF (pdf-parse, pdf-poppler)
+* OCR (Tesseract CLI via `pdftoppm`), parsing PDF (pdfjs-dist)
 * JWT + bcrypt + rate-limit login, upload via multer
 
 Frontend:
@@ -31,7 +31,7 @@ Frontend:
 
 Model AI:
 
-* Chat (OpenRouter): `nex-agi/nex-n2.5-pro:free` (default) → `nex-agi/nex-n2.5-mini:free` → `inclusionai/ling-3.0-flash-fin:free` → `openai/gpt-4o-mini` (fallback terakhir, berbayar). Rincian di `backend/services/modelCatalog.js`.
+* Chat (OpenRouter): `cohere/north-mini-code:free` (default) → `dots-studio/dots-3-note-preview:free` → `nvidia/nemotron-3-super-120b-a12b:free` → `nex-agi/nex-n2.5-pro:free` → `nex-agi/nex-n2.5-mini:free` (semua gratis, 50 req/hari). Rincian di `backend/services/modelCatalog.js`.
 * Embedding lokal (`Xenova/multilingual-e5-small`), prefix `query:`/`passage:` untuk retrieval Indonesia ↔ Inggris.
 * Reranker lokal (`Xenova/bge-reranker-base`), cross-encoder multibahasa.
 
@@ -54,7 +54,7 @@ pkl-kemendag-ai-assistant/
 │   ├── chroma/             # data ChromaDB
 │   ├── routes/             # auth.js, cms.js, chat.js, docs.js
 │   ├── services/           # rag, retriever, llm, ocr, user, file, auth, dll.
-│   ├── scripts/            # healthCheck, evalRag, tes E2E, backup
+│   ├── scripts/            # healthCheck, backup
 │   ├── tests/              # unit test (bm25, chatHistory, chunk)
 │   ├── utils/              # authMiddleware
 │   ├── config.js           # konfigurasi folder & batas upload
@@ -77,7 +77,7 @@ Backend — buat `backend/.env` dari `.env.example`:
 ```bash
 # OpenRouter
 OPENROUTER_API_KEY=YOUR_OPENROUTER_API_KEY
-OPENROUTER_MODEL=nex-agi/nex-n2.5-pro:free
+OPENROUTER_MODEL=cohere/north-mini-code:free
 
 # Server
 PORT=3001
@@ -178,7 +178,6 @@ Request `/api` diteruskan ke backend lewat proxy Vite.
 | `GET/POST/PUT/DELETE` | `/api/cms/users` | Kelola user (admin) |
 | `GET`  | `/api/cms/login-logs` | Log login (admin) |
 | `GET`  | `/api/cms/stats` | Statistik admin |
-| `GET`  | `/api/cms/eval` | Evaluasi RAG (admin) |
 | `GET`  | `/api/health` | Status server |
 
 Chat dibatasi 20 request/menit/IP.
@@ -190,16 +189,7 @@ Dari folder `backend/` (ChromaDB + backend hidup):
 ```
 npm test                                # 14 unit test (bm25, chatHistory, chunk)
 node scripts/healthCheck.mjs            # cek backend, ChromaDB, vektor (--no-chat = skip LLM)
-node scripts/evalRag.mjs                # evaluasi RAG (--no-llm = retrieval saja)
-node scripts/testCmsFullLifecycle.mjs   # E2E CMS 28 tes (self-cleaning)
-node scripts/testNewDocE2E.mjs          # E2E dokumen baru 11 tes (self-cleaning)
 npm run backup                          # backup chroma + files.json + users.json ke backup/<waktu>/
-```
-
-Tes UI browser (dari folder `frontend/`, ketiga service hidup):
-
-```
-npx playwright test                     # chat, CMS upload->approve->delete, feedback, export
 ```
 
 Panduan demo ada di `DEMO.md`.
@@ -224,7 +214,7 @@ Pemulihan dari nol: clone repo → `npm install --legacy-peer-deps` di `backend/
 
 Catatan:
 
-* `npm audit` backend dipertahankan 0 kerentanan lewat `overrides` di `package.json`. Bila override tidak diterapkan, hapus `package-lock.json` + `node_modules` lalu install ulang dengan `--legacy-peer-deps`.
+* `npm audit` backend = 0 kerentanan (`overrides` protobufjs/js-yaml/sharp + multer ≥2.4.0 + audit fix express/qs). Install ulang bila override tidak terpasang: hapus `package-lock.json` + `node_modules`, lalu `npm install --legacy-peer-deps`.
 * Bila model embedding diganti, vektor lama tidak kompatibel — ingest ulang seluruh dokumen.
 * Jalankan proyek di luar folder OneDrive (sinkronisasi OneDrive pernah merusak repo dengan file duplikat).
 

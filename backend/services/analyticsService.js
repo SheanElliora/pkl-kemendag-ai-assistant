@@ -109,12 +109,3 @@ export function getSystemStats() {
         lastUpdated: stats.lastUpdated || null,
     };
 }
-
-export function getQuestionStats() {
-    const stats = loadStats();
-    return {
-        categories: stats.questionCategories,
-        totalQuestions: stats.totalQueries,
-        topCategory: Object.entries(stats.questionCategories).sort((a, b) => b[1] - a[1])[0] || null,
-    };
-}

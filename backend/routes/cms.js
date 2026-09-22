@@ -485,24 +485,4 @@ router.get(
     }
 );
 
-router.get(
-    "/eval",
-    requireRole("admin"),
-    async (req, res) => {
-        const evalData = {
-            summary: { total: 7, pass: 7, fail: 0, recall: "7/7 (100%)", avgLatencyMs: 11200, lastRun: new Date().toISOString().slice(0, 10) },
-            details: [
-                { id: 1, topic: "Regulasi SIP", question: "Apa dasar hukum penyelenggaraan Sistem Informasi Perdagangan?", expected: "PERMENDAG 28/2024", status: "PASS", latencyMs: 14896, sources: ["PERMENDAG NOMOR 28 TAHUN 2024.pdf"] },
-                { id: 2, topic: "Pasar game Jepang", question: "Bagaimana proyeksi pendapatan industri game di Jepang?", expected: "Jepang_Data_Game.pdf", status: "PASS", latencyMs: 9704, sources: ["Jepang_Data_Game.pdf"] },
-                { id: 3, topic: "Pasar restoran Jepang", question: "Bagaimana perkembangan pasar restoran Jepang?", expected: "Jepang_Data_Restoran.pdf", status: "PASS", latencyMs: 7339, sources: ["Jepang_Data_Restoran.pdf"] },
-                { id: 4, topic: "Alat medis Jepang", question: "Apa saja persyaratan impor instrumen dan peralatan medis ke Jepang?", expected: "Jepang_Instrumen_Peralatan_Medis.pdf", status: "PASS", latencyMs: 9328, sources: ["Jepang_Instrumen_Peralatan_Medis.pdf"] },
-                { id: 5, topic: "Lampu hias Nigeria", question: "Bagaimana tren pasar lampu hias (decoration lights) di Nigeria?", expected: "ND208_Laporan...", status: "PASS", latencyMs: 8682, sources: ["ND208_Laporan Informasi Pasar_Decoration Lights_Signed_Lampiran.pdf"] },
-                { id: 6, topic: "Tekstil Nigeria", question: "Bagaimana peluang ekspor kain tekstil Ankara ke Nigeria?", expected: "Nigeria_Martel Tekstil Kain Ankara.pdf", status: "PASS", latencyMs: 7778, sources: ["Nigeria_Martel Tekstil Kain Ankara.pdf"] },
-                { id: 7, topic: "Konsep RAG", question: "Apa yang dimaksud dengan Retrieval-Augmented Generation?", expected: "Retrieval-Augmented Generation for JURNAL.pdf", status: "PASS", latencyMs: 8748, sources: ["Retrieval-Augmented Generation for JURNAL.pdf"] }
-            ]
-        };
-        res.json(evalData);
-    }
-);
-
 export default router;

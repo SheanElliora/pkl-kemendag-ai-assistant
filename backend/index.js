@@ -60,7 +60,7 @@ app.get("/api/models", (req, res) => {
 
     res.json({
 
-        default: process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini",
+        default: process.env.OPENROUTER_MODEL || "cohere/north-mini-code:free",
 
         models: MODEL_CATALOG
 

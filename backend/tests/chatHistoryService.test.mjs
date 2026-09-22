@@ -34,7 +34,7 @@ test("buat sesi & tambah pesan user/assistant", () => {
         role: "assistant",
         content: "Jawaban [1]",
         sources: [{ filename: "x.pdf", page: 1 }],
-        model: "openai/gpt-4o-mini"
+        model: "cohere/north-mini-code:free"
     });
     assert.ok(savedAi.id);
 

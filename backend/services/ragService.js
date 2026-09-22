@@ -88,6 +88,18 @@ function isNotFoundAnswer(answer) {
 
 }
 
+function visibleText(answer) {
+    return String(answer || "")
+        .replace(/\s*\[\d+\s*(?:,\s*\d+\s*)*\]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+}
+
+function isUsableAnswer(answer) {
+    if (!answer || !String(answer).trim()) return false;
+    return visibleText(answer).length >= 10;
+}
+
 function isTruncatedAnswer(answer) {
     if (!answer || typeof answer !== "string") return true;
     const t = answer.trim();
@@ -103,11 +115,13 @@ function answerQuality(answer) {
     let score = 0;
     if (!isTruncatedAnswer(answer)) score++;
     if (CITATION_PATTERN.test(answer || "")) score++;
+    if (visibleText(answer).length >= 20) score++;
     return score;
 }
 
 function filterSourcesByCitations(answer, sources) {
-    if (!answer || !Array.isArray(sources) || sources.length === 0) return sources;
+    if (!isUsableAnswer(answer)) return [];
+    if (!Array.isArray(sources) || sources.length === 0) return sources;
     const matches = [...String(answer).matchAll(/\[\s*(\d+)\s*\]/g)];
     if (matches.length === 0) {
 
@@ -123,12 +137,57 @@ function filterSourcesByCitations(answer, sources) {
     return [...cited].sort((a, b) => a - b).slice(0, 7).map(i => sources[i]);
 }
 
+async function generateUsableAnswer(question, context, model, history, sources) {
+    let answer = await generateAnswer(question, context, model, history);
+    console.log("[answer]:", answer);
+
+    if (!isNotFoundAnswer(answer) && sources.length > 0 && !isUsableAnswer(answer)) {
+        console.log("[RETRY] jawaban kosong/hanya sitasi, coba lagi");
+        try {
+            const retry = await generateAnswer(question, context, model, history);
+            if (isUsableAnswer(retry) || isNotFoundAnswer(retry)) {
+                console.log("[RETRY] pakai hasil retry");
+                answer = retry;
+            }
+        } catch (err) {
+            console.log("[RETRY] gagal:", err.message);
+        }
+    }
+
+    if (!isNotFoundAnswer(answer) && sources.length > 0 && answerQuality(answer) < 2 && isUsableAnswer(answer)) {
+        const q0 = answerQuality(answer);
+        console.log(`[RETRY] skor ${q0}/3, coba lagi`);
+        try {
+            const retry = await generateAnswer(question, context, model, history);
+            if (!isNotFoundAnswer(retry) && answerQuality(retry) > q0) {
+                console.log(`[RETRY] pakai hasil retry (skor ${answerQuality(retry)}/3)`);
+                answer = retry;
+            }
+        } catch (err) {
+            console.log("[RETRY] gagal:", err.message);
+        }
+    }
+
+    if (!isNotFoundAnswer(answer) && sources.length > 0 && !isUsableAnswer(answer)) {
+        throw new Error("Model tidak menghasilkan jawaban yang dapat ditampilkan. Silakan coba lagi.");
+    }
+
+    if (!answer || !String(answer).trim()) {
+        throw new Error("Model tidak menghasilkan jawaban. Silakan coba lagi.");
+    }
+
+    return answer;
+}
+
 export async function askRAG(question, model, history) {
 
     const conv = detectConversational(question, history);
     if (conv.isConversational) {
         console.log(`[CONV] ${conv.matchName}, skip retrieval`);
         const answer = await generateConversationalAnswer(question, model, history, conv.matchName);
+        if (!answer || !String(answer).trim()) {
+            throw new Error("Model tidak menghasilkan jawaban. Silakan coba lagi.");
+        }
         return { answer, sources: [], conversational: true };
     }
 
@@ -226,45 +285,12 @@ ${doc}
         "Context berhasil dibuat"
     );
 
-    console.log("[context]:");
-    console.log(context);
-
-    let answer =
-    await generateAnswer(
-
-        question,
-
-        context,
-
-        model,
-
-        history
-
-    );
-
-    console.log("[answer]:", answer);
-
-    if (!isNotFoundAnswer(answer) && sources.length > 0) {
-        const q0 = answerQuality(answer);
-        if (q0 < 2) {
-            console.log(`[RETRY] skor ${q0}/2, coba lagi`);
-            try {
-                const retry = await generateAnswer(question, context, model, history);
-                if (!isNotFoundAnswer(retry) && answerQuality(retry) > q0) {
-                    console.log(`[RETRY] pakai hasil retry (skor ${answerQuality(retry)}/2)`);
-                    answer = retry;
-                } else {
-                    console.log("[RETRY] pakai jawaban awal");
-                }
-            } catch (err) {
-                console.log("[RETRY] gagal:", err.message);
-            }
-        }
-    }
+    const answer =
+    await generateUsableAnswer(question, context, model, history, sources);
 
     let finalSources = sources;
 
-if (isNotFoundAnswer(answer)) {
+    if (isNotFoundAnswer(answer)) {
         finalSources = [];
         console.log("[CITE-FILTER] NotFound -> 0 sumber");
     } else {
@@ -304,7 +330,13 @@ export async function* streamRAG(
                 full += delta;
                 yield { type: "delta", text: delta };
             }
-            yield { type: "done", answer: full.trim(), sources: [], conversational: true };
+            const convAnswer = full.trim();
+            yield {
+                type: "done",
+                answer: convAnswer || "Maaf, terjadi kesalahan. Silakan coba lagi.",
+                sources: [],
+                conversational: true
+            };
         } catch (err) {
             console.log("[CONV-GATE-STREAM] Error:", err.message);
             yield { type: "done", answer: "Maaf, terjadi kesalahan. Silakan coba lagi.", sources: [], conversational: true };
@@ -390,6 +422,12 @@ ${doc}
 
     for await (const part of stream) {
 
+        if (part && part.error) {
+            const errMsg =
+            part.error.message || part.error.code || "stream LLM gagal";
+            throw new Error("Model AI gagal: " + errMsg);
+        }
+
         const delta =
         part.choices?.[0]?.delta?.content;
 
@@ -405,15 +443,25 @@ ${doc}
     }
 
     let finalAnswer = full.trim();
-    if (!isNotFoundAnswer(finalAnswer) && sources.length > 0 && answerQuality(finalAnswer) < 2) {
-        console.log(`[RETRY-STREAM] skor ${answerQuality(finalAnswer)}/2, ambil ulang`);
+
+    if (!isNotFoundAnswer(finalAnswer) && sources.length > 0 && !isUsableAnswer(finalAnswer)) {
+        console.log("[RETRY-STREAM] jawaban kosong/hanya sitasi, ambil ulang");
+        try {
+            const retry = await generateAnswer(question, context, model, history);
+            if (isUsableAnswer(retry) || isNotFoundAnswer(retry)) {
+                console.log("[RETRY-STREAM] pakai hasil retry");
+                finalAnswer = retry.trim();
+            }
+        } catch (err) {
+            console.log("[RETRY-STREAM] gagal:", err.message);
+        }
+    } else if (!isNotFoundAnswer(finalAnswer) && sources.length > 0 && answerQuality(finalAnswer) < 2 && isUsableAnswer(finalAnswer)) {
+        console.log(`[RETRY-STREAM] skor ${answerQuality(finalAnswer)}/3, ambil ulang`);
         try {
             const retry = await generateAnswer(question, context, model, history);
             if (!isNotFoundAnswer(retry) && answerQuality(retry) > answerQuality(finalAnswer)) {
-                console.log(`[RETRY-STREAM] pakai hasil retry (skor ${answerQuality(retry)}/2)`);
+                console.log(`[RETRY-STREAM] pakai hasil retry (skor ${answerQuality(retry)}/3)`);
                 finalAnswer = retry.trim();
-            } else {
-                console.log("[RETRY-STREAM] pakai hasil stream");
             }
         } catch (err) {
             console.log("[RETRY-STREAM] gagal:", err.message);
@@ -422,6 +470,14 @@ ${doc}
 
     const notFound =
     isNotFoundAnswer(finalAnswer);
+
+    if (!finalAnswer || !finalAnswer.trim()) {
+        throw new Error("Model tidak menghasilkan jawaban. Silakan coba lagi.");
+    }
+
+    if (!notFound && sources.length > 0 && !isUsableAnswer(finalAnswer)) {
+        throw new Error("Model tidak menghasilkan jawaban yang dapat ditampilkan. Silakan coba lagi.");
+    }
 
     const finalStreamSources = notFound ? [] : filterSourcesByCitations(finalAnswer, sources);
 

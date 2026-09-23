@@ -16,7 +16,7 @@ async function getReranker() {
     if (!tokenizer || !model) {
 
         console.log(
-            "Loading reranker model (bge-reranker-base)..."
+            "Memuat model reranker (bge-reranker-base)..."
         );
 
         tokenizer =

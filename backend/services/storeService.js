@@ -56,10 +56,15 @@ export function writeJson(name, data) {
 
     ensureDataFolder();
 
+    const filePath = getFilePath(name);
+    const tmpPath = filePath + ".tmp";
+
     fs.writeFileSync(
-        getFilePath(name),
+        tmpPath,
         JSON.stringify(data, null, 2),
         "utf8"
     );
+
+    fs.renameSync(tmpPath, filePath);
 
 }

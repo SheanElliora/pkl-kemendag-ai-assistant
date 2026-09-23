@@ -1,13 +1,57 @@
 import OpenAI from "openai";
 import { recordQuery, recordFallback } from "./analyticsService.js";
 
+const GEMINI_TIMEOUT_MS = 15000;
+const OPENROUTER_TIMEOUT_MS = 18000;
+const MAX_MODELS_PER_ATTEMPT = 3;
+const RATE_LIMIT_COOLDOWN_MS = 90000;
+
+const rateLimitedUntil = new Map();
+
+function isCoolingDown(model) {
+    const until = rateLimitedUntil.get(model);
+    if (!until) return false;
+    if (Date.now() >= until) {
+        rateLimitedUntil.delete(model);
+        return false;
+    }
+    return true;
+}
+
+function markRateLimited(model) {
+    rateLimitedUntil.set(model, Date.now() + RATE_LIMIT_COOLDOWN_MS);
+    console.log(`[LLM] ${model} cooldown ${RATE_LIMIT_COOLDOWN_MS / 1000}s (rate limit)`);
+}
+
+function isRateLimitError(err) {
+    const status = err?.status;
+    const msg = String(err?.message || "");
+    return status === 429 || /rate limit|too many requests|resourceexhausted|quota/i.test(msg);
+}
+
 const OPENROUTER_CLIENT = new OpenAI({
-    apiKey: process.env.OPENROUTER_API_KEY || "",
+    apiKey: process.env.OPENROUTER_API_KEY || "missing-openrouter-key",
     baseURL: "https://openrouter.ai/api/v1",
-    timeout: 20000,
+    timeout: OPENROUTER_TIMEOUT_MS,
+    maxRetries: 0,
 });
 
-const FALLBACK_CHAIN = [
+let geminiClient = null;
+
+function getGeminiClient() {
+    if (!hasGeminiKey()) return null;
+    if (!geminiClient) {
+        geminiClient = new OpenAI({
+            apiKey: process.env.GEMINI_API_KEY.trim(),
+            baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
+            timeout: GEMINI_TIMEOUT_MS,
+            maxRetries: 0,
+        });
+    }
+    return geminiClient;
+}
+
+const OPENROUTER_CHAIN = [
     "cohere/north-mini-code:free",
     "dots-studio/dots-3-note-preview:free",
     "nvidia/nemotron-3-super-120b-a12b:free",
@@ -15,7 +59,54 @@ const FALLBACK_CHAIN = [
     "nex-agi/nex-n2.5-mini:free",
 ];
 
-const DEFAULT_MODEL = "cohere/north-mini-code:free";
+const GEMINI_CHAIN = [
+    "gemini-3.6-flash",
+    "gemini-3.5-flash-lite",
+];
+
+function hasGeminiKey() {
+    return Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim());
+}
+
+function isGeminiModel(model) {
+    return /gemini/i.test(String(model || ""));
+}
+
+function isModelAvailable(model) {
+    if (isGeminiModel(model)) return hasGeminiKey();
+    return Boolean(process.env.OPENROUTER_API_KEY && process.env.OPENROUTER_API_KEY.trim());
+}
+
+function getClientForModel(model) {
+    if (isGeminiModel(model)) {
+        return getGeminiClient();
+    }
+    return OPENROUTER_CLIENT;
+}
+
+function fullChain() {
+    const gemini = hasGeminiKey() ? GEMINI_CHAIN : [];
+    return [...gemini, ...OPENROUTER_CHAIN];
+}
+
+function defaultModelId() {
+    if (hasGeminiKey()) return GEMINI_CHAIN[0];
+    return process.env.OPENROUTER_MODEL || OPENROUTER_CHAIN[0];
+}
+
+function looksComplete(text) {
+    if (!text || typeof text !== "string") return false;
+    const t = text.trim();
+    if (t.length < 40) return false;
+    if (/\*\*[^*\n]*$/.test(t)) return false;
+    if (/\n\s*\d+\.?\s*$/.test(t)) return false;
+    if (/\d+\.\s*$/.test(t) && !/\[\s*\d+\s*\]\s*\.\s*$/.test(t)) return false;
+    if (/[,;:]\s*$/.test(t)) return false;
+    if (/\b(dan|yang|atau|dengan|untuk|adalah|ini|itu|the|and|of|to|in|for)\s*$/i.test(t)) return false;
+    if (/\[\s*\d+\s*\]\.?\s*$/.test(t)) return true;
+    if (/[.!?…)"'\]}\-•]\s*$/.test(t)) return true;
+    return /[0-9A-Za-zÀ-ÿ%)\]]\s*$/.test(t);
+}
 
 function hasVisibleAnswer(content) {
     if (!content || typeof content !== "string") return false;
@@ -24,6 +115,87 @@ function hasVisibleAnswer(content) {
         .replace(/\s+/g, " ")
         .trim();
     return visible.length >= 10;
+}
+
+function isReasoningPrefix(text) {
+    if (!text) return false;
+    const head = String(text).replace(/^\s+/, "").slice(0, 500);
+    return /^(?:we (?:need|must|should|will|have to)|the question\b|so we |let's |let us |i (?:need|should|must|will) |to answer\b|based on the (?:context|instructions|query|provided)|first,|now (?:we|let)|thus\b|therefore\b|the context (?:includes|contains|has|provides|shows)|we have (?:multiple|been|the)|as an ai\b|according to the\b|step \d+\b|reasoning\s*:|thought\s*:|analysis\s*:|the user (?:asks|wants|is asking)|our task is\b)/im.test(head);
+}
+
+function isReasoningLine(line) {
+    return /^(?:we (?:need|must|should|will|have to|want)|the question\b|so (?:we|,)|let's |let us |i (?:need|should|must|will)|to answer\b|based on the\b|first,|now (?:we|let|,)|thus\b|therefore\b|the context\b|we have\b|as an ai\b|according to\b|step \d+\b|reasoning\s*:|thought\s*:|analysis\s*:|the user\b|our task\b|from file\b|file \d+\b|page \d+\b|next,\b|then,\b|after that\b|however,\b|note that\b|important:|let me\b|we must\b|we will\b|we should\b|okay\b|sure\b|the (?:context|document|file|instruction)\b|enumerat|parse\b|relevant info\b|provide concise\b|each with citation\b|referencing file\b|let's enumerate\b|let's craft\b|must not\b|no external\b)/i.test(line);
+}
+
+function hasAnswerMarker(text) {
+    return /(?:let'?s craft (?:the )?answer|let me craft (?:the )?answer|here(?:'s| is) (?:the )?(?:final )?answer|berikut (?:adalah )?jawaban|\bjawaban\s*:|\bfinal answer\s*:)/i.test(text);
+}
+
+export function couldBeReasoningStart(text) {
+    const t = String(text || "").replace(/^\s+/, "");
+    if (!t) return true;
+    const head = t.toLowerCase();
+    const prefixes = [
+        "we ", "the ", "so ", "let'", "let ", "i ", "to ", "based on",
+        "first", "now ", "thus", "therefore", "as an", "according",
+        "step", "reasoning", "thought", "analysis", "our task",
+        "okay", "sure", "from file", "file ", "next,", "then,",
+        "however,", "note that", "important:", "berikut", "relevan",
+        "must ", "need ", "will ", "should ", "provide "
+    ];
+    return prefixes.some((p) => p.startsWith(head.slice(0, p.length)) || head.startsWith(p));
+}
+
+export function findAnswerStart(text) {
+    if (!text) return 0;
+    if (!isReasoningPrefix(text)) return 0;
+
+    const markers = [
+        /let'?s craft (?:the )?answer\s*:?\s*/i,
+        /let me craft (?:the )?answer\s*:?\s*/i,
+        /here(?:'s| is) (?:the )?(?:final )?answer\s*:?\s*/i,
+        /berikut (?:adalah )?jawaban\s*:?\s*/i,
+        /\bjawaban\s*:\s*\n/i,
+        /\bfinal answer\s*:\s*/i
+    ];
+    for (const re of markers) {
+        const m = re.exec(text);
+        if (m) {
+            const idx = m.index + m[0].length;
+            if (text.slice(idx).trim().length >= 20) return idx;
+        }
+    }
+
+    const lines = text.split(/\n/);
+    let offset = 0;
+    let sawReasoning = false;
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) {
+            offset += line.length + 1;
+            continue;
+        }
+        if (isReasoningLine(trimmed)) {
+            sawReasoning = true;
+            offset += line.length + 1;
+            continue;
+        }
+        if (sawReasoning && trimmed.length >= 20) {
+            return offset;
+        }
+        offset += line.length + 1;
+    }
+    return -1;
+}
+
+export function stripModelReasoning(content) {
+    if (!content || typeof content !== "string") return content;
+    let t = content.replace(/^\uFEFF/, "").replace(/\r\n/g, "\n").trim();
+    if (!t) return t;
+    const start = findAnswerStart(t);
+    if (start > 0) return t.slice(start).trim();
+    if (start === -1) return "";
+    return t;
 }
 
 function extractEntities(question) {
@@ -84,6 +256,8 @@ FORMAT JAWABAN:
 - HANYA tampilkan informasi yang benar-benar menjawab pertanyaan. JANGAN menambahkan detail, konteks, atau topik lain yang tidak ditanyakan. Contoh: jika yang ditanya REGULASI ekspor, jangan ikut menjelaskan metode pembayaran, tarif bea, harga, atau data pasar; jika yang ditanya NILAI IMPOR, beri angkanya dan jangan menjelaskan prosedur lain.
 - PERHATIKAN KATA KUNCI PERTANYAAN: jawab sesuai aspek yang diminta. Pertanyaan "regulasi"/"persyaratan" → hanya aturan, kewajiban, dan prosedur wajib. Pertanyaan "harga"/"nilai" → hanya angka. Pertanyaan "pembayaran" → hanya metode transaksi. Hal di luar aspek itu JANGAN disertakan.
 - Jawaban RINGKAS: idealnya 3-5 poin penting, maksimal sekitar 120 kata.
+- SELESAIKAN seluruh jawaban sampai titik terakhir. JANGAN berhenti di tengah kalimat, daftar, atau kata. Poin terakhir wajib diakhiri tanda baca; tutup semua penanda bold ** dengan benar.
+- JANGAN menulis proses berpikir, analisis, reasoning, draft, atau catatan kerja di dalam jawaban. Tulis HANYA jawaban akhir siap baca untuk pengguna.
 - Gunakan daftar bernomor (1. 2. 3.) atau bullet untuk rincian, bukan paragraf panjang.
 - Jika pertanyaan menanyakan "siapa", sebutkan nama pihaknya terlebih dahulu lalu jelaskan singkat.
 - Jika pertanyaan menanyakan angka/nilai, berikan angkanya langsung beserta satuannya. WAJIB sertakan SEMUA angka, persentase, dan nilai spesifik yang muncul di CONTEXT — jangan digantikan penjelasan umum. Contoh: jika CONTEXT menyebut "USD 2.490", tuliskan "USD 2.490" di jawaban, bukan "nilai yang sangat kecil".
@@ -125,7 +299,7 @@ async function callModel(client, model, prompt) {
     return await client.chat.completions.create({
         model,
         temperature: 0.2,
-        max_tokens: 1024,
+        max_tokens: 1536,
         messages: [{ role: "user", content: prompt }],
     });
 }
@@ -135,67 +309,104 @@ function isDailyFreeLimit(err) {
     return err?.status === 429 && /free-models-per-day|free-model daily/i.test(msg);
 }
 
-export async function generateAnswer(question, context, model, history) {
+function buildChain(targetModel, exclude = []) {
+    const base = fullChain();
+    const start = targetModel && !base.includes(targetModel)
+        ? [targetModel, ...base]
+        : base;
+    const ordered = targetModel && base.includes(targetModel)
+        ? [targetModel, ...base.filter((m) => m !== targetModel)]
+        : start;
+    const filtered = ordered.filter(
+        (m) => isModelAvailable(m) && !exclude.includes(m) && !isCoolingDown(m)
+    );
+    const usable = filtered.length > 0
+        ? filtered
+        : ordered.filter((m) => isModelAvailable(m) && !exclude.includes(m));
+    if (usable.length === 0) {
+        return ordered.filter((m) => isModelAvailable(m)).slice(0, MAX_MODELS_PER_ATTEMPT);
+    }
+    return usable.slice(0, MAX_MODELS_PER_ATTEMPT);
+}
+
+export async function generateAnswer(question, context, model, history, exclude = []) {
     const prompt = buildPrompt(question, context, history);
-    const targetModel = model || process.env.OPENROUTER_MODEL || DEFAULT_MODEL;
+    const targetModel = model || defaultModelId();
     await recordQuery(question, targetModel);
-    const chain = FALLBACK_CHAIN.includes(targetModel)
-        ? FALLBACK_CHAIN
-        : [targetModel, ...FALLBACK_CHAIN];
+    const chain = buildChain(targetModel, exclude);
+    let truncatedFallback = null;
 
     for (const m of chain) {
-        const client = OPENROUTER_CLIENT;
+        const client = getClientForModel(m);
+        if (!client) continue;
         try {
             const completion = await callModel(client, m, prompt);
-            const content = completion?.choices?.[0]?.message?.content;
+            const raw = completion?.choices?.[0]?.message?.content;
+            const content = stripModelReasoning(raw);
             if (hasVisibleAnswer(content)) {
-                return content;
+                if (looksComplete(content)) {
+                    console.log(`[LLM] model aktif: ${m}`);
+                    return { answer: content, model: m };
+                }
+                if (!truncatedFallback) {
+                    truncatedFallback = { answer: content, model: m };
+                }
+                console.log(`Model ${m} terpotong, lanjut cari model utuh...`);
+                await recordFallback(m);
+                continue;
             }
-            console.log(`Model ${m} kosong/hanya sitasi, lanjut fallback`);
+            console.log(`Model ${m} kosong/hanya sitasi/reasoning, lanjut fallback`);
             await recordFallback(m);
         } catch (err) {
             console.log(`Model ${m} gagal:`, err.message);
             await recordFallback(m);
-            if (isDailyFreeLimit(err)) {
+            if (isRateLimitError(err)) {
+                markRateLimited(m);
+            }
+            if (isDailyFreeLimit(err) && !isGeminiModel(m)) {
                 throw new Error(
-                    "Kuota model gratis OpenRouter hari ini habis. " +
-                    "Isi minimal 10 USD kredit di https://openrouter.ai/settings/credits " +
-                    "atau tunggu reset harian, lalu coba lagi."
+                    "Layanan model AI sedang sibuk. Silakan coba lagi beberapa saat lagi."
                 );
             }
             continue;
         }
     }
 
+    if (truncatedFallback) {
+        console.log(`[LLM] pakai fallback terpotong: ${truncatedFallback.model}`);
+        return truncatedFallback;
+    }
+
     throw new Error("Semua model AI gagal memberikan jawaban.");
 }
 
-export async function generateAnswerStream(question, context, model, history) {
+export async function generateAnswerStream(question, context, model, history, exclude = []) {
     const prompt = buildPrompt(question, context, history);
-    const targetModel = model || process.env.OPENROUTER_MODEL || DEFAULT_MODEL;
-    const chain = FALLBACK_CHAIN.includes(targetModel)
-        ? FALLBACK_CHAIN
-        : [targetModel, ...FALLBACK_CHAIN];
+    const targetModel = model || defaultModelId();
+    const chain = buildChain(targetModel, exclude);
 
     for (const m of chain) {
-        const client = OPENROUTER_CLIENT;
+        const client = getClientForModel(m);
+        if (!client) continue;
         try {
             const stream = await client.chat.completions.create({
                 model: m,
                 temperature: 0.2,
-                max_tokens: 1024,
+                max_tokens: 1536,
                 stream: true,
                 messages: [{ role: "user", content: prompt }],
             });
-            return stream;
+            console.log(`[LLM] stream model aktif: ${m}`);
+            return { stream, model: m };
         } catch (err) {
             console.log(`Stream model ${m} gagal:`, err.message);
             await recordFallback(m);
-            if (isDailyFreeLimit(err)) {
+            if (isRateLimitError(err)) {
+                markRateLimited(m);
+            }
+            if (isDailyFreeLimit(err) && !isGeminiModel(m)) {
                 throw new Error(
-                    "Kuota model gratis OpenRouter hari ini habis. " +
-                    "Isi minimal 10 USD kredit di https://openrouter.ai/settings/credits " +
-                    "atau tunggu reset harian, lalu coba lagi."
+                    "Layanan model AI sedang sibuk. Silakan coba lagi beberapa saat lagi."
                 );
             }
             continue;
@@ -245,30 +456,32 @@ Jawaban:`;
 
 export async function generateConversationalAnswer(question, model, history, matchName) {
     const prompt = buildConversationalPrompt(question, history, matchName);
-    const targetModel = model || process.env.OPENROUTER_MODEL || DEFAULT_MODEL;
+    const targetModel = model || defaultModelId();
     await recordQuery(question, targetModel);
-    const chain = FALLBACK_CHAIN.includes(targetModel)
-        ? FALLBACK_CHAIN
-        : [targetModel, ...FALLBACK_CHAIN];
+    const chain = buildChain(targetModel);
 
     for (const m of chain) {
-        const client = OPENROUTER_CLIENT;
+        const client = getClientForModel(m);
+        if (!client) continue;
         try {
             const completion = await callModel(client, m, prompt);
-            const content = completion?.choices?.[0]?.message?.content;
+            const raw = completion?.choices?.[0]?.message?.content;
+            const content = stripModelReasoning(raw);
             if (hasVisibleAnswer(content)) {
-                return content;
+                console.log(`[CONV] model aktif: ${m}`);
+                return { answer: content, model: m };
             }
             console.log(`[CONV] Model ${m} kosong, lanjut fallback`);
             await recordFallback(m);
         } catch (err) {
             console.log(`[CONV] Model ${m} gagal:`, err.message);
             await recordFallback(m);
-            if (isDailyFreeLimit(err)) {
+            if (isRateLimitError(err)) {
+                markRateLimited(m);
+            }
+            if (isDailyFreeLimit(err) && !isGeminiModel(m)) {
                 throw new Error(
-                    "Kuota model gratis OpenRouter hari ini habis. " +
-                    "Isi minimal 10 USD kredit di https://openrouter.ai/settings/credits " +
-                    "atau tunggu reset harian, lalu coba lagi."
+                    "Layanan model AI sedang sibuk. Silakan coba lagi beberapa saat lagi."
                 );
             }
             continue;
@@ -280,13 +493,12 @@ export async function generateConversationalAnswer(question, model, history, mat
 
 export async function generateConversationalAnswerStream(question, model, history, matchName) {
     const prompt = buildConversationalPrompt(question, history, matchName);
-    const targetModel = model || process.env.OPENROUTER_MODEL || DEFAULT_MODEL;
-    const chain = FALLBACK_CHAIN.includes(targetModel)
-        ? FALLBACK_CHAIN
-        : [targetModel, ...FALLBACK_CHAIN];
+    const targetModel = model || defaultModelId();
+    const chain = buildChain(targetModel);
 
     for (const m of chain) {
-        const client = OPENROUTER_CLIENT;
+        const client = getClientForModel(m);
+        if (!client) continue;
         try {
             const stream = await client.chat.completions.create({
                 model: m,
@@ -295,15 +507,17 @@ export async function generateConversationalAnswerStream(question, model, histor
                 stream: true,
                 messages: [{ role: "user", content: prompt }],
             });
-            return stream;
+            console.log(`[CONV] stream model aktif: ${m}`);
+            return { stream, model: m };
         } catch (err) {
             console.log(`[CONV] Stream model ${m} gagal:`, err.message);
             await recordFallback(m);
-            if (isDailyFreeLimit(err)) {
+            if (isRateLimitError(err)) {
+                markRateLimited(m);
+            }
+            if (isDailyFreeLimit(err) && !isGeminiModel(m)) {
                 throw new Error(
-                    "Kuota model gratis OpenRouter hari ini habis. " +
-                    "Isi minimal 10 USD kredit di https://openrouter.ai/settings/credits " +
-                    "atau tunggu reset harian, lalu coba lagi."
+                    "Layanan model AI sedang sibuk. Silakan coba lagi beberapa saat lagi."
                 );
             }
             continue;
@@ -313,14 +527,14 @@ export async function generateConversationalAnswerStream(question, model, histor
     throw new Error("Semua model AI gagal untuk streaming percakapan.");
 }
 
+export { defaultModelId, hasGeminiKey, looksComplete };
+
 export function translateLLMError(error) {
     const status = error?.status;
     const msg = String(error?.message || error || "");
 
-    if (/kuota model gratis|free-models-per-day|free-model daily/i.test(msg)) {
-        return "Kuota model gratis OpenRouter hari ini habis. " +
-        "Isi minimal 10 USD kredit di https://openrouter.ai/settings/credits " +
-        "atau tunggu reset harian, lalu coba lagi.";
+    if (/kuota model gratis|free-models-per-day|free-model daily|tidak dapat diakses|sedang sibuk/i.test(msg)) {
+        return "Layanan model AI sedang sibuk. Silakan coba lagi beberapa saat lagi.";
     }
 
     const isCredits = status === 402 || (/\bcredits?\b|billing|insufficient/i.test(msg) && !/free-model/i.test(msg));

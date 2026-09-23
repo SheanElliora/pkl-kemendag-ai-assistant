@@ -34,7 +34,7 @@ async function getEmbedder() {
     if (!embedder) {
 
         console.log(
-            "Loading embedding model (multilingual-e5-small)..."
+            "Memuat model embedding (multilingual-e5-small)..."
         );
 
         embedder = await pipeline(

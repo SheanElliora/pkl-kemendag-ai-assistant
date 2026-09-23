@@ -14,7 +14,7 @@ import { ensureDefaultAdmin } from "./services/userService.js";
 import { ensureFolders } from "./services/fileService.js";
 import { recoverProcessingJobs } from "./services/ingestQueue.js";
 import { getSystemStats } from "./services/analyticsService.js";
-import { MODEL_CATALOG } from "./services/modelCatalog.js";
+import { availableModels, defaultModelId } from "./services/modelCatalog.js";
 import { createEmbedding } from "./services/embedderService.js";
 import { rerankDocuments } from "./services/rerankerService.js";
 import { readJson } from "./services/storeService.js";
@@ -45,6 +45,13 @@ console.log(
         : "TIDAK TERBACA"
 );
 
+console.log(
+    "GEMINI KEY:",
+    process.env.GEMINI_API_KEY
+        ? "TERBACA"
+        : "TIDAK TERBACA (fallback OpenRouter gratis)"
+);
+
 app.get("/api/health", (req, res) => {
 
     res.json({
@@ -60,9 +67,9 @@ app.get("/api/models", (req, res) => {
 
     res.json({
 
-        default: process.env.OPENROUTER_MODEL || "cohere/north-mini-code:free",
+        default: defaultModelId(),
 
-        models: MODEL_CATALOG
+        models: availableModels()
 
     });
 

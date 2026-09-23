@@ -32,7 +32,9 @@ function loadSessions() {
         return _sessionsCache;
     }
     const data = readJson(STORE, []);
-    const arr = Array.isArray(data) ? data : [];
+    const arr = Array.isArray(data)
+        ? data.filter((s) => s && typeof s === "object" && s.id)
+        : [];
     _sessionsCache = arr;
     _sessionsCacheFP = fp;
     _sessionsCacheTime = Date.now();
@@ -49,7 +51,8 @@ function saveSessions(sessions) {
 }
 
 function findSession(sessions, sessionId) {
-    return sessions.find((s) => s.id === sessionId) || null;
+    if (!sessionId) return null;
+    return sessions.find((s) => s && s.id === sessionId) || null;
 }
 
 export function createSession(owner, title) {
@@ -78,7 +81,7 @@ export function getOrCreateSession(owner, sessionId) {
 
 export function listSessions(owner, limit = 50) {
     return loadSessions()
-        .filter((s) => s.owner === owner)
+        .filter((s) => s && s.owner === owner && Array.isArray(s.messages))
         .slice(0, limit)
         .map((s) => ({
             id: s.id,
@@ -97,7 +100,7 @@ export function getSession(sessionId) {
 
 export function deleteSession(sessionId) {
     const sessions = loadSessions();
-    const next = sessions.filter((s) => s.id !== sessionId);
+    const next = sessions.filter((s) => s && s.id !== sessionId);
     if (next.length === sessions.length) return false;
     saveSessions(next);
     return true;
@@ -105,7 +108,7 @@ export function deleteSession(sessionId) {
 
 export function getRecentMessages(sessionId, maxTurns = 6) {
     const session = getSession(sessionId);
-    if (!session) return [];
+    if (!session || !Array.isArray(session.messages)) return [];
     return session.messages
         .slice(-maxTurns)
         .map((m) => ({
@@ -118,6 +121,7 @@ export function appendMessage(sessionId, { role, content, sources, model, conver
     const sessions = loadSessions();
     const session = findSession(sessions, sessionId);
     if (!session) return null;
+    if (!Array.isArray(session.messages)) session.messages = [];
 
     const message = {
         id: newId("msg"),
@@ -163,7 +167,7 @@ export function setFeedback(sessionId, messageId, rating, comment) {
 }
 
 export function chatStats() {
-    const sessions = loadSessions();
+    const sessions = loadSessions().filter((s) => s && Array.isArray(s.messages));
     const messages = sessions.flatMap((s) => s.messages);
 
     const userMessages = messages.filter((m) => m.role === "user");

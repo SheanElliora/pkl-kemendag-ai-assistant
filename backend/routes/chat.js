@@ -113,6 +113,8 @@ router.post("/", chatLimiter, async (req, res) => {
 
                 } else if (evt.type === "done") {
 
+                    const usedModel = evt.model || model || null;
+
                     const saved =
                     chatHistory.appendMessage(
                         session.id,
@@ -120,7 +122,7 @@ router.post("/", chatLimiter, async (req, res) => {
                             role: "assistant",
                             content: evt.answer,
                             sources: evt.sources,
-                            model: model || null,
+                            model: usedModel,
                             conversational: evt.conversational || false
                         }
                     );
@@ -130,6 +132,7 @@ router.post("/", chatLimiter, async (req, res) => {
                         answer: evt.answer,
                         sources: evt.sources,
                         conversational: evt.conversational || false,
+                        model: usedModel,
                         sessionId: session.id,
                         messageId: saved ? saved.id : null
                     })}\n\n`);
@@ -172,6 +175,8 @@ router.post("/", chatLimiter, async (req, res) => {
             "Jawaban berhasil dibuat."
         );
 
+        const usedModel = result.model || model || null;
+
         const saved =
         chatHistory.appendMessage(
             session.id,
@@ -179,7 +184,7 @@ router.post("/", chatLimiter, async (req, res) => {
                 role: "assistant",
                 content: result.answer,
                 sources: result.sources,
-                model: model || null,
+                model: usedModel,
                 conversational: result.conversational || false
             }
         );
@@ -194,6 +199,9 @@ router.post("/", chatLimiter, async (req, res) => {
 
             conversational:
             result.conversational || false,
+
+            model:
+            usedModel,
 
             sessionId:
             session.id,

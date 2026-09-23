@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { searchDocuments } from "./retrieverService.js";
-import { generateAnswer, generateAnswerStream, generateConversationalAnswer, generateConversationalAnswerStream } from "./llmService.js";
+import { generateAnswer, generateAnswerStream, generateConversationalAnswer, generateConversationalAnswerStream, stripModelReasoning, findAnswerStart, couldBeReasoningStart } from "./llmService.js";
 import { resolveContextualQuery } from "./contextGateService.js";
 import { detectConversational } from "./conversationalGateService.js";
 
@@ -62,6 +62,10 @@ const NEGATIVE_PHRASES = [
 
 const CITATION_PATTERN = /\[\s*\d+\s*\]/;
 
+function hasAnswerMarkerSafe(text) {
+    return /(?:let'?s craft (?:the )?answer|let me craft (?:the )?answer|here(?:'s| is) (?:the )?(?:final )?answer|berikut (?:adalah )?jawaban|\bjawaban\s*:|\bfinal answer\s*:)/i.test(text);
+}
+
 function isNotFoundAnswer(answer) {
 
     if (!answer || typeof answer !== "string") return false;
@@ -103,11 +107,17 @@ function isUsableAnswer(answer) {
 function isTruncatedAnswer(answer) {
     if (!answer || typeof answer !== "string") return true;
     const t = answer.trim();
-    if (t.length < 50) return true;
+    if (t.length < 40) return true;
 
-    if (/[.!?…)"'\]}:]\s*$/.test(t)) return false;
-    if (/\[\s*\d+\s*\]\.?$/.test(t)) return false;
-    return true;
+    if (/\*\*[^*\n]*$/.test(t)) return true;
+    if (/\n\s*\d+\.?\s*$/.test(t)) return true;
+    if (/\d+\.\s*$/.test(t) && !/\[\s*\d+\s*\]\s*\.\s*$/.test(t)) return true;
+    if (/[,;:]\s*$/.test(t)) return true;
+    if (/\b(dan|yang|atau|dengan|untuk|adalah|the|and|of|to|in|for)\s*$/i.test(t)) return true;
+
+    if (/\[\s*\d+\s*\]\.?\s*$/.test(t)) return false;
+    if (/[.!?…)"'\]}\-•]\s*$/.test(t)) return false;
+    return !/[0-9A-Za-zÀ-ÿ%)\]]\s*$/.test(t);
 }
 
 function answerQuality(answer) {
@@ -117,6 +127,33 @@ function answerQuality(answer) {
     if (CITATION_PATTERN.test(answer || "")) score++;
     if (visibleText(answer).length >= 20) score++;
     return score;
+}
+
+function needsQualityRetry(answer, sources) {
+    if (!answer || isNotFoundAnswer(answer)) return false;
+    if (!sources || sources.length === 0) return false;
+    if (!isUsableAnswer(answer)) return false;
+    if (isTruncatedAnswer(answer)) return true;
+    if (!CITATION_PATTERN.test(answer || "")) return true;
+    return false;
+}
+
+function isBetterAnswer(candidate, current) {
+    if (!candidate || !String(candidate).trim()) return false;
+    if (!current || !String(current).trim()) return true;
+    if (isNotFoundAnswer(candidate) && !isNotFoundAnswer(current)) return false;
+    if (!isNotFoundAnswer(candidate) && isNotFoundAnswer(current)) return true;
+
+    const cTrunc = isTruncatedAnswer(candidate);
+    const curTrunc = isTruncatedAnswer(current);
+    if (curTrunc && !cTrunc) return true;
+    if (!curTrunc && cTrunc) return false;
+
+    const cq = answerQuality(candidate);
+    const curq = answerQuality(current);
+    if (cq !== curq) return cq > curq;
+
+    return candidate.trim().length > current.trim().length;
 }
 
 function filterSourcesByCitations(answer, sources) {
@@ -138,30 +175,25 @@ function filterSourcesByCitations(answer, sources) {
 }
 
 async function generateUsableAnswer(question, context, model, history, sources) {
-    let answer = await generateAnswer(question, context, model, history);
+    let { answer, model: usedModel } = await generateAnswer(question, context, model, history);
     console.log("[answer]:", answer);
 
-    if (!isNotFoundAnswer(answer) && sources.length > 0 && !isUsableAnswer(answer)) {
-        console.log("[RETRY] jawaban kosong/hanya sitasi, coba lagi");
-        try {
-            const retry = await generateAnswer(question, context, model, history);
-            if (isUsableAnswer(retry) || isNotFoundAnswer(retry)) {
-                console.log("[RETRY] pakai hasil retry");
-                answer = retry;
-            }
-        } catch (err) {
-            console.log("[RETRY] gagal:", err.message);
-        }
-    }
+    const shouldRetry =
+    !isNotFoundAnswer(answer) &&
+    sources.length > 0 &&
+    (!isUsableAnswer(answer) || needsQualityRetry(answer, sources));
 
-    if (!isNotFoundAnswer(answer) && sources.length > 0 && answerQuality(answer) < 2 && isUsableAnswer(answer)) {
-        const q0 = answerQuality(answer);
-        console.log(`[RETRY] skor ${q0}/3, coba lagi`);
+    if (shouldRetry) {
+        console.log(`[RETRY] kualitas skor ${answerQuality(answer)}/3 truncated=${isTruncatedAnswer(answer)}, 1x retry`);
         try {
-            const retry = await generateAnswer(question, context, model, history);
-            if (!isNotFoundAnswer(retry) && answerQuality(retry) > q0) {
-                console.log(`[RETRY] pakai hasil retry (skor ${answerQuality(retry)}/3)`);
-                answer = retry;
+            const retry = await generateAnswer(question, context, model, history, [usedModel]);
+            if (
+                (isUsableAnswer(retry.answer) || isNotFoundAnswer(retry.answer)) &&
+                (isBetterAnswer(retry.answer, answer) || !isUsableAnswer(answer))
+            ) {
+                console.log(`[RETRY] pakai hasil retry (skor ${answerQuality(retry.answer)}/3 truncated=${isTruncatedAnswer(retry.answer)})`);
+                answer = retry.answer;
+                usedModel = retry.model;
             }
         } catch (err) {
             console.log("[RETRY] gagal:", err.message);
@@ -176,7 +208,7 @@ async function generateUsableAnswer(question, context, model, history, sources) 
         throw new Error("Model tidak menghasilkan jawaban. Silakan coba lagi.");
     }
 
-    return answer;
+    return { answer, model: usedModel };
 }
 
 export async function askRAG(question, model, history) {
@@ -184,11 +216,11 @@ export async function askRAG(question, model, history) {
     const conv = detectConversational(question, history);
     if (conv.isConversational) {
         console.log(`[CONV] ${conv.matchName}, skip retrieval`);
-        const answer = await generateConversationalAnswer(question, model, history, conv.matchName);
+        const { answer, model: usedModel } = await generateConversationalAnswer(question, model, history, conv.matchName);
         if (!answer || !String(answer).trim()) {
             throw new Error("Model tidak menghasilkan jawaban. Silakan coba lagi.");
         }
-        return { answer, sources: [], conversational: true };
+        return { answer, sources: [], conversational: true, model: usedModel };
     }
 
     const gate = resolveContextualQuery(question, history);
@@ -196,7 +228,7 @@ export async function askRAG(question, model, history) {
     const key = cacheKey(retrievalQuery, model);
     const cached = getCached(key);
     if (cached && (!history || history.length === 0)) {
-        console.log("Cache hit ->", retrievalQuery.slice(0, 60));
+        console.log("Cache hit:", retrievalQuery.slice(0, 60));
         return cached;
     }
 
@@ -204,7 +236,6 @@ export async function askRAG(question, model, history) {
     if (gate.gateApplied) {
         console.log(`[GATE] follow-up (${gate.reason})`);
     }
-    console.log("======================");
 
     const result =
     await searchDocuments(retrievalQuery);
@@ -285,7 +316,7 @@ ${doc}
         "Context berhasil dibuat"
     );
 
-    const answer =
+    const { answer, model: usedModel } =
     await generateUsableAnswer(question, context, model, history, sources);
 
     let finalSources = sources;
@@ -301,7 +332,8 @@ ${doc}
 
     const resultToReturn = {
         answer,
-        sources: finalSources
+        sources: finalSources,
+        model: usedModel
     };
 
     if (!history || history.length === 0) {
@@ -322,7 +354,7 @@ export async function* streamRAG(
     if (convStream.isConversational) {
         console.log(`[CONV-STREAM] ${convStream.matchName}, skip retrieval`);
         try {
-            const stream = await generateConversationalAnswerStream(question, model, history, convStream.matchName);
+            const { stream, model: usedModel } = await generateConversationalAnswerStream(question, model, history, convStream.matchName);
             let full = "";
             for await (const part of stream) {
                 const delta = part.choices?.[0]?.delta?.content;
@@ -335,11 +367,12 @@ export async function* streamRAG(
                 type: "done",
                 answer: convAnswer || "Maaf, terjadi kesalahan. Silakan coba lagi.",
                 sources: [],
-                conversational: true
+                conversational: true,
+                model: usedModel
             };
         } catch (err) {
             console.log("[CONV-GATE-STREAM] Error:", err.message);
-            yield { type: "done", answer: "Maaf, terjadi kesalahan. Silakan coba lagi.", sources: [], conversational: true };
+            yield { type: "done", answer: "Maaf, terjadi kesalahan. Silakan coba lagi.", sources: [], conversational: true, model: model || null };
         }
         return;
     }
@@ -410,58 +443,126 @@ ${doc}
         }
     );
 
-    const stream =
-    await generateAnswerStream(
-        question,
-        context,
-        model,
-        history
-    );
+    const STREAM_ABORT_CHARS = 80;
+    const STREAM_MAX_RETRIES = 1;
+    const STREAM_MIN_DECIDE = 40;
+    const STREAM_MAX_HOLD = 2500;
+    const triedModels = [];
+    let finalAnswer = "";
+    let usedModel = model || null;
+    let bestAnswer = "";
+    let bestModel = model || null;
 
-    let full = "";
+    for (let attempt = 0; attempt <= STREAM_MAX_RETRIES; attempt++) {
+        const started = await generateAnswerStream(question, context, model, history, triedModels);
+        usedModel = started.model;
+        triedModels.push(started.model);
 
-    for await (const part of stream) {
+        let full = "";
+        let held = "";
+        let released = false;
+        let aborted = false;
+        let sawError = null;
 
-        if (part && part.error) {
-            const errMsg =
-            part.error.message || part.error.code || "stream LLM gagal";
-            throw new Error("Model AI gagal: " + errMsg);
-        }
-
-        const delta =
-        part.choices?.[0]?.delta?.content;
-
-        if (!delta) continue;
-
-        full += delta;
-
-        yield {
-            type: "delta",
-            text: delta
-        };
-
-    }
-
-    let finalAnswer = full.trim();
-
-    if (!isNotFoundAnswer(finalAnswer) && sources.length > 0 && !isUsableAnswer(finalAnswer)) {
-        console.log("[RETRY-STREAM] jawaban kosong/hanya sitasi, ambil ulang");
         try {
-            const retry = await generateAnswer(question, context, model, history);
-            if (isUsableAnswer(retry) || isNotFoundAnswer(retry)) {
-                console.log("[RETRY-STREAM] pakai hasil retry");
-                finalAnswer = retry.trim();
+            for await (const part of started.stream) {
+                if (part && part.error) {
+                    sawError = part.error.message || part.error.code || "stream LLM gagal";
+                    break;
+                }
+
+                const delta = part.choices?.[0]?.delta?.content;
+                if (!delta) continue;
+
+                full += delta;
+
+                if (!released) {
+                    held += delta;
+                    let startIdx;
+                    if (held.length < STREAM_MIN_DECIDE && !hasAnswerMarkerSafe(held)) {
+                        startIdx = couldBeReasoningStart(held) ? -2 : 0;
+                    } else {
+                        startIdx = findAnswerStart(held);
+                    }
+
+                    if (startIdx === -2) {
+                        if (held.length >= 12) {
+                            released = true;
+                            yield { type: "delta", text: held };
+                            held = "";
+                        }
+                    } else if (startIdx === 0) {
+                        released = true;
+                        yield { type: "delta", text: held };
+                        held = "";
+                    } else if (startIdx > 0) {
+                        released = true;
+                        const partText = held.slice(startIdx);
+                        held = "";
+                        if (partText) yield { type: "delta", text: partText };
+                    } else {
+                        if (held.length >= STREAM_MAX_HOLD) {
+                            console.log(`[STREAM-REASONING] tanpa jawaban setelah ${held.length} char, pindah model`);
+                            aborted = true;
+                            break;
+                        }
+                    }
+                    continue;
+                }
+
+                yield { type: "delta", text: delta };
             }
         } catch (err) {
-            console.log("[RETRY-STREAM] gagal:", err.message);
+            sawError = err.message;
         }
-    } else if (!isNotFoundAnswer(finalAnswer) && sources.length > 0 && answerQuality(finalAnswer) < 2 && isUsableAnswer(finalAnswer)) {
-        console.log(`[RETRY-STREAM] skor ${answerQuality(finalAnswer)}/3, ambil ulang`);
+
+        if (sawError) {
+            console.log(`[STREAM] model ${usedModel} error: ${sawError}`);
+            if (attempt >= STREAM_MAX_RETRIES) {
+                throw new Error("Model AI gagal: " + sawError);
+            }
+            continue;
+        }
+
+        finalAnswer = stripModelReasoning(full).trim();
+
+        if (isUsableAnswer(finalAnswer) && (!bestAnswer || isBetterAnswer(finalAnswer, bestAnswer))) {
+            bestAnswer = finalAnswer;
+            bestModel = usedModel;
+        }
+
+        const bad = aborted
+            || !isUsableAnswer(finalAnswer)
+            || (!isNotFoundAnswer(finalAnswer) && sources.length > 0 && needsQualityRetry(finalAnswer, sources));
+
+        if (!bad) break;
+
+        if (isNotFoundAnswer(finalAnswer) || sources.length === 0) break;
+
+        if (attempt >= STREAM_MAX_RETRIES) {
+            console.log(`[RETRY-STREAM] habis retry, pakai hasil terbaik`);
+            break;
+        }
+
+        console.log(`[RETRY-STREAM] belum utuh/kosong (pakai: ${usedModel}), coba model berikut`);
+    }
+
+    if (bestAnswer && isBetterAnswer(bestAnswer, finalAnswer)) {
+        finalAnswer = bestAnswer;
+        usedModel = bestModel;
+    }
+
+    if (
+        needsQualityRetry(finalAnswer, sources) &&
+        isUsableAnswer(finalAnswer) &&
+        !isNotFoundAnswer(finalAnswer)
+    ) {
+        console.log(`[RETRY-STREAM] 1x non-stream final`);
         try {
-            const retry = await generateAnswer(question, context, model, history);
-            if (!isNotFoundAnswer(retry) && answerQuality(retry) > answerQuality(finalAnswer)) {
-                console.log(`[RETRY-STREAM] pakai hasil retry (skor ${answerQuality(retry)}/3)`);
-                finalAnswer = retry.trim();
+            const retry = await generateAnswer(question, context, model, history, triedModels);
+            if (isBetterAnswer(retry.answer, finalAnswer) || !isUsableAnswer(finalAnswer)) {
+                finalAnswer = retry.answer.trim();
+                usedModel = retry.model;
             }
         } catch (err) {
             console.log("[RETRY-STREAM] gagal:", err.message);
@@ -484,7 +585,8 @@ ${doc}
     yield {
         type: "done",
         answer: finalAnswer,
-        sources: finalStreamSources
+        sources: finalStreamSources,
+        model: usedModel
     };
 
 }

@@ -3,7 +3,6 @@ import fs from "fs";
 import path from "path";
 import { createEmbedding } from "./embedderService.js";
 import { rerankDocuments } from "./rerankerService.js";
-import { getQueryExpansion } from "./queryExpansionService.js";
 import { searchBM25 } from "./bm25Service.js";
 import { DOCS_FOLDER } from "../config.js";
 
@@ -219,15 +218,12 @@ export async function searchDocuments(question){
     const localExpansion =
     getLocalExpansion(lowerQuestion);
 
-    const expansion =
-    await getQueryExpansion(
-        question,
-        localExpansion
-    );
+    const bm25Results =
+    searchBM25(question, BM25_WIDTH);
 
     const searchQuery =
-    expansion
-        ? question + " " + expansion
+    localExpansion
+        ? question + " " + localExpansion
         : question;
 
     const queryVector =
@@ -251,7 +247,7 @@ export async function searchDocuments(question){
         console.log("[search] hasil:");
 
         console.log(
-            "Question:",
+            "Pertanyaan:",
             question
         );
     }
@@ -414,9 +410,6 @@ candidates.push({
         }
 
     );
-
-    const bm25Results =
-    searchBM25(question, BM25_WIDTH);
 
     if (bm25Results.length > 0) {
 

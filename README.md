@@ -6,7 +6,7 @@ Sistem tanya-jawab dokumen perdagangan Kementerian Perdagangan (Kemendag) berbas
 
 * Chatbot tanya-jawab berbasis dokumen resmi (regulasi, data pasar, komoditas).
 * Jawaban disertai sitasi nomor halaman tercetak dari dokumen sumber.
-* Pilihan model AI di antarmuka chat, satu API key OpenRouter (model gratis sebagai utama, fallback berurutan).
+* Pilihan model AI di antarmuka chat: Gemini Flash gratis (Google AI Studio, bila `GEMINI_API_KEY` diisi) + model gratis OpenRouter, satu API key masing-masing, rantai fallback berurutan.
 * Sapaan dan pertanyaan umum dijawab langsung tanpa retrieval dan tanpa sitasi.
 * CMS dengan autentikasi JWT dan dua peran:
   * **Admin** — menyetujui/menolak dokumen, mengelola pengguna, melihat log login.
@@ -21,7 +21,7 @@ Backend:
 
 * Node.js + Express.js
 * ChromaDB (penyimpanan vektor)
-* OpenRouter API (multi-model, rantai fallback)
+* OpenAI-compatible API: Google AI Studio (Gemini Flash, opsional) + OpenRouter (multi-model, rantai fallback)
 * OCR (Tesseract CLI via `pdftoppm`), parsing PDF (pdfjs-dist)
 * JWT + bcrypt + rate-limit login, upload via multer
 
@@ -31,7 +31,7 @@ Frontend:
 
 Model AI:
 
-* Chat (OpenRouter): `cohere/north-mini-code:free` (default) → `dots-studio/dots-3-note-preview:free` → `nvidia/nemotron-3-super-120b-a12b:free` → `nex-agi/nex-n2.5-pro:free` → `nex-agi/nex-n2.5-mini:free` (semua gratis, 50 req/hari). Rincian di `backend/services/modelCatalog.js`.
+* Chat: `gemini-3.6-flash` → `gemini-3.5-flash-lite` (Google AI Studio, gratis, **hanya bila `GEMINI_API_KEY` diisi**; maks 3 model per percobaan) → `cohere/north-mini-code:free` → `dots-studio/dots-3-note-preview:free` → `nvidia/nemotron-3-super-120b-a12b:free` → `nex-agi/nex-n2.5-pro:free` → `nex-agi/nex-n2.5-mini:free` (OpenRouter gratis, 50 req/hari). Default = Gemini bila key ada, selain itu cohere. Model Gemini 2.5/2.0 sudah ditolak Google untuk user baru. Timeout LLM 15–18 detik; retry kualitas maks 2 call. Rincian di `backend/services/modelCatalog.js` + `backend/services/llmService.js`.
 * Embedding lokal (`Xenova/multilingual-e5-small`), prefix `query:`/`passage:` untuk retrieval Indonesia ↔ Inggris.
 * Reranker lokal (`Xenova/bge-reranker-base`), cross-encoder multibahasa.
 
@@ -75,9 +75,13 @@ pkl-kemendag-ai-assistant/
 Backend — buat `backend/.env` dari `.env.example`:
 
 ```bash
-# OpenRouter
+# OpenRouter (model gratis, fallback)
 OPENROUTER_API_KEY=YOUR_OPENROUTER_API_KEY
 OPENROUTER_MODEL=cohere/north-mini-code:free
+
+# Google AI Studio (Gemini Flash gratis, opsional — utama bila diisi)
+# Ambil key di https://aistudio.google.com/apikey
+GEMINI_API_KEY=
 
 # Server
 PORT=3001

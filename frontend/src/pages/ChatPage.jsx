@@ -189,7 +189,7 @@ export default function ChatPage() {
 
   const [models, setModels] = useState([]);
   const [model, setModel] = useState(() =>
-    localStorage.getItem("cms_model") || "cohere/north-mini-code:free"
+    localStorage.getItem("cms_model") || ""
   );
   const [online, setOnline] = useState(null);
 
@@ -251,12 +251,14 @@ export default function ChatPage() {
       .then((data) => {
         if (Array.isArray(data.models) && data.models.length) {
           setModels(data.models);
-          if (!data.models.some((m) => m.id === model)) {
+          const current = model;
+          if (!current || !data.models.some((m) => m.id === current)) {
             setModel(data.default || data.models[0].id);
           }
         }
       })
       .catch(() => setModels([]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function refreshHealth() {
@@ -557,7 +559,7 @@ export default function ChatPage() {
           : (data.answer && String(data.answer).trim())
             ? data.answer
             : data.error || "Model tidak menghasilkan jawaban. Silakan coba lagi.";
-        finalizeStream(answer, data.sources ?? [], question, mdl, data.conversational);
+        finalizeStream(answer, data.sources ?? [], question, data.model || mdl, data.conversational);
         if (data.sessionId) attachSessionInfo(convId, data.sessionId, data.messageId);
         completed = true;
       } else {
@@ -590,7 +592,7 @@ export default function ChatPage() {
               applyDelta(full, question, mdl);
             } else if (data.type === "done") {
               const ans = (data.answer && data.answer.trim()) ? data.answer : full.trim();
-              finalizeStream(ans || "Model tidak menghasilkan jawaban. Silakan coba lagi.", data.sources ?? [], question, mdl, data.conversational);
+              finalizeStream(ans || "Model tidak menghasilkan jawaban. Silakan coba lagi.", data.sources ?? [], question, data.model || mdl, data.conversational);
               if (data.sessionId) attachSessionInfo(convId, data.sessionId, data.messageId);
               completed = true;
             } else if (data.type === "error") {

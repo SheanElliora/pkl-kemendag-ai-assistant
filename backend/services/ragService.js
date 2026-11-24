@@ -9,9 +9,13 @@ const CACHE_TTL = 10 * 60 * 1000;
 const CACHE_MAX = 100;
 
 function cacheKey(question, model) {
+    const modelPart =
+    (typeof model === "string" && model.trim())
+        ? model.trim()
+        : "default";
     return crypto
         .createHash("md5")
-        .update((question || "").toLowerCase().trim() + "|" + (model || ""))
+        .update((question || "").toLowerCase().trim() + "|" + modelPart)
         .digest("hex");
 }
 

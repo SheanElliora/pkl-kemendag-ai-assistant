@@ -4,8 +4,9 @@ Sistem tanya-jawab dokumen perdagangan Kementerian Perdagangan (Kemendag) berbas
 
 ## Fitur
 
-* Chatbot tanya-jawab berbasis dokumen resmi (regulasi, data pasar, komoditas).
+* Chatbot tanya-jawab berbasis dokumen resmi (regulasi, data pasar, komoditas) — korpus saat ini 10 dokumen approved.
 * Jawaban disertai sitasi nomor halaman tercetak dari dokumen sumber.
+* Streaming jawaban (SSE).
 * Pilihan model AI di antarmuka chat: Gemini Flash gratis (Google AI Studio, bila `GEMINI_API_KEY` diisi) + model gratis OpenRouter, satu API key masing-masing, rantai fallback berurutan.
 * Sapaan dan pertanyaan umum dijawab langsung tanpa retrieval dan tanpa sitasi.
 * CMS dengan autentikasi JWT dan dua peran:
@@ -22,8 +23,8 @@ Backend:
 * Node.js + Express.js
 * ChromaDB (penyimpanan vektor)
 * OpenAI-compatible API: Google AI Studio (Gemini Flash, opsional) + OpenRouter (multi-model, rantai fallback)
-* OCR (Tesseract CLI via `pdftoppm`), parsing PDF (pdfjs-dist)
-* JWT + bcrypt + rate-limit login, upload via multer
+* OCR sistem (`pdftoppm` + CLI `tesseract`) bila PDF scan, parsing PDF digital (pdfjs-dist)
+* JWT + bcryptjs + rate-limit login, upload via multer (maks 5 file/upload, 20 MB)
 
 Frontend:
 
@@ -39,36 +40,54 @@ Pendekatan retrieval:
 
 * Hybrid: pencarian vektor + BM25, lalu rerank cross-encoder.
 * Chunking adaptif berbasis kalimat (ukuran menyesuaikan jenis dokumen).
-* Query expansion + gate konteks untuk pertanyaan lanjutan ("gamenya", "berapa modalnya").
+* Pemetaan istilah Indonesia ↔ Inggris (`localTerms`) + gate konteks untuk pertanyaan lanjutan ("gamenya", "berapa modalnya").
+* Conversational gate: sapaan/pronomina kosong substansi dijawab langsung tanpa retrieval.
 
 ## Struktur Proyek
 
 ```
 pkl-kemendag-ai-assistant/
 ├── backend/
-│   ├── docs/               # dokumen sumber yang sudah disetujui
-│   ├── uploads/            # file pending hasil upload CMS
-│   ├── data/               # users.json, files.json, chats.json
-│   ├── ocr_text/           # hasil OCR sementara
-│   ├── chunks/             # hasil chunking (<nama>_chunks.json)
-│   ├── chroma/             # data ChromaDB
-│   ├── routes/             # auth.js, cms.js, chat.js, docs.js
-│   ├── services/           # rag, retriever, llm, ocr, user, file, auth, dll.
-│   ├── scripts/            # healthCheck, backup
-│   ├── tests/              # unit test (bm25, chatHistory, chunk)
-│   ├── utils/              # authMiddleware
-│   ├── config.js           # konfigurasi folder & batas upload
-│   ├── ingest.js           # alur OCR → chunking → embedding
-│   ├── index.js            # entrypoint server API
-│   └── package.json        # install WAJIB pakai --legacy-peer-deps
+│   ├── docs/                  # dokumen PDF approved (korpus RAG)
+│   ├── uploads/               # file pending hasil upload CMS
+│   ├── data/                  # users.json, files.json, chats.json,
+│   │                          # login-logs.json, analytics_stats.json
+│   ├── ocr_text/              # hasil ekstraksi teks per dokumen (<nama>.txt)
+│   ├── chunks/                # hasil chunking (<nama>_chunks.json)
+│   ├── chroma/                # data ChromaDB (vektor)
+│   ├── routes/                # auth.js, cms.js, chat.js, docs.js
+│   ├── services/              # 24 modul: rag, retriever, bm25, llm,
+│   │                          # modelCatalog, chunk, embedder, reranker,
+│   │                          # contextGate, conversationalGate, ocr,
+│   │                          # ingestQueue, file, user, auth, dll.
+│   ├── scripts/               # healthCheck.mjs, backupChroma.mjs
+│   ├── tests/                 # 14 unit test (bm25, chatHistory, chunk)
+│   ├── utils/                 # authMiddleware.js (JWT + role)
+│   ├── config.js              # konfigurasi folder & batas upload
+│   ├── ingest.js              # alur OCR → chunking → embedding
+│   ├── index.js               # entrypoint server API
+│   ├── .env / .env.example    # konfigurasi (jangan commit .env)
+│   └── package.json           # install backend WAJIB --legacy-peer-deps
 ├── frontend/
-│   ├── src/pages/          # ChatPage, LoginPage, CmsPage
-│   ├── src/api.js          # klien API
-│   ├── src/App.jsx         # routing (HashRouter)
+│   ├── public/                # logo Kemendag (normal + putih)
+│   ├── src/
+│   │   ├── pages/             # ChatPage.jsx, LoginPage.jsx, CmsPage.jsx
+│   │   ├── api.js             # klien API
+│   │   ├── theme.js           # token warna/font (sumber tunggal)
+│   │   ├── App.jsx            # routing HashRouter + lazy load CMS/Login
+│   │   ├── App.css            # gaya global
+│   │   └── main.jsx           # entrypoint React
+│   ├── index.html             # muat Google Fonts (Sora + Source Sans 3)
+│   ├── vite.config.js         # proxy /api → backend :3001
+│   ├── .env.example           # VITE_API_TARGET
 │   └── package.json
-├── DEMO.md                 # panduan demo (termasuk lampiran golden question)
-└── README.md
+├── AGENTS.md                  # konteks proyek (dibaca tool AI)
+├── DEMO.md                    # panduan demo + lampiran golden question
+├── MATERI_PRESENTASI.md       # catatan materi presentasi (juga .docx/.pdf)
+└── README.md                  # dokumentasi ini
 ```
+
+Catatan: `backend/temp_ocr/` dibuat sementara saat OCR lalu dihapus; folder data (`chroma/`, `chunks/`, `data/`, `docs/`, `ocr_text/`, `uploads/`) masuk `.gitignore`.
 
 ## Konfigurasi Environment
 
@@ -175,10 +194,15 @@ Request `/api` diteruskan ke backend lewat proxy Vite.
 | `GET`  | `/api/chat/history/:sessionId/export?format=html\|doc` | Export riwayat |
 | `GET`  | `/api/docs`, `/api/docs.json` | Swagger UI / OpenAPI |
 | `GET`  | `/api/stats` | Statistik publik |
-| `POST` | `/api/cms/upload` | Upload PDF (login) |
+| `GET`  | `/api/models` | Daftar model AI yang tersedia |
+| `GET`  | `/api/documents` | Daftar dokumen approved |
+| `GET`  | `/api/documents/:filename` | Preview PDF dokumen approved |
+| `POST` | `/api/cms/upload` | Upload PDF, maks 5 file (login) |
 | `GET`  | `/api/cms/files` | Daftar file (login) |
+| `GET`  | `/api/cms/files/:id/download` | Unduh file (login) |
 | `POST` | `/api/cms/files/:id/approve` | Setujui dokumen (admin) |
 | `POST` | `/api/cms/files/:id/reject` | Tolak dokumen (admin) |
+| `DELETE` | `/api/cms/files/:id` | Hapus file (admin) |
 | `GET/POST/PUT/DELETE` | `/api/cms/users` | Kelola user (admin) |
 | `GET`  | `/api/cms/login-logs` | Log login (admin) |
 | `GET`  | `/api/cms/stats` | Statistik admin |
@@ -194,6 +218,7 @@ Dari folder `backend/` (ChromaDB + backend hidup):
 npm test                                # 14 unit test (bm25, chatHistory, chunk)
 node scripts/healthCheck.mjs            # cek backend, ChromaDB, vektor (--no-chat = skip LLM)
 npm run backup                          # backup chroma + files.json + users.json ke backup/<waktu>/
+npm run ingest                          # ingest ulang korpus (berat, RAM 4 GB)
 ```
 
 Panduan demo ada di `DEMO.md`.
@@ -206,7 +231,7 @@ Yang perlu dicadangkan:
 | ---- | ------ |
 | Data ChromaDB (vektor) | `backend/chroma/` |
 | Hasil chunking | `backend/chunks/` |
-| Akun, status file, riwayat | `backend/data/` |
+| Akun, status file, riwayat, log, analitik | `backend/data/` |
 | Dokumen disetujui | `backend/docs/` |
 | File pending | `backend/uploads/` |
 | Konfigurasi rahasia | `backend/.env` (**jangan di-commit**) |

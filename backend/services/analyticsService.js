@@ -32,15 +32,27 @@ function saveStats(stats) {
     } catch {  }
 }
 
+function safeModelId(model) {
+    if (typeof model === "string" && model.trim()) {
+        return model.trim();
+    }
+    if (model && typeof model === "object") {
+        return "unknown";
+    }
+    return "default";
+}
+
 export async function recordQuery(question, model, fallback = false) {
     const stats = loadStats();
     stats.totalQueries++;
     stats.totalAnswers++;
 
-    if (!stats.modelUsage[model]) {
-        stats.modelUsage[model] = 0;
+    const modelId = safeModelId(model);
+
+    if (!stats.modelUsage[modelId]) {
+        stats.modelUsage[modelId] = 0;
     }
-    stats.modelUsage[model]++;
+    stats.modelUsage[modelId]++;
 
     if (fallback) {
         stats.totalFallbacks++;
@@ -53,8 +65,8 @@ export async function recordQuery(question, model, fallback = false) {
     stats.questionCategories[category]++;
 
     stats.recentQueries.push({
-        question: question.slice(0, 100),
-        model,
+        question: String(question || "").slice(0, 100),
+        model: modelId,
         fallback,
         timestamp: new Date().toISOString(),
     });
@@ -70,10 +82,11 @@ export async function recordQuery(question, model, fallback = false) {
 export async function recordFallback(model) {
     const stats = loadStats();
     stats.totalFallbacks++;
-    if (!stats.modelUsage[model]) {
-        stats.modelUsage[model] = 0;
+    const modelId = safeModelId(model);
+    if (!stats.modelUsage[modelId]) {
+        stats.modelUsage[modelId] = 0;
     }
-    stats.modelUsage[model]++;
+    stats.modelUsage[modelId]++;
     saveStats(stats);
     return stats;
 }

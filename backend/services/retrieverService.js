@@ -5,6 +5,7 @@ import { createEmbedding } from "./embedderService.js";
 import { rerankDocuments } from "./rerankerService.js";
 import { searchBM25 } from "./bm25Service.js";
 import { DOCS_FOLDER } from "../config.js";
+import { docHasHsCode, expandHsTokens, extractHsCodes, hsQueryHint } from "../utils/hsCode.js";
 
 const client = new ChromaClient();
 
@@ -25,6 +26,7 @@ const VALUE_FACT_BONUS = 0.1;
 const VALUE_FACT_PATTERN =
 /(\$\s?\d|\busd\b|\brp\s?\d|\beur\b|\d+[.,]\d+\s*%|\d+(?:[.,]\d+)?\s*(?:juta|miliar|triliun|ton|unit)|\d{1,3}(?:\.\d{3})+,\d{2}|\d{1,3}(?:,\d{3})+\.\d{2})/i;
 const BM25_BONUS = 0.3;
+const HS_CODE_BONUS = 0.45;
 
 const STOP3 = new Set([
     "dan","dari","apa","itu","ini","ada","atau",
@@ -218,13 +220,16 @@ export async function searchDocuments(question){
     const localExpansion =
     getLocalExpansion(lowerQuestion);
 
+    const hsHint =
+    hsQueryHint(question);
+
     const bm25Results =
     searchBM25(question, BM25_WIDTH);
 
     const searchQuery =
-    localExpansion
-        ? question + " " + localExpansion
-        : question;
+    [question, localExpansion, hsHint]
+        .filter(Boolean)
+        .join(" ");
 
     const queryVector =
     await createEmbedding(
@@ -255,15 +260,20 @@ export async function searchDocuments(question){
     let candidates = [];
 
     const questionTokens =
-    lowerQuestion
+    expandHsTokens(
+        lowerQuestion
 
-    .split(/[^a-z0-9]+/)
-    .filter(w=>{
+        .split(/[^a-z0-9]+/)
+        .filter(w=>{
 
-        return (w.length >= 2 && /^\d+$/.test(w))
-            || (w.length >= 4 && !STOPWORD_ANY_LENGTH.has(w))
-            || (w.length === 3 && !STOP3.has(w));
-    });
+            return (w.length >= 2 && /^\d+$/.test(w))
+                || (w.length >= 4 && !STOPWORD_ANY_LENGTH.has(w))
+                || (w.length === 3 && !STOP3.has(w));
+        })
+    );
+
+    const hsCodes =
+    extractHsCodes(question);
 
 result.documents[0].forEach(
 
@@ -393,6 +403,19 @@ result.documents[0].forEach(
 
             }
 
+            let hsHit = false;
+
+            for(const code of hsCodes){
+
+                if(docHasHsCode(lowerDoc, code)){
+
+                    hsHit = true;
+                    break;
+
+                }
+
+            }
+
 candidates.push({
 
                 doc,
@@ -403,7 +426,9 @@ candidates.push({
 
                 keywordHits,
 
-                filenameMatch
+                filenameMatch,
+
+                hsHit
 
             });
 
@@ -461,12 +486,26 @@ candidates.push({
 
             const norm = hit.bm25Score / bm25Max;
 
+            let bm25HsHit = false;
+
+            for(const code of hsCodes){
+
+                if(docHasHsCode(lowerDoc, code)){
+
+                    bm25HsHit = true;
+                    break;
+
+                }
+
+            }
+
             candidates.push({
                 doc: hit.doc,
                 meta: hit.meta,
                 distance: worstDistance + (1 - norm) * 0.5,
                 keywordHits: 0,
                 filenameMatch: false,
+                hsHit: bm25HsHit,
                 bm25Bonus: norm * BM25_BONUS
             });
 
@@ -480,7 +519,8 @@ candidates.push({
         item.distance
         - KEYWORD_BONUS * item.keywordHits
         - (item.filenameMatch ? FILENAME_BONUS : 0)
-        - (item.bm25Bonus || 0);
+        - (item.bm25Bonus || 0)
+        - (item.hsHit ? HS_CODE_BONUS : 0);
 
     });
 

@@ -94,6 +94,13 @@ function defaultModelId() {
     return process.env.OPENROUTER_MODEL || OPENROUTER_CHAIN[0];
 }
 
+function normalizeModelId(model) {
+    if (typeof model === "string" && model.trim()) {
+        return model.trim();
+    }
+    return defaultModelId();
+}
+
 function looksComplete(text) {
     if (!text || typeof text !== "string") return false;
     const t = text.trim();
@@ -311,11 +318,14 @@ function isDailyFreeLimit(err) {
 
 function buildChain(targetModel, exclude = []) {
     const base = fullChain();
-    const start = targetModel && !base.includes(targetModel)
-        ? [targetModel, ...base]
+    const wanted = typeof targetModel === "string" && targetModel.trim()
+        ? targetModel.trim()
+        : null;
+    const start = wanted && !base.includes(wanted)
+        ? [wanted, ...base]
         : base;
-    const ordered = targetModel && base.includes(targetModel)
-        ? [targetModel, ...base.filter((m) => m !== targetModel)]
+    const ordered = wanted && base.includes(wanted)
+        ? [wanted, ...base.filter((m) => m !== wanted)]
         : start;
     const filtered = ordered.filter(
         (m) => isModelAvailable(m) && !exclude.includes(m) && !isCoolingDown(m)
@@ -331,7 +341,7 @@ function buildChain(targetModel, exclude = []) {
 
 export async function generateAnswer(question, context, model, history, exclude = []) {
     const prompt = buildPrompt(question, context, history);
-    const targetModel = model || defaultModelId();
+    const targetModel = normalizeModelId(model);
     await recordQuery(question, targetModel);
     const chain = buildChain(targetModel, exclude);
     let truncatedFallback = null;
@@ -382,7 +392,7 @@ export async function generateAnswer(question, context, model, history, exclude 
 
 export async function generateAnswerStream(question, context, model, history, exclude = []) {
     const prompt = buildPrompt(question, context, history);
-    const targetModel = model || defaultModelId();
+    const targetModel = normalizeModelId(model);
     const chain = buildChain(targetModel, exclude);
 
     for (const m of chain) {
@@ -456,7 +466,7 @@ Jawaban:`;
 
 export async function generateConversationalAnswer(question, model, history, matchName) {
     const prompt = buildConversationalPrompt(question, history, matchName);
-    const targetModel = model || defaultModelId();
+    const targetModel = normalizeModelId(model);
     await recordQuery(question, targetModel);
     const chain = buildChain(targetModel);
 
@@ -493,7 +503,7 @@ export async function generateConversationalAnswer(question, model, history, mat
 
 export async function generateConversationalAnswerStream(question, model, history, matchName) {
     const prompt = buildConversationalPrompt(question, history, matchName);
-    const targetModel = model || defaultModelId();
+    const targetModel = normalizeModelId(model);
     const chain = buildChain(targetModel);
 
     for (const m of chain) {

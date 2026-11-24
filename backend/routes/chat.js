@@ -62,7 +62,12 @@ router.post("/", chatLimiter, async (req, res) => {
 
     console.log("Request diterima");
 
-    const { message, model, stream } = req.body;
+    const { message, stream } = req.body;
+    const rawModel = req.body?.model;
+    const model =
+    (typeof rawModel === "string" && rawModel.trim())
+        ? rawModel.trim()
+        : undefined;
 
     if (!message) {
 

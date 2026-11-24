@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { CHUNK_FOLDER } from "../config.js";
+import { expandHsTokens } from "../utils/hsCode.js";
 
 const K1 = 1.5;
 const B = 0.75;
@@ -214,7 +215,7 @@ export function searchBM25(question, topN = 60) {
 
     }
 
-    const queryTerms = tokenize(question);
+    const queryTerms = expandHsTokens(tokenize(question));
 
     if (queryTerms.length === 0) {
 
